@@ -1,0 +1,6 @@
+/* ===== Main Stylesheet Bundle ===== */
+@import 'index/variables.css';
+@import 'index/navbar.css';
+@import 'index/hero.css';
+@import 'index/features.css';
+@import 'index/footer.css';
