@@ -17,10 +17,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
 
     if (empty($formData['firstName'])) {
         $errors['firstName'] = 'First name is required.';
+    } elseif (!preg_match('/^[a-zA-Z]+$/', $formData['firstName'])) {
+        $errors['firstName'] = 'First name must contain letters only.';
     }
 
     if (empty($formData['lastName'])) {
         $errors['lastName'] = 'Last name is required.';
+    } elseif (!preg_match('/^[a-zA-Z]+$/', $formData['lastName'])) {
+        $errors['lastName'] = 'Last name must contain letters only.';
     }
 
     if (empty($formData['gender'])) {
@@ -29,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
 
     if (empty($formData['phoneNumber'])) {
         $errors['phoneNumber'] = 'Phone number is required.';
-    } elseif (!preg_match('/^(97|98)\d{8}$/', $formData['phoneNumber'])) {
+    } elseif (!preg_match('/^(96|97|98)\d{8}$/', $formData['phoneNumber'])) {
         $errors['phoneNumber'] = 'Enter a valid 10-digit Nepali phone number.';
     }
 
@@ -41,16 +45,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
 
     if (empty($formData['address'])) {
         $errors['address'] = 'Address is required.';
+    } elseif (!preg_match('/^[a-zA-Z]/', $formData['address'])) {
+        $errors['address'] = 'Address must start with a character.';
     }
 
     if (empty($formData['emergencyContact'])) {
         $errors['emergencyContact'] = 'Emergency contact is required.';
+    } elseif (!preg_match('/^((96|97|98)\d{8}|0\d{1,2}-?\d{6,7})$/', $formData['emergencyContact'])) {
+        $errors['emergencyContact'] = 'Emergency contact must be a valid Nepali mobile or telephone number.';
     }
 
     if (empty($formData['password'])) {
         $errors['password'] = 'Password is required.';
     } elseif (strlen($formData['password']) < 8) {
         $errors['password'] = 'Password must be at least 8 characters long.';
+    } elseif (!preg_match('/^[A-Z]/', $formData['password'])) {
+        $errors['password'] = 'Password must start with a capital letter.';
+    } elseif (!preg_match('/\d/', $formData['password'])) {
+        $errors['password'] = 'Password must contain at least one number.';
     }
 
     if (empty($formData['confirmPassword'])) {
@@ -280,12 +292,23 @@ function errClass($errors, $field) {
                 const gender = document.querySelector('[name="gender"]').value;
                 const phoneNumber = document.querySelector('[name="phoneNumber"]').value.trim();
 
-                if (!firstName) errors.push({ field: 'firstName', message: 'First name is required.' });
-                if (!lastName) errors.push({ field: 'lastName', message: 'Last name is required.' });
+                if (!firstName) {
+                    errors.push({ field: 'firstName', message: 'First name is required.' });
+                } else if (!/^[a-zA-Z]+$/.test(firstName)) {
+                    errors.push({ field: 'firstName', message: 'First name must contain letters only.' });
+                }
+
+                if (!lastName) {
+                    errors.push({ field: 'lastName', message: 'Last name is required.' });
+                } else if (!/^[a-zA-Z]+$/.test(lastName)) {
+                    errors.push({ field: 'lastName', message: 'Last name must contain letters only.' });
+                }
+
                 if (!gender) errors.push({ field: 'gender', message: 'Please select your gender.' });
+
                 if (!phoneNumber) {
                     errors.push({ field: 'phoneNumber', message: 'Phone number is required.' });
-                } else if (!/^(97|98)\d{8}$/.test(phoneNumber)) {
+                } else if (!/^(96|97|98)\d{8}$/.test(phoneNumber)) {
                     errors.push({ field: 'phoneNumber', message: 'Enter a valid 10-digit Nepali phone number.' });
                 }
             }
@@ -300,8 +323,18 @@ function errClass($errors, $field) {
                 } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                     errors.push({ field: 'email', message: 'Please enter a valid email address.' });
                 }
-                if (!emergencyContact) errors.push({ field: 'emergencyContact', message: 'Emergency contact is required.' });
-                if (!address) errors.push({ field: 'address', message: 'Address is required.' });
+
+                if (!emergencyContact) {
+                    errors.push({ field: 'emergencyContact', message: 'Emergency contact is required.' });
+                } else if (!/^((96|97|98)\d{8}|0\d{1,2}-?\d{6,7})$/.test(emergencyContact)) {
+                    errors.push({ field: 'emergencyContact', message: 'Emergency contact must be a valid Nepali mobile or telephone number.' });
+                }
+
+                if (!address) {
+                    errors.push({ field: 'address', message: 'Address is required.' });
+                } else if (!/^[a-zA-Z]/.test(address)) {
+                    errors.push({ field: 'address', message: 'Address must start with a character.' });
+                }
             }
 
             if (step === 3) {
@@ -312,7 +345,12 @@ function errClass($errors, $field) {
                     errors.push({ field: 'password', message: 'Password is required.' });
                 } else if (password.length < 8) {
                     errors.push({ field: 'password', message: 'Password must be at least 8 characters long.' });
+                } else if (!/^[A-Z]/.test(password)) {
+                    errors.push({ field: 'password', message: 'Password must start with a capital letter.' });
+                } else if (!/\d/.test(password)) {
+                    errors.push({ field: 'password', message: 'Password must contain at least one number.' });
                 }
+
                 if (!confirmPassword) {
                     errors.push({ field: 'confirmPassword', message: 'Please confirm your password.' });
                 } else if (password !== confirmPassword) {
