@@ -1,0 +1,40 @@
+/* ===== Patient Registration Page Styles ===== */
+.form-step {
+    display: none;
+}
+
+.form-step.active {
+    display: block;
+}
+
+.form-error {
+    color: #ff6b6b;
+    font-size: 0.78rem;
+    display: block;
+    margin-top: 5px;
+}
+
+.input-error {
+    border-color: rgba(255, 107, 107, 0.6) !important;
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1) !important;
+}
+
+.auth-card.large {
+    max-width: 760px;
+}
+
+.error-banner {
+    background: rgba(255, 77, 77, 0.08);
+    border: 1px solid rgba(255, 77, 77, 0.25);
+    padding: 12px 14px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.success-banner {
+    background: rgba(46, 213, 115, 0.1);
+    border: 1px solid rgba(46, 213, 115, 0.3);
+    padding: 12px 14px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}

@@ -1,0 +1,25 @@
+/* ===== Doctor Login Page Styles ===== */
+.bg-pattern::before {
+    background: radial-gradient(circle, rgba(108, 99, 255, 0.12), transparent 70%);
+}
+
+.bg-pattern::after {
+    background: radial-gradient(circle, rgba(0, 212, 170, 0.08), transparent 70%);
+}
+
+.btn-full {
+    width: 100%;
+}
+
+.otp-help-links {
+    justify-content: center;
+    gap: 8px;
+}
+
+.otp-help-links span {
+    color: var(--text-muted);
+}
+
+.otp-logo {
+    background: linear-gradient(135deg, var(--accent), var(--primary));
+}

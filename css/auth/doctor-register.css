@@ -1,0 +1,155 @@
+/* ===== Doctor Registration Page Styles ===== */
+.bg-pattern::before {
+    background: radial-gradient(circle, rgba(108, 99, 255, 0.12), transparent 70%);
+}
+
+.bg-pattern::after {
+    background: radial-gradient(circle, rgba(0, 212, 170, 0.08), transparent 70%);
+}
+
+.form-error {
+    color: #ff6b6b;
+    font-size: 0.78rem;
+    margin-top: 5px;
+    display: block;
+    font-weight: 500;
+    animation: fadeInError 0.3s ease;
+}
+
+.input-error {
+    border-color: rgba(255, 107, 107, 0.6) !important;
+    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1) !important;
+}
+
+@keyframes fadeInError {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.error-banner {
+    background: rgba(255, 77, 77, 0.08);
+    border: 1px solid rgba(255, 77, 77, 0.25);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.error-banner p {
+    color: #ff6b6b;
+    font-size: 0.84rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.success-banner.register-success-banner {
+    background: rgba(46, 213, 115, 0.1);
+    border: 1px solid rgba(46, 213, 115, 0.3);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.success-banner.register-success-banner p {
+    color: #2ed573;
+    font-size: 0.84rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.required-note {
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+}
+
+.phone-input-group {
+    display: flex;
+    align-items: stretch;
+}
+
+.phone-prefix {
+    display: flex;
+    align-items: center;
+    padding: 0 14px;
+    background: rgba(108, 99, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-right: none;
+    border-radius: 10px 0 0 10px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #a78bfa;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.phone-input-group .form-input {
+    border-radius: 0 10px 10px 0 !important;
+    flex: 1;
+}
+
+.same-address-toggle {
+    margin-top: 8px;
+}
+
+.same-address-toggle label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+}
+
+.registration-details-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+}
+
+.registration-details-card h4 {
+    font-size: 0.88rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.registration-details-card p {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.registration-details-card .accent-text {
+    color: var(--accent-light);
+}
+
+.registration-details-card .accent-text-success {
+    color: var(--accent);
+}
+
+.btn-full {
+    width: 100%;
+}
+
+.login-link-row {
+    justify-content: center;
+    margin-top: 32px;
+}
+
+.login-link-row a {
+    margin-left: 6px;
+    color: var(--primary-light);
+    font-weight: 600;
+}
+
+.otp-logo {
+    background: linear-gradient(135deg, var(--accent), var(--primary));
+}
