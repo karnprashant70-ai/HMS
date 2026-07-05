@@ -1,3 +1,43 @@
+<?php
+ob_start();
+session_start();
+$loginError = '';
+$registrationSuccess = '';
+if (!empty($_SESSION['registration_success'])) {
+    $registrationSuccess = $_SESSION['registration_success'];
+    unset($_SESSION['registration_success']);
+}
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
+    require_once __DIR__ . '/../db-connection/db_conn.php';
+    $email = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+
+    if ($email === '' || $password === '') {
+        $loginError = 'Email and password are required.';
+    } else {
+        $stmt = $conn->prepare('SELECT doctor_id, password, first_name, middle_name, last_name FROM tbl_doctor WHERE email = ? LIMIT 1');
+        $stmt->bind_param('s', $email);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        if ($row = $res->fetch_assoc()) {
+            if (password_verify($password, $row['password'])) {
+                // successful login
+                $_SESSION['doctor_id'] = $row['doctor_id'];
+                $_SESSION['doctor_name'] = trim($row['first_name'] . ' ' . $row['middle_name'] . ' ' . $row['last_name']);
+                $_SESSION['login_success'] = 'Login successful! Welcome back, Dr. ' . $row['first_name'] . '.';
+                header('Location: dashboard.php');
+                exit;
+            } else {
+                $loginError = 'Invalid credentials.';
+            }
+        } else {
+            $loginError = 'No account found for that email.';
+        }
+        $stmt->close();
+        $conn->close();
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,16 +48,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../css/main.css">
-    <style>
-        /* Adjust paths if needed since we are in doctor/ folder */
-        .bg-pattern::before {
-            background: radial-gradient(circle, rgba(108, 99, 255, 0.12), transparent 70%);
-        }
-        .bg-pattern::after {
-            background: radial-gradient(circle, rgba(0, 212, 170, 0.08), transparent 70%);
-        }
-    </style>
+    <link rel="stylesheet" href="../css/main.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="../css/auth/doctor-login.css?v=<?php echo time(); ?>">
 </head>
 <body>
 
@@ -110,20 +142,34 @@
                     <p>Enter your details below to log in</p>
                 </div>
 
-                <form id="loginForm" onsubmit="handleLogin(event)">
+                <form id="loginForm" method="POST" action="" novalidate>
                     <div class="form-group">
                         <label class="form-label" for="email">Email Address</label>
-                        <input type="email" id="email" class="form-input" placeholder="name@hospital.com" required autocomplete="username">
+                        <input type="email" id="email" name="email" class="form-input" placeholder="name@hospital.com" autocomplete="username">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label" for="password">Password</label>
-                        <input type="password" id="password" class="form-input" placeholder="••••••••" required autocomplete="current-password">
+                        <input type="password" id="password" name="password" class="form-input" placeholder="••••••••" autocomplete="current-password">
                     </div>
+                    <?php if (!empty($registrationSuccess)): ?>
+                    <div class="toast-popup show" id="regSuccessToast">
+                        <div class="toast-icon">✅</div>
+                        <p><?php echo htmlspecialchars($registrationSuccess); ?></p>
+                    </div>
+                    <script>
+                        setTimeout(function() {
+                            document.getElementById('regSuccessToast').classList.remove('show');
+                        }, 3000);
+                    </script>
+                    <?php endif; ?>
+                    <?php if (!empty($loginError)): ?>
+                    <div class="error-banner">
+                        <p><?php echo htmlspecialchars($loginError); ?></p>
+                    </div>
+                    <?php endif; ?>
 
-                    <button type="submit" class="btn-auth btn-auth-primary" style="width: 100%;">
-                        Continue to OTP
-                    </button>
+                    <button type="submit" name="login" value="1" class="btn-auth btn-auth-primary btn-full">Login</button>
                 </form>
 
                 <div class="auth-footer-links">
@@ -135,7 +181,7 @@
             <!-- Step 2: OTP Verification -->
             <div id="otpStep" class="form-step">
                 <div class="auth-header">
-                    <div class="auth-logo" style="background: linear-gradient(135deg, var(--accent), var(--primary));">🔑</div>
+                    <div class="auth-logo otp-logo">🔑</div>
                     <h2>Two-Factor Auth</h2>
                     <p>We've sent a 6-digit OTP code to <strong id="userEmailPlaceholder">your email</strong></p>
                 </div>
@@ -160,8 +206,8 @@
                     </div>
                 </form>
 
-                <div class="auth-footer-links" style="justify-content: center; gap: 8px;">
-                    <span style="color: var(--text-muted)">Didn't receive code?</span>
+                <div class="auth-footer-links otp-help-links">
+                    <span>Didn't receive code?</span>
                     <a href="#" onclick="resendOTP(event)">Resend Code</a>
                 </div>
             </div>
@@ -205,24 +251,6 @@
             });
         });
 
-        // Handle Login Submission
-        function handleLogin(event) {
-            event.preventDefault();
-            const email = document.getElementById('email').value;
-            
-            // Set email placeholder in OTP screen
-            document.getElementById('userEmailPlaceholder').innerText = email;
-
-            // Switch to OTP step
-            document.getElementById('loginStep').classList.remove('active');
-            document.getElementById('otpStep').classList.add('active');
-
-            // Focus on first OTP input
-            setTimeout(() => {
-                otpInputs[0].focus();
-            }, 100);
-        }
-
         // Back to login form
         function backToLogin() {
             document.getElementById('otpStep').classList.remove('active');
@@ -233,8 +261,9 @@
         function resendOTP(event) {
             event.preventDefault();
             alert("A new 6-digit OTP code has been sent!");
+            const otpInputs = document.querySelectorAll('.otp-input');
             otpInputs.forEach(input => input.value = '');
-            otpInputs[0].focus();
+            if (otpInputs[0]) otpInputs[0].focus();
         }
 
         // OTP inputs auto-advance logic
@@ -254,14 +283,13 @@
             });
         });
 
-        // Handle OTP verification
+        // Handle OTP verification (if used)
         function handleOTPVerify(event) {
             event.preventDefault();
             let otp = "";
             otpInputs.forEach(input => otp += input.value);
-            
             alert(`OTP Verified successfully: ${otp}! Logging you into the Doctor dashboard...`);
-            window.location.href = "../index.php"; // Redirect for demo
+            window.location.href = "dashboard.php";
         }
     </script>
 </body>
