@@ -1,0 +1,166 @@
+/* ===== Patient Dashboard Layout ===== */
+
+/* Patient-specific accent overrides */
+.sidebar-link.active {
+    background: linear-gradient(135deg, rgba(0, 212, 170, 0.2), rgba(52, 234, 191, 0.1));
+    border: 1px solid rgba(0, 212, 170, 0.25);
+}
+
+.sidebar-link.active::before {
+    background: var(--accent);
+}
+
+.sidebar-toggle {
+    background: var(--accent);
+}
+
+.sidebar-toggle:hover {
+    background: var(--accent-light);
+    box-shadow: 0 0 12px rgba(0, 212, 170, 0.4);
+}
+
+/* Stat card patient-specific top bars */
+.stat-card.teal::before { background: linear-gradient(to right, var(--accent), var(--accent-light)); }
+.stat-card.purple::before { background: linear-gradient(to right, var(--primary), var(--primary-light)); }
+.stat-card.orange::before { background: linear-gradient(to right, #FF8C42, #FFAD60); }
+.stat-card.pink::before { background: linear-gradient(to right, #FF6B8A, #FF8FA3); }
+
+/* Quick Actions Grid */
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+
+.quick-action-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 24px 16px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    color: inherit;
+    text-align: center;
+}
+
+.quick-action-card:hover {
+    background: var(--bg-glass-hover);
+    border-color: var(--border-hover);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow);
+}
+
+.quick-action-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+}
+
+.quick-action-icon.teal { background: rgba(0, 212, 170, 0.15); }
+.quick-action-icon.purple { background: rgba(108, 99, 255, 0.15); }
+.quick-action-icon.orange { background: rgba(255, 140, 66, 0.15); }
+
+.quick-action-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.quick-action-desc {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+/* Health Tips Card */
+.health-tip-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(0, 212, 170, 0.08), rgba(52, 234, 191, 0.04));
+    border: 1px solid rgba(0, 212, 170, 0.15);
+    border-radius: var(--radius-sm);
+}
+
+.health-tip-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(0, 212, 170, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.health-tip-content h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--accent-light);
+}
+
+.health-tip-content p {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* Profile completion bar */
+.completion-bar-bg {
+    width: 100%;
+    height: 8px;
+    background: var(--bg-glass);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 12px;
+}
+
+.completion-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    background: linear-gradient(to right, var(--accent), var(--accent-light));
+    transition: width 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.completion-text {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.completion-text span {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.completion-text strong {
+    font-size: 0.82rem;
+    color: var(--accent);
+    font-weight: 700;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .quick-actions-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .quick-actions-grid {
+        grid-template-columns: 1fr;
+    }
+}
