@@ -1,0 +1,61 @@
+/* ===== Patient Login Page Styles ===== */
+.bg-pattern::before {
+    background: radial-gradient(circle, rgba(0, 212, 170, 0.12), transparent 70%);
+}
+
+.bg-pattern::after {
+    background: radial-gradient(circle, rgba(52, 234, 191, 0.08), transparent 70%);
+}
+
+.auth-logo {
+    background: linear-gradient(135deg, #00D4AA, #34EABF);
+}
+
+.btn-full {
+    width: 100%;
+}
+
+.btn-auth-primary {
+    background: linear-gradient(135deg, #00D4AA, #009D7E);
+}
+
+.btn-auth-primary:hover {
+    box-shadow: 0 4px 15px rgba(0, 212, 170, 0.35);
+}
+
+.otp-help-links {
+    justify-content: center;
+    gap: 8px;
+}
+
+.otp-help-links span {
+    color: var(--text-muted);
+}
+
+.otp-logo {
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+}
+
+/* Password toggle */
+.password-wrapper {
+    position: relative;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 4px;
+    transition: var(--transition);
+    line-height: 1;
+}
+
+.password-toggle:hover {
+    color: var(--text-primary);
+}
