@@ -84,7 +84,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             }
         }
     } else {
-        $successMessage = 'Patient registration submitted successfully.';
+        // All validation passed — insert into database
+        require_once __DIR__ . '/../db-connection/db_conn.php';
+
+        // Check for duplicate email
+        $checkStmt = $conn->prepare('SELECT patient_id FROM tbl_patient WHERE email = ? LIMIT 1');
+        $checkStmt->bind_param('s', $formData['email']);
+        $checkStmt->execute();
+        $checkResult = $checkStmt->get_result();
+        if ($checkResult->num_rows > 0) {
+            $errors['email'] = 'An account with this email already exists.';
+            $activeStep = 2;
+        } else {
+            $hashedPassword = password_hash($formData['password'], PASSWORD_DEFAULT);
+            $insertStmt = $conn->prepare(
+                'INSERT INTO tbl_patient (first_name, last_name, gender, phone_number, email, permanent_address, password) VALUES (?, ?, ?, ?, ?, ?, ?)'
+            );
+            $insertStmt->bind_param(
+                'sssssss',
+                $formData['firstName'],
+                $formData['lastName'],
+                $formData['gender'],
+                $formData['phoneNumber'],
+                $formData['email'],
+                $formData['address'],
+                $hashedPassword
+            );
+            try {
+                if ($insertStmt->execute()) {
+                    session_start();
+                    $_SESSION['registration_success'] = 'Registration successful! Please log in with your credentials.';
+                    header('Location: login.php');
+                    exit;
+                } else {
+                    $errors['email'] = 'Registration failed. Please try again.';
+                    $activeStep = 2;
+                }
+            } catch (mysqli_sql_exception $e) {
+                $errors['email'] = 'Database error: ' . $e->getMessage();
+                $activeStep = 2;
+            }
+            $insertStmt->close();
+        }
+        $checkStmt->close();
+        $conn->close();
     }
 }
 
