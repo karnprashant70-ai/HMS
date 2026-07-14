@@ -30,9 +30,7 @@ $successMessage = '';
 
 // Handle Appointment Book/Update/Delete actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $feeStmt->close();
-
-            $updateStmt = $conn->prepare('UPDATE tbl_appointment SET doctor_id=?, department_id=?, appointment_date=?, appointment_time=?, appointment_type=?, consultation_fee=? WHERE appointment_id=?');
+    if (isset($_POST['update_appointment'])) {
         $appointment_id = intval($_POST['appointment_id'] ?? 0);
         $doctor_id = intval($_POST['doctor_id'] ?? 0);
         $department_id = intval($_POST['department_id'] ?? 0);
