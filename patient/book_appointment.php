@@ -51,16 +51,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) 
         $feeStmt->close();
 
         // Insert appointment
-        $insertStmt = $conn->prepare('INSERT INTO tbl_appointment (patient_id, doctor_id, department_id, appointment_date, appointment_time, appointment_type, consultation_fee) VALUES (?, ?, ?, ?, ?, ?, ?)');
-        $insertStmt->bind_param('iiisssd', $patientId, $doctor_id, $department_id, $appointment_date, $appointment_time, $appointment_type, $consultation_fee);
-        if ($insertStmt->execute()) {
-            $_SESSION['appt_success'] = 'Appointment booked successfully!';
-            header('Location: appointments.php');
-            exit;
-        } else {
-            $errors[] = 'Failed to book appointment. Error: ' . $insertStmt->error;
+        try {
+            $insertStmt = $conn->prepare('INSERT INTO tbl_appointment (patient_id, doctor_id, department_id, appointment_date, appointment_time, appointment_type, consultation_fee) VALUES (?, ?, ?, ?, ?, ?, ?)');
+            $insertStmt->bind_param('iiisssd', $patientId, $doctor_id, $department_id, $appointment_date, $appointment_time, $appointment_type, $consultation_fee);
+            if ($insertStmt->execute()) {
+                $_SESSION['appt_success'] = 'Appointment booked successfully!';
+                header('Location: appointments.php');
+                exit;
+            } else {
+                $errors[] = 'Failed to book appointment. Error: ' . $insertStmt->error;
+            }
+            $insertStmt->close();
+        } catch (mysqli_sql_exception $e) {
+            $errors[] = 'Database Error: ' . $e->getMessage() . '. Please verify your database table column types match the form data.';
         }
-        $insertStmt->close();
     }
 }
 
