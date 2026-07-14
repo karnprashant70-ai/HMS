@@ -30,44 +30,9 @@ $successMessage = '';
 
 // Handle Appointment Book/Update/Delete actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['book_appointment'])) {
-        $doctor_id = intval($_POST['doctor_id'] ?? 0);
-        $department_id = intval($_POST['department_id'] ?? 0);
-        $appointment_date = $_POST['appointment_date'] ?? '';
-        $appointment_time = $_POST['appointment_time'] ?? '';
-        $appointment_type = trim($_POST['appointment_type'] ?? '');
-
-        // Validation
-        if ($doctor_id <= 0) $errors[] = 'Please select a doctor.';
-        if ($department_id <= 0) $errors[] = 'Please select a department.';
-        if (empty($appointment_date)) $errors[] = 'Appointment date is required.';
-        if (empty($appointment_time)) $errors[] = 'Appointment time is required.';
-        if (empty($appointment_type)) $errors[] = 'Appointment type is required.';
-
-        if (empty($errors)) {
-            // Get consultation fee for the selected doctor
-            $feeStmt = $conn->prepare('SELECT consultation_fee FROM tbl_doctor WHERE doctor_id = ? LIMIT 1');
-            $feeStmt->bind_param('i', $doctor_id);
-            $feeStmt->execute();
-            $feeRes = $feeStmt->get_result()->fetch_assoc();
-            $consultation_fee = $feeRes ? floatval($feeRes['consultation_fee']) : 0.00;
             $feeStmt->close();
 
-            // Insert appointment
-            $insertStmt = $conn->prepare('INSERT INTO tbl_appointment (patient_id, doctor_id, department_id, appointment_date, appointment_time, appointment_type, consultation_fee) VALUES (?, ?, ?, ?, ?, ?, ?)');
-            $insertStmt->bind_param('iiisssd', $patientId, $doctor_id, $department_id, $appointment_date, $appointment_time, $appointment_type, $consultation_fee);
-            if ($insertStmt->execute()) {
-                $_SESSION['appt_success'] = 'Appointment booked successfully!';
-                header('Location: appointments.php');
-                exit;
-            } else {
-                $errors[] = 'Failed to book appointment. Please try again.';
-            }
-            $insertStmt->close();
-        }
-    }
-
-    if (isset($_POST['update_appointment'])) {
+            $updateStmt = $conn->prepare('UPDATE tbl_appointment SET doctor_id=?, department_id=?, appointment_date=?, appointment_time=?, appointment_type=?, consultation_fee=? WHERE appointment_id=?');
         $appointment_id = intval($_POST['appointment_id'] ?? 0);
         $doctor_id = intval($_POST['doctor_id'] ?? 0);
         $department_id = intval($_POST['department_id'] ?? 0);
@@ -364,9 +329,9 @@ foreach ($depts as $d) {
                     <span class="sidebar-link-icon">📋</span>
                     <span class="sidebar-link-text">Medical Records</span>
                 </a>
-                <a href="#" class="sidebar-link" data-tooltip="Prescriptions">
-                    <span class="sidebar-link-icon">💊</span>
-                    <span class="sidebar-link-text">Prescriptions</span>
+                <a href="book_appointment.php" class="sidebar-link" data-tooltip="Book Appointment">
+                    <span class="sidebar-link-icon">➕</span>
+                    <span class="sidebar-link-text">Book Appointment</span>
                 </a>
                 <div class="sidebar-nav-label">Account</div>
                 <a href="profile.php" class="sidebar-link" data-tooltip="My Profile">
@@ -428,9 +393,9 @@ foreach ($depts as $d) {
 
                 <div class="appt-header-actions">
                     <h2 style="font-size: 1.25rem; font-weight: 700;">Your Scheduled Visits</h2>
-                    <button class="btn-book" onclick="openBookModal()">
+                    <a href="book_appointment.php" class="btn-book" style="text-decoration: none;">
                         <span>➕</span> Book New Appointment
-                    </button>
+                    </a>
                 </div>
 
                 <div class="appointment-table-card">
@@ -499,69 +464,6 @@ foreach ($depts as $d) {
                 </div>
             </div>
         </main>
-    </div>
-
-    <!-- ===== BOOK APPOINTMENT MODAL ===== -->
-    <div class="modal" id="bookModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>🏥 Book New Appointment</h3>
-                <button class="modal-close" onclick="closeBookModal()">&times;</button>
-            </div>
-            <form method="POST" action="">
-                <input type="hidden" name="book_appointment" value="1">
-                
-                <div class="form-group">
-                    <label class="form-label" for="book_dept">Select Department *</label>
-                    <select id="book_dept" name="department_id" class="form-input" onchange="filterDoctors('book')" required>
-                        <option value="" disabled selected>Choose Department</option>
-                        <?php foreach ($depts as $d): ?>
-                            <option value="<?php echo $d['department_id']; ?>"><?php echo htmlspecialchars($d['department_name']); ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="book_doc">Select Doctor *</label>
-                    <select id="book_doc" name="doctor_id" class="form-input" onchange="updateFee('book')" required disabled>
-                        <option value="" disabled selected>Choose Doctor</option>
-                    </select>
-                </div>
-
-                <div class="form-group" id="book_schedule_info" style="display:none; background:rgba(255,255,255,0.03); padding:10px 14px; border-radius:6px; border:1px solid var(--border-glass); margin-bottom:15px; font-size:0.82rem; color:var(--text-secondary);">
-                    📅 Doctor Schedule: <span id="book_schedule_text" style="color:var(--accent-light); font-weight:600;"></span>
-                </div>
-
-                <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap:16px;">
-                    <div class="form-group">
-                        <label class="form-label" for="book_date">Date *</label>
-                        <input type="date" id="book_date" name="appointment_date" class="form-input" min="<?php echo date('Y-m-d'); ?>" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label" for="book_time">Time *</label>
-                        <input type="time" id="book_time" name="appointment_time" class="form-input" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Appointment Type *</label>
-                    <select name="appointment_type" class="form-input" required>
-                        <option value="In-Person">In-Person</option>
-                        <option value="Online">Online Consultation</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Consultation Fee</label>
-                    <div class="fee-display" id="book_fee">Rs. 0.00</div>
-                </div>
-
-                <div style="display:flex; gap:12px; margin-top:24px;">
-                    <button type="button" class="btn-auth btn-auth-secondary" style="flex:1;" onclick="closeBookModal()">Cancel</button>
-                    <button type="submit" class="btn-auth btn-auth-primary" style="flex:1;">Confirm Booking</button>
-                </div>
-            </form>
-        </div>
     </div>
 
     <!-- ===== EDIT APPOINTMENT MODAL ===== -->
@@ -658,12 +560,6 @@ foreach ($depts as $d) {
         });
 
         // Modal triggers
-        function openBookModal() {
-            document.getElementById('bookModal').classList.add('show');
-        }
-        function closeBookModal() {
-            document.getElementById('bookModal').classList.remove('show');
-        }
         function openEditModal(apptData) {
             document.getElementById('edit_appt_id').value = apptData.appointment_id;
             
