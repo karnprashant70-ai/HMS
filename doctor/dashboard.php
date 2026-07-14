@@ -36,6 +36,22 @@ if (!empty($_SESSION['login_success'])) {
     $loginSuccess = $_SESSION['login_success'];
     unset($_SESSION['login_success']);
 }
+
+// Fetch doctor stats from database
+$todayStmt = $conn->prepare('SELECT COUNT(*) as count FROM tbl_appointment WHERE doctor_id = ? AND appointment_date = CURRENT_DATE()');
+$todayStmt->bind_param('i', $doctorId);
+$todayStmt->execute();
+$todayRes = $todayStmt->get_result()->fetch_assoc();
+$todayCount = $todayRes ? intval($todayRes['count']) : 0;
+$todayStmt->close();
+
+$patStmt = $conn->prepare('SELECT COUNT(DISTINCT patient_id) as count FROM tbl_appointment WHERE doctor_id = ?');
+$patStmt->bind_param('i', $doctorId);
+$patStmt->execute();
+$patRes = $patStmt->get_result()->fetch_assoc();
+$totalPatientsCount = $patRes ? intval($patRes['count']) : 0;
+$patStmt->close();
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -83,7 +99,7 @@ if (!empty($_SESSION['login_success'])) {
                     <span class="sidebar-link-icon">📊</span>
                     <span class="sidebar-link-text">Dashboard</span>
                 </a>
-                <a href="#" class="sidebar-link" data-tooltip="Appointments">
+                <a href="appointments.php" class="sidebar-link" data-tooltip="Appointments">
                     <span class="sidebar-link-icon">📅</span>
                     <span class="sidebar-link-text">Appointments</span>
                 </a>
@@ -182,17 +198,17 @@ if (!empty($_SESSION['login_success'])) {
                     <div class="stat-card purple">
                         <div class="stat-card-header">
                             <div class="stat-card-icon purple">📅</div>
-                            <span class="stat-card-trend up">+12%</span>
+                            <span class="stat-card-trend up">Today</span>
                         </div>
-                        <div class="stat-card-value">24</div>
+                        <div class="stat-card-value"><?php echo $todayCount; ?></div>
                         <div class="stat-card-label">Today's Appointments</div>
                     </div>
                     <div class="stat-card teal">
                         <div class="stat-card-header">
                             <div class="stat-card-icon teal">🧑</div>
-                            <span class="stat-card-trend up">+5%</span>
+                            <span class="stat-card-trend up">Active</span>
                         </div>
-                        <div class="stat-card-value">182</div>
+                        <div class="stat-card-value"><?php echo $totalPatientsCount; ?></div>
                         <div class="stat-card-label">Total Patients</div>
                     </div>
                     <div class="stat-card orange">
@@ -254,48 +270,48 @@ if (!empty($_SESSION['login_success'])) {
                     </div>
 
                     <!-- Upcoming Appointments -->
+                    <?php
+                    $apptQuery = "SELECT a.*, p.first_name, p.middle_name, p.last_name 
+                                  FROM tbl_appointment a 
+                                  JOIN tbl_patient p ON a.patient_id = p.patient_id 
+                                  WHERE a.doctor_id = ? AND a.appointment_date >= CURRENT_DATE() 
+                                  ORDER BY a.appointment_date ASC, a.appointment_time ASC 
+                                  LIMIT 4";
+                    $apptStmt = $conn->prepare($apptQuery);
+                    $apptStmt->bind_param('i', $doctorId);
+                    $apptStmt->execute();
+                    $apptRes = $apptStmt->get_result();
+                    ?>
                     <div class="card">
                         <div class="card-header">
                             <h3 class="card-title">Upcoming Appointments</h3>
-                            <span class="card-badge">Today</span>
+                            <span class="card-badge">All</span>
                         </div>
                         <div class="appointment-list">
-                            <div class="appointment-item">
-                                <div class="appointment-avatar a1">RK</div>
-                                <div class="appointment-info">
-                                    <div class="appointment-name">Ramesh Kumar</div>
-                                    <div class="appointment-detail">General Checkup</div>
+                            <?php if ($apptRes && $apptRes->num_rows > 0): ?>
+                                <?php while ($appt = $apptRes->fetch_assoc()): 
+                                    $patInitials = strtoupper($appt['first_name'][0] . ($appt['last_name'][0] ?? ''));
+                                    $patFullName = trim($appt['first_name'] . ' ' . $appt['middle_name'] . ' ' . $appt['last_name']);
+                                    $formattedTime = date('h:i A', strtotime($appt['appointment_time']));
+                                    $formattedDate = date('M d', strtotime($appt['appointment_date']));
+                                ?>
+                                    <div class="appointment-item">
+                                        <div class="appointment-avatar" style="background: var(--bg-glass-hover); border: 1px solid var(--border-glass); display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--accent-light);">
+                                            <?php echo htmlspecialchars($patInitials); ?>
+                                        </div>
+                                        <div class="appointment-info">
+                                            <div class="appointment-name"><?php echo htmlspecialchars($patFullName); ?></div>
+                                            <div class="appointment-detail"><?php echo htmlspecialchars($appt['appointment_type']); ?> (<?php echo $formattedDate; ?>)</div>
+                                        </div>
+                                        <div class="appointment-time"><?php echo $formattedTime; ?></div>
+                                        <span class="appointment-status confirmed">Scheduled</span>
+                                    </div>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <div style="padding: 20px; text-align: center; color: var(--text-muted); font-size: 0.88rem;">
+                                    No upcoming appointments scheduled.
                                 </div>
-                                <div class="appointment-time">9:00 AM</div>
-                                <span class="appointment-status confirmed">Confirmed</span>
-                            </div>
-                            <div class="appointment-item">
-                                <div class="appointment-avatar a2">SP</div>
-                                <div class="appointment-info">
-                                    <div class="appointment-name">Sita Poudel</div>
-                                    <div class="appointment-detail">Follow-up Visit</div>
-                                </div>
-                                <div class="appointment-time">10:30 AM</div>
-                                <span class="appointment-status pending">Pending</span>
-                            </div>
-                            <div class="appointment-item">
-                                <div class="appointment-avatar a3">AT</div>
-                                <div class="appointment-info">
-                                    <div class="appointment-name">Ankit Thapa</div>
-                                    <div class="appointment-detail">Lab Results Review</div>
-                                </div>
-                                <div class="appointment-time">11:45 AM</div>
-                                <span class="appointment-status confirmed">Confirmed</span>
-                            </div>
-                            <div class="appointment-item">
-                                <div class="appointment-avatar a4">MG</div>
-                                <div class="appointment-info">
-                                    <div class="appointment-name">Maya Gurung</div>
-                                    <div class="appointment-detail">Consultation</div>
-                                </div>
-                                <div class="appointment-time">2:00 PM</div>
-                                <span class="appointment-status pending">Pending</span>
-                            </div>
+                            <?php endif; $apptStmt->close(); ?>
                         </div>
                     </div>
                 </div>
