@@ -510,7 +510,7 @@ foreach ($depts as $d) {
                 <div class="form-group">
                     <label class="form-label">Appointment Type *</label>
                     <select id="edit_type" name="appointment_type" class="form-input" required>
-                        <option value="In-Person">In-Person</option>
+                        <option value="Physical">Physical (In-Person)</option>
                         <option value="Online">Online Consultation</option>
                     </select>
                 </div>
