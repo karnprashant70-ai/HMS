@@ -90,7 +90,7 @@ if (!empty($_SESSION['login_success'])) {
                     <span class="sidebar-link-icon">📊</span>
                     <span class="sidebar-link-text">Dashboard</span>
                 </a>
-                <a href="#" class="sidebar-link" data-tooltip="Appointments">
+                <a href="appointments.php" class="sidebar-link" data-tooltip="Appointments">
                     <span class="sidebar-link-icon">📅</span>
                     <span class="sidebar-link-text">Appointments</span>
                 </a>
@@ -226,7 +226,7 @@ if (!empty($_SESSION['login_success'])) {
                             <span class="card-badge">Shortcuts</span>
                         </div>
                         <div class="quick-actions-grid">
-                            <a href="#" class="quick-action-card">
+                            <a href="appointments.php" class="quick-action-card">
                                 <div class="quick-action-icon teal">📅</div>
                                 <div class="quick-action-label">Book Appointment</div>
                                 <div class="quick-action-desc">Schedule a visit with a doctor</div>
