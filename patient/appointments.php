@@ -703,7 +703,7 @@ foreach ($depts as $d) {
 
             // Find matching doctors
             const filteredDocs = doctorsData.filter(d => {
-                const mapId = deptNameToIdMap[d.department];
+                const mapId = parseInt(deptNameToIdMap[d.department]);
                 return mapId === selectedDeptId;
             });
 
@@ -724,7 +724,7 @@ foreach ($depts as $d) {
         function updateFee(prefix) {
             const docSelect = document.getElementById(`${prefix}_doc`);
             const selectedDocId = parseInt(docSelect.value);
-            const doctorObj = doctorsData.find(d => d.doctor_id === selectedDocId);
+            const doctorObj = doctorsData.find(d => parseInt(d.doctor_id) === selectedDocId);
 
             if (doctorObj) {
                 const feeFormatted = parseFloat(doctorObj.consultation_fee).toFixed(2);
