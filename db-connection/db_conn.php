@@ -125,4 +125,24 @@ $patientTableSql = "CREATE TABLE IF NOT EXISTS tbl_patient (
 if ($conn->query($patientTableSql) !== TRUE) {
     die("Error creating patient table: " . $conn->error);
 }
+
+// Create tbl_appointment table if not exists
+$appointmentTableSql = "CREATE TABLE IF NOT EXISTS tbl_appointment (
+    appointment_id INT(11) AUTO_INCREMENT PRIMARY KEY,
+    patient_id INT(11) NOT NULL,
+    doctor_id INT(11) NOT NULL,
+    department_id INT(11) NOT NULL,
+    appointment_date DATE NOT NULL,
+    appointment_time TIME NOT NULL,
+    appointment_type VARCHAR(50) NOT NULL,
+    consultation_fee DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (patient_id) REFERENCES tbl_patient(patient_id) ON DELETE CASCADE,
+    FOREIGN KEY (doctor_id) REFERENCES tbl_doctor(doctor_id) ON DELETE CASCADE,
+    FOREIGN KEY (department_id) REFERENCES tbl_department(department_id) ON DELETE CASCADE
+)";
+
+if ($conn->query($appointmentTableSql) !== TRUE) {
+    die("Error creating appointment table: " . $conn->error);
+}
 ?>
