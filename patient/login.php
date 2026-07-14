@@ -50,6 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/main.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/auth/patient-login.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="../css/patient-login.css?v=<?php echo time(); ?>">
 </head>
 <body>
 
@@ -247,14 +248,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
         });
     </script>
 
-    <style>
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-8px); }
-            40% { transform: translateX(8px); }
-            60% { transform: translateX(-4px); }
-            80% { transform: translateX(4px); }
-        }
-    </style>
 </body>
 </html>
