@@ -1,6 +1,6 @@
 <?php
-ini_set('display_errors', '0');
-ini_set('display_startup_errors', '0');
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
 error_reporting(E_ALL);
 ini_set('log_errors', '1');
 ini_set('error_log', __DIR__ . '/register-debug.log');
@@ -27,6 +27,8 @@ $activeStep = 1;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     error_log('register.php POST start');
+    error_log('POST keys: ' . implode(',', array_keys($_POST)));
+    error_log('FILES keys: ' . implode(',', array_keys($_FILES)));
     // Sanitize and collect form data
     $formData['firstName'] = trim($_POST['firstName'] ?? '');
     $formData['middleName'] = trim($_POST['middleName'] ?? '');
@@ -211,15 +213,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
         // Handle file upload (optional)
         $uploadDir = __DIR__ . '/../uploads/doctors/';
         if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0777, true);
+            if (!mkdir($uploadDir, 0777, true)) {
+                error_log('Failed to create upload directory: ' . $uploadDir);
+                $errors['profilePhoto'] = 'Server error: cannot create upload directory.';
+            }
         }
 
         $fileName = '';
         if (isset($_FILES['profilePhoto']) && $_FILES['profilePhoto']['error'] === UPLOAD_ERR_OK) {
+            error_log('Attempting file upload: ' . print_r($_FILES['profilePhoto'], true));
             $fileName = time() . '_' . basename($_FILES['profilePhoto']['name']);
             $targetFilePath = $uploadDir . $fileName;
             if (!move_uploaded_file($_FILES['profilePhoto']['tmp_name'], $targetFilePath)) {
+                error_log('move_uploaded_file failed. tmp_name=' . ($_FILES['profilePhoto']['tmp_name'] ?? ''));
                 $errors['profilePhoto'] = "Failed to upload profile photo.";
+            } else {
+                error_log('File uploaded to: ' . $targetFilePath);
             }
         }
 
@@ -231,6 +240,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             // Check prepare success
             if (!$stmt) {
                 $errors['db'] = 'Database prepare error: ' . $conn->error;
+                error_log('DB prepare failed: ' . $conn->error);
+            } else {
+                error_log('DB prepare OK');
             }
 
             // Prepare variables for bind_param (must be variables, not expressions)
@@ -256,7 +268,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             $b_password = $hashedPassword;
 
             if (empty($errors)) {
+                // Prevent duplicate licence numbers or emails before executing the insert.
+                $dupCheckStmt = $conn->prepare('SELECT doctor_id, email, licence_number FROM tbl_doctor WHERE email = ? OR licence_number = ? LIMIT 1');
+                if ($dupCheckStmt) {
+                    $dupCheckStmt->bind_param('ss', $b_email, $b_licenceNumber);
+                    $dupCheckStmt->execute();
+                    $dupRes = $dupCheckStmt->get_result()->fetch_assoc();
+                    $dupCheckStmt->close();
+                    if ($dupRes) {
+                        if ($dupRes['email'] === $b_email) {
+                            $errors['email'] = 'This email address is already registered.';
+                        }
+                        if ($dupRes['licence_number'] === $b_licenceNumber) {
+                            $errors['licenceNumber'] = 'This NMC registration number is already in use.';
+                        }
+                    }
+                }
+            }
+
+            if (empty($errors)) {
                 $types = str_repeat('s', 14) . 'id' . str_repeat('s', 4);
+                error_log('Bind types: ' . $types);
+                error_log('Bind values preview: ' . json_encode([
+                    'first' => $b_firstName,
+                    'middle' => $b_middleName,
+                    'last' => $b_lastName,
+                    'gender' => $b_gender,
+                    'maritalStatus' => $b_maritalStatus,
+                    'profilePhoto' => $b_profilePhoto,
+                    'phone' => $b_phoneNumber,
+                    'email' => $b_email,
+                    'dept' => $b_department,
+                    'experience' => $b_experience
+                ]));
+
                 if ($stmt->bind_param($types,
                     $b_firstName, $b_middleName, $b_lastName,
                     $b_gender, $b_maritalStatus, $b_profilePhoto,
@@ -266,14 +311,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                     $b_consultationFee, $b_availableTime, $b_status,
                     $b_otp, $b_password
                 )) {
-                    if ($stmt->execute()) {
-                        // Registration successful
-                        $successMessage = 'Registration completed successfully. Redirecting to login...';
-                    } else {
-                        $errors['db'] = "Error inserting data: " . $stmt->error;
+                    error_log('bind_param OK');
+                    try {
+                        if ($stmt->execute()) {
+                            // Registration successful
+                            $successMessage = 'Registration completed successfully. Redirecting to login...';
+                            error_log('Insert executed, insert_id=' . $stmt->insert_id);
+                        }
+                    } catch (mysqli_sql_exception $e) {
+                        error_log('Execute exception: ' . $e->getMessage());
+                        if ($e->getCode() === 1062) {
+                            if (strpos($e->getMessage(), 'licence_number') !== false) {
+                                $errors['licenceNumber'] = 'This NMC registration number is already in use.';
+                            } elseif (strpos($e->getMessage(), 'email') !== false) {
+                                $errors['email'] = 'This email address is already registered.';
+                            } else {
+                                $errors['db'] = 'A duplicate record already exists. Please use a different email or NMC number.';
+                            }
+                        } else {
+                            $errors['db'] = 'Error inserting data: ' . $e->getMessage();
+                        }
                     }
                 } else {
                     $errors['db'] = 'Failed to bind parameters: ' . $stmt->error;
+                    error_log('bind_param failed: ' . $stmt->error);
                 }
             }
             if ($stmt) {
@@ -307,8 +368,8 @@ function errClass($errors, $field) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Doctor Registration | Join MediCare+ Hospital Management Network">
-    <title>Doctor Registration | MediCare+</title>
+    <meta name="description" content="Doctor Registration | Join Medi-Care Hospital Management Network">
+    <title>Doctor Registration | Medi-Care</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -324,7 +385,7 @@ function errClass($errors, $field) {
     <nav class="navbar" id="navbar">
         <a href="../index.php" class="nav-brand">
             <div class="nav-brand-icon">M+</div>
-            <div class="nav-brand-text">Medi<span>Care+</span></div>
+            <div class="nav-brand-text">Medi-<span>Care</span></div>
         </a>
 
         <ul class="nav-links" id="navLinks">
@@ -404,7 +465,7 @@ function errClass($errors, $field) {
             <div class="auth-header">
                 <div class="auth-logo">🩺</div>
                 <h2>Doctor Application</h2>
-                <p>Register to join Medicare+ health network</p>
+                <p>Register to join Medi-Care health network</p>
             </div>
 
             <!-- Step Progress Indicator -->
@@ -694,7 +755,7 @@ function errClass($errors, $field) {
 
     <!-- ===== Footer ===== -->
     <footer class="footer">
-        <p>&copy; <?php echo date('Y'); ?> MediCare+ Hospital Management System. All rights reserved.</p>
+        <p>&copy; <?php echo date('Y'); ?> Medi-Care Hospital Management System. All rights reserved.</p>
     </footer>
 
     <!-- ===== JS LOGIC ===== -->

@@ -50,10 +50,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['book_appointment'])) 
         $consultation_fee = $feeRes ? floatval($feeRes['consultation_fee']) : 0.00;
         $feeStmt->close();
 
-        // Insert appointment
+        // Insert appointment (mark new bookings as Pending)
         try {
-            $insertStmt = $conn->prepare('INSERT INTO tbl_appointment (patient_id, doctor_id, department_id, appointment_date, appointment_time, appointment_type, consultation_fee) VALUES (?, ?, ?, ?, ?, ?, ?)');
-            $insertStmt->bind_param('iiisssd', $patientId, $doctor_id, $department_id, $appointment_date, $appointment_time, $appointment_type, $consultation_fee);
+            $status = 'Pending';
+            $insertStmt = $conn->prepare('INSERT INTO tbl_appointment (patient_id, doctor_id, department_id, appointment_date, appointment_time, appointment_type, status, consultation_fee) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+            $insertStmt->bind_param('iiissssd', $patientId, $doctor_id, $department_id, $appointment_date, $appointment_time, $appointment_type, $status, $consultation_fee);
             if ($insertStmt->execute()) {
                 $_SESSION['appt_success'] = 'Appointment booked successfully!';
                 header('Location: appointments.php');
@@ -97,7 +98,7 @@ foreach ($depts as $d) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Book Appointment | MediCare+</title>
+    <title>Book Appointment | Medi-Care</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -115,7 +116,7 @@ foreach ($depts as $d) {
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-header">
                 <div class="sidebar-logo">🧑‍⚕️</div>
-                <h2 class="sidebar-title">MediCare+</h2>
+                <h2 class="sidebar-title">Medi-Care</h2>
                 <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="15 18 9 12 15 6"></polyline>
@@ -147,7 +148,7 @@ foreach ($depts as $d) {
                     <span class="sidebar-link-icon">👤</span>
                     <span class="sidebar-link-text">My Profile</span>
                 </a>
-                <a href="logout.php" class="sidebar-link" data-tooltip="Logout">
+                <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
                     <span class="sidebar-link-icon">🚪</span>
                     <span class="sidebar-link-text">Logout</span>
                 </a>

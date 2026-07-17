@@ -121,8 +121,8 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Patient Profile | MediCare+ Hospital Management System">
-    <title>My Profile | <?php echo htmlspecialchars($patientName); ?> | MediCare+</title>
+    <meta name="description" content="Patient Profile | Medi-Care Hospital Management System">
+    <title>My Profile | <?php echo htmlspecialchars($patientName); ?> | Medi-Care</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -154,7 +154,7 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
             <!-- Brand -->
             <div class="sidebar-header">
                 <div class="sidebar-brand-icon">M+</div>
-                <div class="sidebar-brand-text">Medi<span>Care+</span></div>
+                <div class="sidebar-brand-text">Medi-<span>Care</span></div>
             </div>
 
             <!-- Navigation -->
@@ -196,7 +196,7 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
                     <span class="sidebar-link-icon">⚙️</span>
                     <span class="sidebar-link-text">Settings</span>
                 </a>
-                <a href="logout.php" class="sidebar-link" data-tooltip="Logout">
+                <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
                     <span class="sidebar-link-icon">🚪</span>
                     <span class="sidebar-link-text">Logout</span>
                 </a>

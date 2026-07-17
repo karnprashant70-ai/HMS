@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MediCare+ Hospital Management System — Streamlined healthcare management for doctors and patients. Register or login to access your dashboard.">
-    <title>MediCare+ | Hospital Management System</title>
+    <meta name="description" content="Medi-Care Hospital Management System — Streamlined healthcare management for doctors and patients. Register or login to access your dashboard.">
+    <title>Medi-Care | Hospital Management System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -19,7 +19,7 @@
     <nav class="navbar" id="navbar">
         <a href="index.php" class="nav-brand">
             <div class="nav-brand-icon">M+</div>
-            <div class="nav-brand-text">Medi<span>Care+</span></div>
+            <div class="nav-brand-text">Medi-<span>Care</span></div>
         </a>
 
         <ul class="nav-links" id="navLinks">
@@ -140,7 +140,7 @@
 
     <!-- ===== FOOTER ===== -->
     <footer class="footer">
-        <p>&copy; <?php echo date('Y'); ?> MediCare+ Hospital Management System. All rights reserved.</p>
+        <p>&copy; <?php echo date('Y'); ?> Medi-Care Hospital Management System. All rights reserved.</p>
     </footer>
 
     <!-- ===== JavaScript ===== -->

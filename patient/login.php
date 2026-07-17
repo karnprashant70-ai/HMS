@@ -12,8 +12,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
 
-    if ($email === '' || $password === '') {
-        $loginError = 'Email and password are required.';
+    if ($email === '' && $password === '') {
+        $loginError = 'Invalid Email and Password.';
+    } elseif ($email === '') {
+        $loginError = 'Invalid Email.';
+    } elseif ($password === '') {
+        $loginError = 'Invalid Password.';
     } else {
         $stmt = $conn->prepare('SELECT patient_id, password, first_name, middle_name, last_name FROM tbl_patient WHERE email = ? LIMIT 1');
         $stmt->bind_param('s', $email);
@@ -28,10 +32,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                 header('Location: dashboard.php');
                 exit;
             } else {
-                $loginError = 'Invalid credentials.';
+                $loginError = 'Invalid Password.';
             }
         } else {
-            $loginError = 'No account found for that email.';
+            $loginError = 'No account found for this email.';
         }
         $stmt->close();
         $conn->close();
@@ -43,8 +47,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Patient Login | MediCare+ Hospital Management System">
-    <title>Patient Login | MediCare+</title>
+    <meta name="description" content="Patient Login | Medi-Care Hospital Management System">
+    <title>Patient Login | Medi-Care</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -61,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     <nav class="navbar" id="navbar">
         <a href="../index.php" class="nav-brand">
             <div class="nav-brand-icon">M+</div>
-            <div class="nav-brand-text">Medi<span>Care+</span></div>
+            <div class="nav-brand-text">Medi-<span>Care</span></div>
         </a>
 
         <ul class="nav-links" id="navLinks">
@@ -170,8 +174,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                     <?php endif; ?>
 
                     <?php if (!empty($loginError)): ?>
-                    <div class="error-banner" style="background: rgba(255, 107, 107, 0.1); border: 1px solid rgba(255, 107, 107, 0.25); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 16px;">
-                        <p style="color: #FF6B6B; font-size: 0.88rem; font-weight: 500; margin: 0;"><?php echo htmlspecialchars($loginError); ?></p>
+                    <div class="alert-box alert-error" id="errorAlert" style="margin-bottom: 1rem;">
+                        <div class="alert-icon">⚠️</div>
+                        <div class="alert-content">
+                            <p style="color: red; font-weight: bold; margin: 0;"><?php echo htmlspecialchars($loginError); ?></p>
+                        </div>
+                        <button type="button" class="alert-close" onclick="this.parentElement.style.display='none'" aria-label="Close alert">&times;</button>
                     </div>
                     <?php endif; ?>
 
@@ -188,7 +196,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
 
     <!-- ===== Footer ===== -->
     <footer class="footer">
-        <p>&copy; <?php echo date('Y'); ?> MediCare+ Hospital Management System. All rights reserved.</p>
+        <p>&copy; <?php echo date('Y'); ?> Medi-Care Hospital Management System. All rights reserved.</p>
     </footer>
 
     <!-- ===== JS LOGIC ===== -->
@@ -232,20 +240,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             passwordToggle.textContent = isPassword ? '🙈' : '👁️';
         });
 
-        // Client-side validation
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
 
-            if (!email || !password) {
-                e.preventDefault();
-                // Shake the card
-                const card = document.getElementById('authCard');
-                card.style.animation = 'none';
-                card.offsetHeight; // trigger reflow
-                card.style.animation = 'shake 0.5s ease';
-            }
-        });
     </script>
 
 </body>

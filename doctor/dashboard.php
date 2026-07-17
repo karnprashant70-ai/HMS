@@ -58,8 +58,8 @@ $patStmt->close();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Doctor Dashboard | MediCare+ Hospital Management System">
-    <title>Dashboard | Dr. <?php echo htmlspecialchars($doctorName); ?> | MediCare+</title>
+    <meta name="description" content="Doctor Dashboard | Medi-Care Hospital Management System">
+    <title>Dashboard | Dr. <?php echo htmlspecialchars($doctorName); ?> | Medi-Care</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -89,7 +89,7 @@ $patStmt->close();
             <!-- Brand -->
             <div class="sidebar-header">
                 <div class="sidebar-brand-icon">M+</div>
-                <div class="sidebar-brand-text">Medi<span>Care+</span></div>
+                <div class="sidebar-brand-text">Medi-<span>Care</span></div>
             </div>
 
             <!-- Navigation -->
@@ -103,7 +103,7 @@ $patStmt->close();
                     <span class="sidebar-link-icon">📅</span>
                     <span class="sidebar-link-text">Appointments</span>
                 </a>
-                <a href="#" class="sidebar-link" data-tooltip="My Patients">
+                <a href="my_patients.php" class="sidebar-link" data-tooltip="My Patients">
                     <span class="sidebar-link-icon">🧑‍🤝‍🧑</span>
                     <span class="sidebar-link-text">My Patients</span>
                 </a>
@@ -135,7 +135,7 @@ $patStmt->close();
                     <span class="sidebar-link-icon">⚙️</span>
                     <span class="sidebar-link-text">Settings</span>
                 </a>
-                <a href="logout.php" class="sidebar-link" data-tooltip="Logout">
+                <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
                     <span class="sidebar-link-icon">🚪</span>
                     <span class="sidebar-link-text">Logout</span>
                 </a>

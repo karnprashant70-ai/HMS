@@ -29,13 +29,20 @@
     box-shadow: 0 0 15px rgba(0, 212, 170, 0.4);
 }
 
+/* Ensure the Book button is clickable above overlays */
+.btn-book {
+    position: relative;
+    z-index: 12000;
+    pointer-events: auto;
+}
+
 /* Table Card */
 .appointment-table-card {
     background: var(--bg-card);
     border: 1px solid var(--border-glass);
     border-radius: var(--radius-lg);
     padding: 24px;
-    overflow-x: auto;
+    overflow-x: visible;
 }
 
 /* Badges */
@@ -44,6 +51,10 @@
     border-radius: 20px;
     font-size: 0.75rem;
     font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
 }
 
 .appt-badge.online {
@@ -58,11 +69,55 @@
     border: 1px solid rgba(108, 99, 255, 0.3);
 }
 
+.status-badge.pending {
+    background: rgba(251, 191, 36, 0.15);
+    color: #F59E0B;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.status-badge.confirmed {
+    background: rgba(34, 197, 94, 0.15);
+    color: #4ADE80;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.status-badge.cancelled {
+    background: rgba(239, 68, 68, 0.1);
+    color: #FCA5A5;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.status-badge.completed {
+    background: rgba(108, 99, 255, 0.15);
+    color: #A5B4FC;
+    border: 1px solid rgba(108, 99, 255, 0.3);
+}
+
 /* Action Buttons */
 .action-btns {
-    display: flex;
+    display: inline-flex;
     gap: 8px;
-    justify-content: flex-end;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+    margin: 0 auto;
+    white-space: nowrap;
+}
+
+.btn-action-edit,
+.btn-action-cancel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+    pointer-events: auto;
+}
+
+.appointment-table-card .admin-table th,
+.appointment-table-card .admin-table td {
+    text-align: center;
+    vertical-align: middle;
 }
 
 .btn-action-edit {
@@ -168,4 +223,117 @@
     color: var(--accent);
     font-weight: 700;
     margin-top: 8px;
+}
+
+/* Dropdown Action Button */
+.dropdown-action-wrapper {
+    position: relative;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.dropdown-action-trigger {
+    background: rgba(108, 99, 255, 0.12);
+    border: 1px solid rgba(108, 99, 255, 0.3);
+    color: var(--primary-light);
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 600;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    z-index: 2;
+    pointer-events: auto;
+    white-space: nowrap;
+}
+
+.dropdown-action-trigger:hover {
+    background: var(--primary);
+    color: white;
+}
+
+.dropdown-action-trigger .arrow-icon {
+    font-size: 0.7rem;
+    transition: transform 0.2s ease;
+}
+
+.dropdown-action-wrapper.open .dropdown-action-trigger .arrow-icon {
+    transform: rotate(180deg);
+}
+
+.dropdown-action-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: rgba(20, 25, 40, 0.98);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-md);
+    padding: 6px;
+    min-width: 180px;
+    z-index: 9999;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+    display: none;
+    animation: dropdownFadeIn 0.15s ease;
+}
+
+.dropdown-action-wrapper.open {
+    z-index: 9999;
+}
+
+.dropdown-action-wrapper.open .dropdown-action-menu {
+    display: block;
+}
+
+@keyframes dropdownFadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-action-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: var(--transition);
+    text-align: left;
+    white-space: nowrap;
+}
+
+.dropdown-action-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.dropdown-action-item.item-reschedule {
+    color: var(--primary-light);
+}
+
+.dropdown-action-item.item-reschedule:hover {
+    background: rgba(108, 99, 255, 0.15);
+}
+
+.dropdown-action-item.item-cancel {
+    color: #FCA5A5;
+}
+
+.dropdown-action-item.item-cancel:hover {
+    background: rgba(239, 68, 68, 0.15);
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: var(--border-glass);
+    margin: 4px 8px;
 }

@@ -151,7 +151,7 @@ function errClass($errors, $field) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patient Registration | MediCare+</title>
+    <title>Patient Registration | Medi-Care</title>
     <link rel="stylesheet" href="../css/main.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/auth/patient-register.css?v=<?php echo time(); ?>">
 </head>
