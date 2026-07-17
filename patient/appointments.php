@@ -63,11 +63,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $consultation_fee = $feeRes ? floatval($feeRes['consultation_fee']) : 0.00;
                 $feeStmt->close();
 
-                // Update
-                $updateStmt = $conn->prepare('UPDATE tbl_appointment SET doctor_id = ?, department_id = ?, appointment_date = ?, appointment_time = ?, appointment_type = ?, consultation_fee = ? WHERE appointment_id = ?');
-                $updateStmt->bind_param('iisssdi', $doctor_id, $department_id, $appointment_date, $appointment_time, $appointment_type, $consultation_fee, $appointment_id);
+                // Update with reschedule note for doctor and revert status to Pending
+                $rescheduleNote = 'Patient requested reschedule on ' . date('M d, Y \a\t h:i A');
+                $pendingStatus = 'Pending';
+                $updateStmt = $conn->prepare('UPDATE tbl_appointment SET doctor_id = ?, department_id = ?, appointment_date = ?, appointment_time = ?, appointment_type = ?, consultation_fee = ?, reschedule_note = ?, status = ? WHERE appointment_id = ?');
+                $updateStmt->bind_param('iisssdssi', $doctor_id, $department_id, $appointment_date, $appointment_time, $appointment_type, $consultation_fee, $rescheduleNote, $pendingStatus, $appointment_id);
                 if ($updateStmt->execute()) {
-                    $_SESSION['appt_success'] = 'Appointment rescheduled successfully!';
+                    $_SESSION['appt_success'] = 'Appointment rescheduled successfully! It is now Pending doctor confirmation.';
                     header('Location: appointments.php');
                     exit;
                 } else {
@@ -142,7 +144,7 @@ foreach ($depts as $d) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Appointments | MediCare+</title>
+    <title>My Appointments | Medi-Care</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -167,7 +169,7 @@ foreach ($depts as $d) {
             </button>
             <div class="sidebar-header">
                 <div class="sidebar-brand-icon">M+</div>
-                <div class="sidebar-brand-text">Medi<span>Care+</span></div>
+                <div class="sidebar-brand-text">Medi-<span>Care</span></div>
             </div>
             <nav class="sidebar-nav">
                 <div class="sidebar-nav-label">Main</div>
@@ -192,7 +194,7 @@ foreach ($depts as $d) {
                     <span class="sidebar-link-icon">👤</span>
                     <span class="sidebar-link-text">My Profile</span>
                 </a>
-                <a href="logout.php" class="sidebar-link" data-tooltip="Logout">
+                <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
                     <span class="sidebar-link-icon">🚪</span>
                     <span class="sidebar-link-text">Logout</span>
                 </a>
@@ -252,7 +254,25 @@ foreach ($depts as $d) {
                     </a>
                 </div>
 
-                <div class="appointment-table-card">
+                <?php
+                $stmt = $conn->prepare("SELECT a.*, d.first_name, d.middle_name, d.last_name, dept.department_name 
+                                        FROM tbl_appointment a
+                                        JOIN tbl_doctor d ON a.doctor_id = d.doctor_id
+                                        JOIN tbl_department dept ON a.department_id = dept.department_id
+                                        WHERE a.patient_id = ?
+                                        ORDER BY a.appointment_date DESC, a.appointment_time DESC");
+                $stmt->bind_param('i', $patientId);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                $count = $result ? $result->num_rows : 0;
+                $stmt->close();
+                ?>
+
+                <div class="appointment-table-card" style="margin-bottom: 24px;">
+                    <div class="card-header" style="margin-bottom: 16px;">
+                        <h3 class="card-title">All Appointments</h3>
+                        <span class="card-badge"><?php echo $count; ?> record<?php echo $count !== 1 ? 's' : ''; ?></span>
+                    </div>
                     <table class="admin-table" style="margin-top: 0;">
                         <thead>
                             <tr>
@@ -263,56 +283,69 @@ foreach ($depts as $d) {
                                 <th>Time</th>
                                 <th>Type</th>
                                 <th>Fee</th>
-                                <th style="text-align: right;">Actions</th>
+                                <th>Status</th>
+                                <th style="text-align: center;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php
-                            $query = "SELECT a.*, d.first_name, d.middle_name, d.last_name, dept.department_name 
-                                      FROM tbl_appointment a
-                                      JOIN tbl_doctor d ON a.doctor_id = d.doctor_id
-                                      JOIN tbl_department dept ON a.department_id = dept.department_id
-                                      WHERE a.patient_id = ?
-                                      ORDER BY a.appointment_date ASC, a.appointment_time ASC";
-                            $stmt = $conn->prepare($query);
-                            $stmt->bind_param('i', $patientId);
-                            $stmt->execute();
-                            $apptRes = $stmt->get_result();
-
-                            if ($apptRes && $apptRes->num_rows > 0):
-                                while ($row = $apptRes->fetch_assoc()):
+                            <?php if ($count > 0): 
+                                while ($row = $result->fetch_assoc()):
                                     $docName = trim($row['first_name'] . ' ' . $row['middle_name'] . ' ' . $row['last_name']);
-                            ?>
-                                    <tr>
-                                        <td>#<?php echo $row['appointment_id']; ?></td>
-                                        <td><strong>Dr. <?php echo htmlspecialchars($docName); ?></strong></td>
-                                        <td><?php echo htmlspecialchars($row['department_name']); ?></td>
-                                        <td><?php echo date('M d, Y', strtotime($row['appointment_date'])); ?></td>
-                                        <td><?php echo date('h:i A', strtotime($row['appointment_time'])); ?></td>
-                                        <td>
-                                            <span class="appt-badge <?php echo strtolower($row['appointment_type']) === 'online' ? 'online' : 'in-person'; ?>">
-                                                <?php echo htmlspecialchars($row['appointment_type']); ?>
-                                            </span>
-                                        </td>
-                                        <td><span style="color: var(--accent); font-weight:600;">Rs. <?php echo number_format($row['consultation_fee'], 2); ?></span></td>
-                                        <td>
-                                            <div class="action-btns">
-                                                <button class="btn-action-edit" onclick='openEditModal(<?php echo json_encode($row); ?>)'>Reschedule</button>
-                                                <form method="POST" action="" style="display:inline;" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
-                                                    <input type="hidden" name="appointment_id" value="<?php echo $row['appointment_id']; ?>">
-                                                    <button type="submit" name="delete_appointment" value="1" class="btn-action-cancel">Cancel</button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                            <?php
-                                endwhile;
-                            else:
+                                    $status = $row['status'];
+                                    $statusLower = strtolower($status);
                             ?>
                                 <tr>
-                                    <td colspan="8" class="no-records">No appointments scheduled yet. Book one today!</td>
+                                    <td>#<?php echo $row['appointment_id']; ?></td>
+                                    <td><strong>Dr. <?php echo htmlspecialchars($docName); ?></strong></td>
+                                    <td><?php echo htmlspecialchars($row['department_name']); ?></td>
+                                    <td><?php echo date('M d, Y', strtotime($row['appointment_date'])); ?></td>
+                                    <td><?php echo date('h:i A', strtotime($row['appointment_time'])); ?></td>
+                                    <td>
+                                        <span class="appt-badge <?php echo strtolower($row['appointment_type']) === 'online' ? 'online' : 'in-person'; ?>">
+                                            <?php echo htmlspecialchars($row['appointment_type']); ?>
+                                        </span>
+                                    </td>
+                                    <td><span style="color: var(--accent); font-weight:600;">Rs. <?php echo number_format($row['consultation_fee'], 2); ?></span></td>
+                                    <td>
+                                        <span class="appt-badge status-badge <?php echo $statusLower; ?>">
+                                            <?php echo htmlspecialchars($status); ?>
+                                        </span>
+                                    </td>
+                                    <td style="text-align: center;">
+                                        <?php if ($status === 'Pending' || $status === 'Confirmed'): ?>
+                                            <div class="dropdown-action-wrapper">
+                                                <button type="button" class="dropdown-action-trigger" onclick="toggleDropdown(this)">
+                                                    Actions <span class="arrow-icon">▼</span>
+                                                </button>
+                                                <div class="dropdown-action-menu">
+                                                    <button type="button"
+                                                            class="dropdown-action-item item-reschedule"
+                                                            data-appt-id="<?php echo (int)$row['appointment_id']; ?>"
+                                                            data-dept-id="<?php echo (int)$row['department_id']; ?>"
+                                                            data-doctor-id="<?php echo (int)$row['doctor_id']; ?>"
+                                                            data-date="<?php echo htmlspecialchars($row['appointment_date']); ?>"
+                                                            data-time="<?php echo htmlspecialchars($row['appointment_time']); ?>"
+                                                            data-type="<?php echo htmlspecialchars($row['appointment_type']); ?>"
+                                                            onclick="openEditModal(this)">📅 Reschedule</button>
+                                                    <form method="POST" action="" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
+                                                        <input type="hidden" name="appointment_id" value="<?php echo $row['appointment_id']; ?>">
+                                                        <button type="submit" name="delete_appointment" value="1" class="dropdown-action-item item-cancel">✕ Cancel</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        <?php else: ?>
+                                            <span style="color: var(--text-muted); font-size: 0.82rem;">—</span>
+                                        <?php endif; ?>
+                                    </td>
                                 </tr>
-                            <?php endif; $stmt->close(); ?>
+                            <?php 
+                                endwhile; 
+                            else: 
+                            ?>
+                                <tr>
+                                    <td colspan="9" class="no-records">No appointments found.</td>
+                                </tr>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
@@ -414,32 +447,54 @@ foreach ($depts as $d) {
         });
 
         // Modal triggers
-        function openEditModal(apptData) {
-            document.getElementById('edit_appt_id').value = apptData.appointment_id;
-            
-            const deptId = apptData.department_id;
-            document.getElementById('edit_dept').value = deptId;
-            
+        function openEditModal(button) {
+            const apptData = button.dataset || {};
+
+            document.getElementById('edit_appt_id').value = apptData.apptId || '';
+            document.getElementById('edit_dept').value = apptData.deptId || '';
+
             // Re-filter doctors for edit modal
             filterDoctors('edit');
-            
-            document.getElementById('edit_doc').value = apptData.doctor_id;
-            document.getElementById('edit_date').value = apptData.appointment_date;
-            
+
+            const doctorSelect = document.getElementById('edit_doc');
+            doctorSelect.value = apptData.doctorId || '';
+            document.getElementById('edit_date').value = apptData.date || '';
+
             // Format time correctly to 24h for time input (e.g., '14:30:00' to '14:30')
-            let timeStr = apptData.appointment_time;
+            let timeStr = apptData.time || '';
             if (timeStr.length > 5) {
                 timeStr = timeStr.substring(0, 5);
             }
             document.getElementById('edit_time').value = timeStr;
-            document.getElementById('edit_type').value = apptData.appointment_type;
-            
+            document.getElementById('edit_type').value = apptData.type || 'Physical';
+
             updateFee('edit');
             document.getElementById('editModal').classList.add('show');
         }
         function closeEditModal() {
             document.getElementById('editModal').classList.remove('show');
         }
+
+        function toggleDropdown(trigger) {
+            const wrapper = trigger.parentElement;
+            const isOpen = wrapper.classList.contains('open');
+            
+            document.querySelectorAll('.dropdown-action-wrapper.open').forEach(w => {
+                w.classList.remove('open');
+            });
+            
+            if (!isOpen) {
+                wrapper.classList.add('open');
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown-action-wrapper')) {
+                document.querySelectorAll('.dropdown-action-wrapper.open').forEach(w => {
+                    w.classList.remove('open');
+                });
+            }
+        });
 
         // Dropdown interactive filtering
         function filterDoctors(prefix) {

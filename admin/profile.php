@@ -188,6 +188,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    if ($action === 'update_department') {
+        $deptId = isset($_POST['department_id']) ? intval($_POST['department_id']) : 0;
+        $deptName = isset($_POST['department_name']) ? trim($_POST['department_name']) : '';
+
+        if ($deptId <= 0) {
+            $errors[] = 'Invalid department ID.';
+        } elseif (empty($deptName)) {
+            $errors[] = 'Department name is required.';
+        } elseif (strlen($deptName) < 2) {
+            $errors[] = 'Department name must be at least 2 characters.';
+        } elseif (strlen($deptName) > 100) {
+            $errors[] = 'Department name must not exceed 100 characters.';
+        } else {
+            // Check if another department has the same name
+            $checkDept = $conn->prepare("SELECT department_id FROM tbl_department WHERE department_name = ? AND department_id != ?");
+            $checkDept->bind_param("si", $deptName, $deptId);
+            $checkDept->execute();
+            if ($checkDept->get_result()->num_rows > 0) {
+                $errors[] = 'Another department with this name already exists.';
+            }
+            $checkDept->close();
+        }
+
+        if (empty($errors)) {
+            $updateDept = $conn->prepare("UPDATE tbl_department SET department_name = ? WHERE department_id = ?");
+            $updateDept->bind_param("si", $deptName, $deptId);
+            if ($updateDept->execute()) {
+                $success = 'Department updated successfully!';
+            } else {
+                $errors[] = 'Failed to update department: ' . $conn->error;
+            }
+            $updateDept->close();
+        }
+    }
+
     if ($action === 'update_consultation_fee') {
         $doctorId = isset($_POST['doctor_id']) ? intval($_POST['doctor_id']) : 0;
         $fee = isset($_POST['consultation_fee']) ? floatval($_POST['consultation_fee']) : 0.00;
@@ -221,8 +256,8 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="MediCare+ Admin Profile — Manage your admin account settings.">
-    <title>Admin Profile | MediCare+</title>
+    <meta name="description" content="Medi-Care Admin Profile — Manage your admin account settings.">
+    <title>Admin Profile | Medi-Care</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -239,11 +274,11 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
     <nav class="navbar scrolled" id="navbar">
         <a href="../index.php" class="nav-brand">
             <div class="nav-brand-icon">M+</div>
-            <div class="nav-brand-text">Medi<span>Care+</span></div>
+            <div class="nav-brand-text">Medi-<span>Care</span></div>
         </a>
         <ul class="nav-links" id="navLinks">
             <li><a href="../index.php" class="nav-link">Home</a></li>
-            <li><a href="logout.php" class="nav-link nav-link-logout">Logout</a></li>
+            <li><a href="logout.php" class="nav-link nav-link-logout" onclick="return confirm('Are you sure you want to logout?');">Logout</a></li>
         </ul>
     </nav>
 
@@ -470,11 +505,21 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
                                                 <td>#<?php echo $dept['department_id']; ?></td>
                                                 <td><strong><?php echo htmlspecialchars($dept['department_name']); ?></strong></td>
                                                 <td style="text-align: right;">
-                                                   <form method="POST" action="" class="dept-action-form" onsubmit="return confirmDelete(event);">
-    <input type="hidden" name="action" value="delete_department">
-    <input type="hidden" name="department_id" value="<?php echo $dept['department_id']; ?>">
-    <button type="submit" class="btn-delete-dept">🗑️ Delete</button>
-</form>
+                                                    <div class="dropdown-action-wrapper">
+                                                        <button type="button" class="dropdown-action-trigger" onclick="toggleDropdown(this)">
+                                                            Actions <span class="arrow-icon">▼</span>
+                                                        </button>
+                                                        <div class="dropdown-action-menu">
+                                                            <button type="button" class="dropdown-action-item item-edit" onclick="openUpdateDeptModal(<?php echo $dept['department_id']; ?>, '<?php echo htmlspecialchars(addslashes($dept['department_name'])); ?>')">
+                                                                ✏️ Edit
+                                                            </button>
+                                                            <form method="POST" action="" class="dept-action-form" onsubmit="return confirmDelete(event);">
+                                                                <input type="hidden" name="action" value="delete_department">
+                                                                <input type="hidden" name="department_id" value="<?php echo $dept['department_id']; ?>">
+                                                                <button type="submit" class="dropdown-action-item item-delete">🗑️ Delete</button>
+                                                            </form>
+                                                        </div>
+                                                    </div>
                                                 </td>
                                             </tr>
                                     <?php
@@ -565,8 +610,35 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
 
     <!-- ===== FOOTER ===== -->
     <footer class="footer">
-        <p>&copy; <?php echo date('Y'); ?> MediCare+ Hospital Management System. All rights reserved.</p>
+        <p>&copy; <?php echo date('Y'); ?> Medi-Care Hospital Management System. All rights reserved.</p>
     </footer>
+
+    <!-- Edit Department Modal -->
+    <div id="updateDeptModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>✏️ Edit Department</h3>
+                <button type="button" class="modal-close" onclick="closeUpdateDeptModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="">
+                    <input type="hidden" name="action" value="update_department">
+                    <input type="hidden" name="department_id" id="update_dept_id">
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="update_dept_name">Department Name</label>
+                        <input type="text" class="form-input" id="update_dept_name" name="department_name" required>
+                    </div>
+                    
+                    <div class="form-actions" style="margin-top: 20px;">
+                        <button type="submit" class="btn-auth btn-auth-primary" style="width: 100%;">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <script>
         // Navbar scroll
@@ -587,15 +659,12 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
 
         // Tab Switching Logic
         function switchTab(tabId) {
-            // Hide all tab contents
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.remove('active');
             });
-            // Deactivate all tab buttons
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            // Show selected content and activate button
             const selectedContent = document.getElementById('tab-' + tabId);
             const selectedBtn = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
             if (selectedContent && selectedBtn) {
@@ -613,7 +682,51 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
 
         function confirmDelete(event) {
             return confirm("Are you sure to delete this department?");
-        } 
+        }
+
+        // Dropdown toggle logic
+        function toggleDropdown(trigger) {
+            const wrapper = trigger.closest('.dropdown-action-wrapper');
+            const wasOpen = wrapper.classList.contains('open');
+            closeDropdowns();
+            if (!wasOpen) {
+                wrapper.classList.add('open');
+            }
+        }
+
+        function closeDropdowns() {
+            document.querySelectorAll('.dropdown-action-wrapper.open').forEach(el => {
+                el.classList.remove('open');
+            });
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown-action-wrapper')) {
+                closeDropdowns();
+            }
+        });
+
+        // Edit Department Modal Logic
+        const updateDeptModal = document.getElementById('updateDeptModal');
+        const updateDeptIdInput = document.getElementById('update_dept_id');
+        const updateDeptNameInput = document.getElementById('update_dept_name');
+
+        function openUpdateDeptModal(id, name) {
+            updateDeptIdInput.value = id;
+            updateDeptNameInput.value = name;
+            updateDeptModal.classList.add('show');
+            closeDropdowns();
+        }
+
+        function closeUpdateDeptModal() {
+            updateDeptModal.classList.remove('show');
+        }
+
+        window.addEventListener('click', (e) => {
+            if (e.target === updateDeptModal) {
+                closeUpdateDeptModal();
+            }
+        });
     </script>
 
 </body>

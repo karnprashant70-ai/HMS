@@ -65,6 +65,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reschedule_appointmen
     }
 }
 
+// Handle appointment action by Doctor (confirm or decline)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    $appointment_id = intval($_POST['appointment_id'] ?? 0);
+    $action = $_POST['action'] ?? '';
+    $validActions = ['confirm', 'cancel', 'acknowledge_reschedule'];
+
+    if ($appointment_id <= 0 || !in_array($action, $validActions, true)) {
+        $errors[] = 'Invalid appointment action.';
+    } else {
+        $checkStmt = $conn->prepare('SELECT doctor_id, status FROM tbl_appointment WHERE appointment_id = ? LIMIT 1');
+        $checkStmt->bind_param('i', $appointment_id);
+        $checkStmt->execute();
+        $checkRes = $checkStmt->get_result()->fetch_assoc();
+        $checkStmt->close();
+
+        if ($checkRes && intval($checkRes['doctor_id']) === $doctorId) {
+            if ($action === 'acknowledge_reschedule') {
+                // Clear the reschedule note
+                $ackStmt = $conn->prepare('UPDATE tbl_appointment SET reschedule_note = NULL WHERE appointment_id = ?');
+                $ackStmt->bind_param('i', $appointment_id);
+                if ($ackStmt->execute()) {
+                    $_SESSION['appt_success'] = 'Reschedule notification acknowledged.';
+                    header('Location: appointments.php');
+                    exit;
+                } else {
+                    $errors[] = 'Failed to acknowledge reschedule.';
+                }
+                $ackStmt->close();
+            } else {
+                $newStatus = $action === 'confirm' ? 'Confirmed' : 'Cancelled';
+                if ($checkRes['status'] === $newStatus) {
+                    $errors[] = 'Appointment is already ' . strtolower($newStatus) . '.';
+                } else {
+                    $statusStmt = $conn->prepare('UPDATE tbl_appointment SET status = ?, reschedule_note = NULL WHERE appointment_id = ?');
+                    $statusStmt->bind_param('si', $newStatus, $appointment_id);
+                    if ($statusStmt->execute()) {
+                        $_SESSION['appt_success'] = 'Appointment ' . ($action === 'confirm' ? 'confirmed' : 'declined') . ' successfully.';
+                        header('Location: appointments.php');
+                        exit;
+                    } else {
+                        $errors[] = 'Failed to update appointment status.';
+                    }
+                    $statusStmt->close();
+                }
+            }
+        } else {
+            $errors[] = 'Access denied or invalid appointment.';
+        }
+    }
+}
+
 if (!empty($_SESSION['appt_success'])) {
     $successMessage = $_SESSION['appt_success'];
     unset($_SESSION['appt_success']);
@@ -75,7 +126,7 @@ if (!empty($_SESSION['appt_success'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patient Appointments | Dr. <?php echo htmlspecialchars($doctorName); ?> | MediCare+</title>
+    <title>Patient Appointments | Dr. <?php echo htmlspecialchars($doctorName); ?> | Medi-Care</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -99,7 +150,7 @@ if (!empty($_SESSION['appt_success'])) {
             </button>
             <div class="sidebar-header">
                 <div class="sidebar-brand-icon">M+</div>
-                <div class="sidebar-brand-text">Medi<span>Care+</span></div>
+                <div class="sidebar-brand-text">Medi-<span>Care</span></div>
             </div>
             <nav class="sidebar-nav">
                 <div class="sidebar-nav-label">Main</div>
@@ -111,7 +162,7 @@ if (!empty($_SESSION['appt_success'])) {
                     <span class="sidebar-link-icon">📅</span>
                     <span class="sidebar-link-text">Appointments</span>
                 </a>
-                <a href="#" class="sidebar-link" data-tooltip="My Patients">
+                <a href="my_patients.php" class="sidebar-link" data-tooltip="My Patients">
                     <span class="sidebar-link-icon">🧑‍🤝‍🧑</span>
                     <span class="sidebar-link-text">My Patients</span>
                 </a>
@@ -120,7 +171,7 @@ if (!empty($_SESSION['appt_success'])) {
                     <span class="sidebar-link-icon">👤</span>
                     <span class="sidebar-link-text">My Profile</span>
                 </a>
-                <a href="logout.php" class="sidebar-link" data-tooltip="Logout">
+                <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
                     <span class="sidebar-link-icon">🚪</span>
                     <span class="sidebar-link-text">Logout</span>
                 </a>
@@ -152,56 +203,66 @@ if (!empty($_SESSION['appt_success'])) {
                 </div>
             </header>
 
-            <div class="dashboard-content">
-                <?php if (!empty($errors)): ?>
-                    <div class="error-banner" style="margin-bottom: 20px;">
-                        <?php foreach ($errors as $e): ?>
-                            <p>⚠️ <?php echo htmlspecialchars($e); ?></p>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
+                <div class="dashboard-content">
+                    <?php if (!empty($errors)): ?>
+                        <div class="error-banner" style="margin-bottom: 20px;">
+                            <?php foreach ($errors as $e): ?>
+                                <p>⚠️ <?php echo htmlspecialchars($e); ?></p>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
 
-                <?php if (!empty($successMessage)): ?>
-                    <div class="toast-popup show" style="top: 24px; right: 24px;" id="successAlert">
-                        <div class="toast-icon">✅</div>
-                        <p><?php echo htmlspecialchars($successMessage); ?></p>
-                    </div>
-                    <script>
-                        setTimeout(function() {
-                            document.getElementById('successAlert').classList.remove('show');
-                        }, 3000);
-                    </script>
-                <?php endif; ?>
+                    <?php if (!empty($successMessage)): ?>
+                        <div class="toast-popup show" style="top: 24px; right: 24px;" id="successAlert">
+                            <div class="toast-icon">✅</div>
+                            <p><?php echo htmlspecialchars($successMessage); ?></p>
+                        </div>
+                        <script>
+                            setTimeout(function() {
+                                document.getElementById('successAlert').classList.remove('show');
+                            }, 3000);
+                        </script>
+                    <?php endif; ?>
 
-                <div class="appointment-table-card">
-                    <table class="admin-table" style="margin-top: 0;">
-                        <thead>
-                            <tr>
-                                <th>Appt ID</th>
-                                <th>Patient Name</th>
-                                <th>Date</th>
-                                <th>Time</th>
-                                <th>Type</th>
-                                <th>Consultation Fee</th>
-                                <th style="text-align: right;">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php
-                            $query = "SELECT a.*, p.first_name, p.middle_name, p.last_name 
-                                      FROM tbl_appointment a
-                                      JOIN tbl_patient p ON a.patient_id = p.patient_id
-                                      WHERE a.doctor_id = ?
-                                      ORDER BY a.appointment_date ASC, a.appointment_time ASC";
-                            $stmt = $conn->prepare($query);
-                            $stmt->bind_param('i', $doctorId);
-                            $stmt->execute();
-                            $apptRes = $stmt->get_result();
+                    <?php
+                    $stmt = $conn->prepare("SELECT a.*, p.first_name, p.middle_name, p.last_name 
+                                            FROM tbl_appointment a
+                                            JOIN tbl_patient p ON a.patient_id = p.patient_id
+                                            WHERE a.doctor_id = ?
+                                            ORDER BY a.appointment_date DESC, a.appointment_time DESC");
+                    $stmt->bind_param('i', $doctorId);
+                    $stmt->execute();
+                    $result = $stmt->get_result();
+                    $count = $result ? $result->num_rows : 0;
+                    $stmt->close();
+                    ?>
 
-                            if ($apptRes && $apptRes->num_rows > 0):
-                                while ($row = $apptRes->fetch_assoc()):
-                                    $patName = trim($row['first_name'] . ' ' . $row['middle_name'] . ' ' . $row['last_name']);
-                            ?>
+                    <div class="appointment-table-card" style="margin-bottom: 24px;">
+                        <div class="card-header" style="margin-bottom: 16px;">
+                            <h3 class="card-title">All Appointments</h3>
+                            <span class="card-badge"><?php echo $count; ?> record<?php echo $count !== 1 ? 's' : ''; ?></span>
+                        </div>
+                        <table class="admin-table" style="margin-top: 0;">
+                            <thead>
+                                <tr>
+                                    <th>Appt ID</th>
+                                    <th>Patient Name</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Type</th>
+                                    <th>Consultation Fee</th>
+                                    <th>Status</th>
+                                    <th style="text-align: center;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if ($count > 0): 
+                                    while ($row = $result->fetch_assoc()):
+                                        $patName = trim($row['first_name'] . ' ' . $row['middle_name'] . ' ' . $row['last_name']);
+                                        $status = $row['status'];
+                                        $statusLower = strtolower($status);
+                                        $rescheduleNote = $row['reschedule_note'] ?? null;
+                                ?>
                                     <tr>
                                         <td>#<?php echo $row['appointment_id']; ?></td>
                                         <td><strong><?php echo htmlspecialchars($patName); ?></strong></td>
@@ -213,23 +274,60 @@ if (!empty($_SESSION['appt_success'])) {
                                             </span>
                                         </td>
                                         <td><span style="color: var(--accent); font-weight:600;">Rs. <?php echo number_format($row['consultation_fee'], 2); ?></span></td>
-                                        <td style="text-align: right;">
-                                            <button class="btn-reschedule" onclick='openRescheduleModal(<?php echo json_encode($row); ?>, "<?php echo htmlspecialchars($patName); ?>")'>
-                                                Reschedule
-                                            </button>
+                                        <td>
+                                            <span class="appt-badge status-badge <?php echo $statusLower; ?>">
+                                                <?php echo htmlspecialchars($status); ?>
+                                            </span>
+                                            <?php if (!empty($rescheduleNote)): ?>
+                                                <div class="reschedule-alert" style="margin-top: 6px;">
+                                                    <span class="reschedule-alert-text">🔄 <?php echo htmlspecialchars($rescheduleNote); ?></span>
+                                                    <form method="POST" action="" style="display:inline; margin-left: 6px;">
+                                                        <input type="hidden" name="action" value="acknowledge_reschedule">
+                                                        <input type="hidden" name="appointment_id" value="<?php echo $row['appointment_id']; ?>">
+                                                        <button type="submit" class="reschedule-ack-btn" title="Dismiss">✓ OK</button>
+                                                    </form>
+                                                </div>
+                                            <?php endif; ?>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <div class="dropdown-action-wrapper">
+                                                <button type="button" class="dropdown-action-trigger" onclick="toggleDropdown(this)">
+                                                    Actions <span class="arrow-icon">▼</span>
+                                                </button>
+                                                <div class="dropdown-action-menu">
+                                                    <?php if ($status === 'Pending'): ?>
+                                                        <form method="POST" action="">
+                                                            <input type="hidden" name="action" value="confirm">
+                                                            <input type="hidden" name="appointment_id" value="<?php echo $row['appointment_id']; ?>">
+                                                            <button type="submit" class="dropdown-action-item item-confirm">✓ Confirm</button>
+                                                        </form>
+                                                        <form method="POST" action="">
+                                                            <input type="hidden" name="action" value="cancel">
+                                                            <input type="hidden" name="appointment_id" value="<?php echo $row['appointment_id']; ?>">
+                                                            <button type="submit" class="dropdown-action-item item-decline">✕ Decline</button>
+                                                        </form>
+                                                        <div class="dropdown-divider"></div>
+                                                    <?php endif; ?>
+                                                    <?php if ($status === 'Pending' || $status === 'Confirmed'): ?>
+                                                        <button type="button" class="dropdown-action-item item-reschedule" onclick='openRescheduleModal(<?php echo json_encode($row); ?>, "<?php echo htmlspecialchars($patName); ?>")'>
+                                                            🕒 Reschedule
+                                                        </button>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
                                         </td>
                                     </tr>
-                            <?php
-                                endwhile;
-                            else:
-                            ?>
-                                <tr>
-                                    <td colspan="7" class="no-records">No appointments assigned to you yet.</td>
-                                </tr>
-                            <?php endif; $stmt->close(); ?>
-                        </tbody>
-                    </table>
-                </div>
+                                <?php 
+                                    endwhile; 
+                                else: 
+                                ?>
+                                    <tr>
+                                        <td colspan="8" class="no-records">No appointments found.</td>
+                                    </tr>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
             </div>
         </main>
     </div>
@@ -311,6 +409,27 @@ if (!empty($_SESSION['appt_success'])) {
         function closeRescheduleModal() {
             document.getElementById('rescheduleModal').classList.remove('show');
         }
+
+        function toggleDropdown(trigger) {
+            const wrapper = trigger.parentElement;
+            const isOpen = wrapper.classList.contains('open');
+            
+            document.querySelectorAll('.dropdown-action-wrapper.open').forEach(w => {
+                w.classList.remove('open');
+            });
+            
+            if (!isOpen) {
+                wrapper.classList.add('open');
+            }
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown-action-wrapper')) {
+                document.querySelectorAll('.dropdown-action-wrapper.open').forEach(w => {
+                    w.classList.remove('open');
+                });
+            }
+        });
     </script>
 </body>
 </html>

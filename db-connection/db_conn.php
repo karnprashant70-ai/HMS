@@ -136,6 +136,7 @@ $appointmentTableSql = "CREATE TABLE IF NOT EXISTS tbl_appointment (
     appointment_time TIME NOT NULL,
     appointment_type VARCHAR(50) NOT NULL,
     consultation_fee DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    status ENUM('Pending', 'Confirmed', 'Cancelled', 'Completed') NOT NULL DEFAULT 'Pending',
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (patient_id) REFERENCES tbl_patient(patient_id) ON DELETE CASCADE,
     FOREIGN KEY (doctor_id) REFERENCES tbl_doctor(doctor_id) ON DELETE CASCADE,
@@ -144,5 +145,23 @@ $appointmentTableSql = "CREATE TABLE IF NOT EXISTS tbl_appointment (
 
 if ($conn->query($appointmentTableSql) !== TRUE) {
     die("Error creating appointment table: " . $conn->error);
+}
+
+// Ensure tbl_appointment has the status column for pending/confirmed tracking.
+$statusColumnCheck = $conn->query("SHOW COLUMNS FROM tbl_appointment LIKE 'status'");
+if ($statusColumnCheck && $statusColumnCheck->num_rows === 0) {
+    $alterStatusSql = "ALTER TABLE tbl_appointment ADD COLUMN status ENUM('Pending','Confirmed','Cancelled','Completed') NOT NULL DEFAULT 'Pending' AFTER appointment_type";
+    if ($conn->query($alterStatusSql) !== TRUE) {
+        die("Error adding status column to tbl_appointment: " . $conn->error);
+    }
+}
+
+// Ensure tbl_appointment has the reschedule_note column for patient reschedule requests.
+$rescheduleNoteCheck = $conn->query("SHOW COLUMNS FROM tbl_appointment LIKE 'reschedule_note'");
+if ($rescheduleNoteCheck && $rescheduleNoteCheck->num_rows === 0) {
+    $alterRescheduleSql = "ALTER TABLE tbl_appointment ADD COLUMN reschedule_note VARCHAR(255) DEFAULT NULL AFTER status";
+    if ($conn->query($alterRescheduleSql) !== TRUE) {
+        die("Error adding reschedule_note column to tbl_appointment: " . $conn->error);
+    }
 }
 ?>
