@@ -42,18 +42,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_profile'])) {
     foreach ($map as $input => $col) {
         if (isset($_POST[$input])) {
             $val = trim($_POST[$input]);
-            $updates[] = "$col = ?";
-            $types .= 's';
-            $values[] = $val;
+            
+            // Only update if a value is provided, otherwise keep existing data
+            if ($val !== '') {
+                $updates[] = "$col = ?";
+                $types .= 's';
+                $values[] = $val;
+            }
         }
-    }
-
-    // Password (optional)
-    if (!empty($_POST['password'])) {
-        $hashed = password_hash($_POST['password'], PASSWORD_DEFAULT);
-        $updates[] = "password = ?";
-        $types .= 's';
-        $values[] = $hashed;
     }
 
     // Handle profile photo upload
@@ -188,18 +184,27 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
                 </a>
 
                 <div class="sidebar-nav-label">Account</div>
-                <a href="profile.php" class="sidebar-link active" data-tooltip="My Profile">
-                    <span class="sidebar-link-icon">👤</span>
-                    <span class="sidebar-link-text">My Profile</span>
-                </a>
-                <a href="#" class="sidebar-link" data-tooltip="Settings">
-                    <span class="sidebar-link-icon">⚙️</span>
-                    <span class="sidebar-link-text">Settings</span>
-                </a>
-                <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
-                    <span class="sidebar-link-icon">🚪</span>
-                    <span class="sidebar-link-text">Logout</span>
-                </a>
+                <details class="sidebar-dropdown" open>
+                    <summary class="sidebar-link" data-tooltip="Settings">
+                        <span class="sidebar-link-icon">⚙️</span>
+                        <span class="sidebar-link-text">Settings</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </summary>
+                    <div class="sidebar-submenu">
+                        <a href="profile.php" class="sidebar-link active" data-tooltip="My Profile">
+                            <span class="sidebar-link-icon">👤</span>
+                            <span class="sidebar-link-text">My Profile</span>
+                        </a>
+                                                <a href="reset_password.php" class="sidebar-link" data-tooltip="Reset Password">
+                            <span class="sidebar-link-icon">🔐</span>
+                            <span class="sidebar-link-text">Reset Password</span>
+                        </a>
+                        <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
+                            <span class="sidebar-link-icon">🚪</span>
+                            <span class="sidebar-link-text">Logout</span>
+                        </a>
+                    </div>
+                </details>
             </nav>
 
             <!-- Footer: Patient Info -->
@@ -262,19 +267,15 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
                     </div>
                     <div class="profile-hero-info">
                         <div class="profile-hero-name"><?php echo htmlspecialchars($patientName); ?></div>
-                        <div class="profile-hero-role"><?php echo htmlspecialchars($patient['occupation'] ?? 'Patient'); ?></div>
+                        <div class="profile-hero-role"><?php echo htmlspecialchars(!empty($patient['occupation']) ? $patient['occupation'] : 'Patient'); ?></div>
                         <div class="profile-hero-meta">
-                            <div class="profile-meta-item">
-                                <span>📧</span> <?php echo htmlspecialchars($patient['email'] ?? '—'); ?>
-                            </div>
-                            <div class="profile-meta-item">
-                                <span>📱</span> <?php echo htmlspecialchars($patient['phone_number'] ?? '—'); ?>
-                            </div>
-                            <div class="profile-meta-item">
-                                <span>📅</span> Member since <?php echo $memberSince; ?>
-                            </div>
+                            <div class="profile-meta-item"><span>📧</span> <?php echo htmlspecialchars(!empty($patient['email']) ? $patient['email'] : '—'); ?></div>
+                            <div class="profile-meta-item"><span>📱</span> <?php echo htmlspecialchars(!empty($patient['phone_number']) ? $patient['phone_number'] : '—'); ?></div>
+                            <div class="profile-meta-item"><span>📅</span> Member since <?php echo $memberSince; ?></div>
+                            <div class="profile-meta-item"><span>🆔</span> ID: PT-<?php echo str_pad($patientId, 5, '0', STR_PAD_LEFT); ?></div>
                         </div>
                     </div>
+                    <div class="profile-status-badge available">● Active</div>
                 </div>
 
                 <!-- Profile Edit Form -->
@@ -289,6 +290,23 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
                                 <div class="profile-section-subtitle">Your basic identity details</div>
                             </div>
                         </div>
+                        <div class="photo-upload-area" style="margin-bottom: 24px;">
+                            <div class="photo-upload-preview" id="photoPreview">
+                                <?php if ($profilePhoto): ?>
+                                    <img src="<?php echo htmlspecialchars($profilePhoto); ?>" alt="Preview" id="previewImg">
+                                <?php else: ?>
+                                    <?php echo $initials; ?>
+                                <?php endif; ?>
+                            </div>
+                            <div class="photo-upload-info">
+                                <p>Upload a profile photo. JPG, PNG or WebP (max 2MB)</p>
+                                <label class="photo-upload-btn">
+                                    📷 Choose Photo
+                                    <input type="file" name="profile_photo" id="profilePhotoInput" accept="image/jpeg,image/png,image/webp,image/gif">
+                                </label>
+                            </div>
+                        </div>
+
                         <div class="profile-form-grid">
                             <div class="profile-form-group">
                                 <label class="profile-form-label" for="first_name">First Name</label>
@@ -318,6 +336,20 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
                             <div class="profile-form-group">
                                 <label class="profile-form-label" for="occupation">Occupation</label>
                                 <input type="text" id="occupation" name="occupation" class="profile-form-input" value="<?php echo htmlspecialchars($patient['occupation'] ?? ''); ?>" placeholder="e.g. Teacher, Engineer, Student">
+                            </div>
+                            <div class="profile-form-group">
+                                <label class="profile-form-label" for="marital_status">Marital Status</label>
+                                <select id="marital_status" name="marital_status" class="profile-form-input">
+                                    <option value="" <?php echo empty($patient['marital_status']) ? 'selected' : ''; ?>>Select Status</option>
+                                    <option value="Single" <?php echo (($patient['marital_status'] ?? '') === 'Single') ? 'selected' : ''; ?>>Single</option>
+                                    <option value="Married" <?php echo (($patient['marital_status'] ?? '') === 'Married') ? 'selected' : ''; ?>>Married</option>
+                                    <option value="Divorced" <?php echo (($patient['marital_status'] ?? '') === 'Divorced') ? 'selected' : ''; ?>>Divorced</option>
+                                    <option value="Widowed" <?php echo (($patient['marital_status'] ?? '') === 'Widowed') ? 'selected' : ''; ?>>Widowed</option>
+                                </select>
+                            </div>
+                            <div class="profile-form-group">
+                                <label class="profile-form-label">Patient ID</label>
+                                <input type="text" class="profile-form-input" value="PT-<?php echo str_pad($patientId, 5, '0', STR_PAD_LEFT); ?>" disabled>
                             </div>
                         </div>
                     </div>
@@ -351,59 +383,6 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
                         </div>
                     </div>
 
-                    <!-- Section 3: Account & Security -->
-                    <div class="profile-section">
-                        <div class="profile-section-header">
-                            <div class="profile-section-icon orange">🔒</div>
-                            <div>
-                                <div class="profile-section-title">Account & Security</div>
-                                <div class="profile-section-subtitle">Manage your account settings and photo</div>
-                            </div>
-                        </div>
-                        <div class="profile-form-grid">
-                            <div class="profile-form-group">
-                                <label class="profile-form-label" for="marital_status">Marital Status</label>
-                                <select id="marital_status" name="marital_status" class="profile-form-input">
-                                    <option value="" <?php echo empty($patient['marital_status']) ? 'selected' : ''; ?>>Select Status</option>
-                                    <option value="Single" <?php echo (($patient['marital_status'] ?? '') === 'Single') ? 'selected' : ''; ?>>Single</option>
-                                    <option value="Married" <?php echo (($patient['marital_status'] ?? '') === 'Married') ? 'selected' : ''; ?>>Married</option>
-                                    <option value="Divorced" <?php echo (($patient['marital_status'] ?? '') === 'Divorced') ? 'selected' : ''; ?>>Divorced</option>
-                                    <option value="Widowed" <?php echo (($patient['marital_status'] ?? '') === 'Widowed') ? 'selected' : ''; ?>>Widowed</option>
-                                </select>
-                            </div>
-                            <div class="profile-form-group">
-                                <label class="profile-form-label">Patient ID</label>
-                                <input type="text" class="profile-form-input" value="PT-<?php echo str_pad($patientId, 5, '0', STR_PAD_LEFT); ?>" disabled>
-                            </div>
-                            <div class="profile-form-group full-width">
-                                <label class="profile-form-label">Profile Photo</label>
-                                <div class="photo-upload-area">
-                                    <div class="photo-upload-preview" id="photoPreview">
-                                        <?php if ($profilePhoto): ?>
-                                            <img src="<?php echo htmlspecialchars($profilePhoto); ?>" alt="Photo" id="previewImg">
-                                        <?php else: ?>
-                                            <?php echo $initials; ?>
-                                        <?php endif; ?>
-                                    </div>
-                                    <div class="photo-upload-info">
-                                        <p>Upload a profile photo. JPG, PNG or WebP (max 2MB)</p>
-                                        <label class="photo-upload-btn">
-                                            📷 Choose Photo
-                                            <input type="file" name="profile_photo" id="profilePhotoInput" accept="image/jpeg,image/png,image/webp,image/gif">
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="profile-form-group">
-                                <label class="profile-form-label" for="password">New Password</label>
-                                <input type="password" id="password" name="password" class="profile-form-input" placeholder="Leave blank to keep current">
-                            </div>
-                            <div class="profile-form-group">
-                                <label class="profile-form-label" for="confirm_password">Confirm New Password</label>
-                                <input type="password" id="confirm_password" name="confirm_password" class="profile-form-input" placeholder="Re-enter new password">
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Save Actions -->
                     <div class="profile-save-bar">
@@ -470,18 +449,6 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
                     photoPreview.innerHTML = '<img src="' + e.target.result + '" alt="Preview" id="previewImg">';
                 };
                 reader.readAsDataURL(this.files[0]);
-            }
-        });
-
-        // --- Password Confirmation Validation ---
-        document.getElementById('profileForm').addEventListener('submit', function(e) {
-            const pw = document.getElementById('password').value;
-            const confirm = document.getElementById('confirm_password').value;
-
-            if (pw && pw !== confirm) {
-                e.preventDefault();
-                alert('Passwords do not match. Please check and try again.');
-                document.getElementById('confirm_password').focus();
             }
         });
     </script>

@@ -48,18 +48,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_profile'])) {
     foreach ($map as $input => $col) {
         if (isset($_POST[$input])) {
             $val = trim($_POST[$input]);
-            $updates[] = "$col = ?";
-            $types .= 's';
-            $values[] = $val;
+            
+            // Only update if a value is provided, otherwise keep existing data
+            if ($val !== '') {
+                $updates[] = "$col = ?";
+                $types .= 's';
+                $values[] = $val;
+            }
         }
-    }
-
-    // Password (optional)
-    if (!empty($_POST['password'])) {
-        $hashed = password_hash($_POST['password'], PASSWORD_DEFAULT);
-        $updates[] = "password = ?";
-        $types .= 's';
-        $values[] = $hashed;
     }
 
     // Handle profile photo upload
@@ -197,18 +193,27 @@ $department = $doctor['department'] ?? 'General';
                 </a>
 
                 <div class="sidebar-nav-label">Account</div>
-                <a href="profile.php" class="sidebar-link active" data-tooltip="My Profile">
-                    <span class="sidebar-link-icon">👤</span>
-                    <span class="sidebar-link-text">My Profile</span>
-                </a>
-                <a href="#" class="sidebar-link" data-tooltip="Settings">
-                    <span class="sidebar-link-icon">⚙️</span>
-                    <span class="sidebar-link-text">Settings</span>
-                </a>
-                <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
-                    <span class="sidebar-link-icon">🚪</span>
-                    <span class="sidebar-link-text">Logout</span>
-                </a>
+                <details class="sidebar-dropdown" open>
+                    <summary class="sidebar-link" data-tooltip="Settings">
+                        <span class="sidebar-link-icon">⚙️</span>
+                        <span class="sidebar-link-text">Settings</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </summary>
+                    <div class="sidebar-submenu">
+                        <a href="profile.php" class="sidebar-link active" data-tooltip="My Profile">
+                            <span class="sidebar-link-icon">👤</span>
+                            <span class="sidebar-link-text">My Profile</span>
+                        </a>
+                                                <a href="reset_password.php" class="sidebar-link" data-tooltip="Reset Password">
+                            <span class="sidebar-link-icon">🔐</span>
+                            <span class="sidebar-link-text">Reset Password</span>
+                        </a>
+                        <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
+                            <span class="sidebar-link-icon">🚪</span>
+                            <span class="sidebar-link-text">Logout</span>
+                        </a>
+                    </div>
+                </details>
             </nav>
 
             <div class="sidebar-footer">
@@ -446,31 +451,10 @@ $department = $doctor['department'] ?? 'General';
                         </div>
                     </div>
 
-                    <!-- Section 4: Security -->
-                    <div class="profile-section">
-                        <div class="profile-section-header">
-                            <div class="profile-section-icon pink">🔒</div>
-                            <div>
-                                <div class="profile-section-title">Security</div>
-                                <div class="profile-section-subtitle">Update your password (leave blank to keep current)</div>
-                            </div>
-                        </div>
-                        <div class="profile-form-grid">
-                            <div class="profile-form-group">
-                                <label class="profile-form-label">New Password</label>
-                                <input class="profile-form-input" type="password" name="password" placeholder="••••••••" autocomplete="new-password">
-                            </div>
-                            <div class="profile-form-group">
-                                <label class="profile-form-label">Confirm Password</label>
-                                <input class="profile-form-input" type="password" id="confirmPassword" placeholder="••••••••" autocomplete="new-password">
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Save Bar -->
                     <div class="profile-save-bar">
                         <a href="dashboard.php" class="btn-profile-cancel">Cancel</a>
-                        <button type="submit" name="save_profile" class="btn-profile-save">
+                        <button type="submit" name="save_profile" value="1" class="btn-profile-save">
                             💾 Save Changes
                         </button>
                     </div>
