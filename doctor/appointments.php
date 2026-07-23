@@ -167,14 +167,27 @@ if (!empty($_SESSION['appt_success'])) {
                     <span class="sidebar-link-text">My Patients</span>
                 </a>
                 <div class="sidebar-nav-label">Account</div>
-                <a href="profile.php" class="sidebar-link" data-tooltip="My Profile">
-                    <span class="sidebar-link-icon">👤</span>
-                    <span class="sidebar-link-text">My Profile</span>
-                </a>
-                <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
-                    <span class="sidebar-link-icon">🚪</span>
-                    <span class="sidebar-link-text">Logout</span>
-                </a>
+                <details class="sidebar-dropdown">
+                    <summary class="sidebar-link" data-tooltip="Settings">
+                        <span class="sidebar-link-icon">⚙️</span>
+                        <span class="sidebar-link-text">Settings</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </summary>
+                    <div class="sidebar-submenu">
+                        <a href="profile.php" class="sidebar-link" data-tooltip="My Profile">
+                            <span class="sidebar-link-icon">👤</span>
+                            <span class="sidebar-link-text">My Profile</span>
+                        </a>
+                                                <a href="reset_password.php" class="sidebar-link" data-tooltip="Reset Password">
+                            <span class="sidebar-link-icon">🔐</span>
+                            <span class="sidebar-link-text">Reset Password</span>
+                        </a>
+                        <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
+                            <span class="sidebar-link-icon">🚪</span>
+                            <span class="sidebar-link-text">Logout</span>
+                        </a>
+                    </div>
+                </details>
             </nav>
             <div class="sidebar-footer">
                 <div class="sidebar-avatar">
@@ -343,9 +356,9 @@ if (!empty($_SESSION['appt_success'])) {
                 <input type="hidden" name="reschedule_appointment" value="1">
                 <input type="hidden" id="edit_appt_id" name="appointment_id">
                 
-                <div style="background:rgba(255,255,255,0.02); border: 1px solid var(--border-glass); padding: 14px; border-radius: 8px; margin-bottom: 20px; font-size: 0.88rem;">
+                <div style="background:rgba(0,0,0,0.02); border: 1px solid var(--border-glass); padding: 14px; border-radius: 8px; margin-bottom: 20px; font-size: 0.88rem;">
                     <p style="color:var(--text-secondary);">Patient: <strong id="patient_name_text" style="color:var(--text-primary);"></strong></p>
-                    <p style="color:var(--text-secondary); margin-top:6px;">Your Schedule: <strong style="color:var(--accent-light);"><?php echo htmlspecialchars($doctor['available_time'] ?: 'Not configured'); ?></strong></p>
+                    <p style="color:var(--text-secondary); margin-top:6px;">Your Schedule: <strong style="color:var(--accent);"><?php echo htmlspecialchars($doctor['available_time'] ?: 'Not configured'); ?></strong></p>
                 </div>
 
                 <div class="form-group">

@@ -19,7 +19,7 @@
     left: 0;
     right: 0;
     height: 100px;
-    background: linear-gradient(135deg, rgba(108, 99, 255, 0.15), rgba(0, 212, 170, 0.1));
+    background: linear-gradient(135deg, rgba(91, 84, 224, 0.08), rgba(0, 184, 148, 0.04));
     z-index: 0;
 }
 
@@ -36,8 +36,8 @@
     color: white;
     flex-shrink: 0;
     z-index: 1;
-    border: 4px solid var(--bg-dark);
-    box-shadow: 0 8px 24px rgba(108, 99, 255, 0.25);
+    border: 4px solid #FFFFFF;
+    box-shadow: 0 8px 24px rgba(91, 84, 224, 0.1);
     overflow: hidden;
 }
 
@@ -142,7 +142,7 @@
     flex-shrink: 0;
 }
 
-.profile-section-icon.purple { background: rgba(108, 99, 255, 0.15); }
+.profile-section-icon.purple { background: rgba(91, 84, 224, 0.15); }
 .profile-section-icon.teal { background: rgba(0, 212, 170, 0.15); }
 .profile-section-icon.orange { background: rgba(255, 140, 66, 0.15); }
 .profile-section-icon.pink { background: rgba(255, 107, 138, 0.15); }
@@ -185,7 +185,7 @@
 .profile-form-input {
     width: 100%;
     padding: 11px 14px;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(0, 0, 0, 0.02);
     border: 1px solid var(--border-glass);
     border-radius: var(--radius-sm);
     color: var(--text-primary);
@@ -197,8 +197,8 @@
 
 .profile-form-input:focus {
     border-color: var(--primary-light);
-    background: rgba(255, 255, 255, 0.06);
-    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.12);
+    background: rgba(0, 0, 0, 0.04);
+    box-shadow: 0 0 0 3px rgba(91, 84, 224, 0.15);
 }
 
 .profile-form-input:disabled {
@@ -323,7 +323,7 @@ textarea.profile-form-input {
 }
 
 .btn-profile-save:hover {
-    box-shadow: 0 6px 20px rgba(108, 99, 255, 0.35);
+    box-shadow: 0 6px 20px rgba(91, 84, 224, 0.15);
     transform: translateY(-1px);
 }
 

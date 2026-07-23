@@ -1,10 +1,10 @@
 /* ===== Patient Login Page Styles ===== */
 .bg-pattern::before {
-    background: radial-gradient(circle, rgba(0, 212, 170, 0.12), transparent 70%);
+    background: radial-gradient(circle, rgba(0, 184, 148, 0.06), transparent 70%);
 }
 
 .bg-pattern::after {
-    background: radial-gradient(circle, rgba(52, 234, 191, 0.08), transparent 70%);
+    background: radial-gradient(circle, rgba(0, 212, 170, 0.04), transparent 70%);
 }
 
 .auth-logo {
@@ -20,7 +20,7 @@
 }
 
 .btn-auth-primary:hover {
-    box-shadow: 0 4px 15px rgba(0, 212, 170, 0.35);
+    box-shadow: 0 4px 15px rgba(0, 184, 148, 0.15);
 }
 
 .otp-help-links {
@@ -75,7 +75,7 @@
 .alert-error {
     background: rgba(239, 68, 68, 0.1);
     border: 1px solid rgba(239, 68, 68, 0.25);
-    color: #FCA5A5;
+    color: #EF4444;
 }
 
 .alert-icon {

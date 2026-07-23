@@ -127,18 +127,27 @@ $patStmt->close();
                 </a>
 
                 <div class="sidebar-nav-label">Account</div>
-                <a href="profile.php" class="sidebar-link" data-tooltip="My Profile">
-                    <span class="sidebar-link-icon">👤</span>
-                    <span class="sidebar-link-text">My Profile</span>
-                </a>
-                <a href="#" class="sidebar-link" data-tooltip="Settings">
-                    <span class="sidebar-link-icon">⚙️</span>
-                    <span class="sidebar-link-text">Settings</span>
-                </a>
-                <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
-                    <span class="sidebar-link-icon">🚪</span>
-                    <span class="sidebar-link-text">Logout</span>
-                </a>
+                <details class="sidebar-dropdown">
+                    <summary class="sidebar-link" data-tooltip="Settings">
+                        <span class="sidebar-link-icon">⚙️</span>
+                        <span class="sidebar-link-text">Settings</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </summary>
+                    <div class="sidebar-submenu">
+                        <a href="profile.php" class="sidebar-link" data-tooltip="My Profile">
+                            <span class="sidebar-link-icon">👤</span>
+                            <span class="sidebar-link-text">My Profile</span>
+                        </a>
+                                                <a href="reset_password.php" class="sidebar-link" data-tooltip="Reset Password">
+                            <span class="sidebar-link-icon">🔐</span>
+                            <span class="sidebar-link-text">Reset Password</span>
+                        </a>
+                        <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
+                            <span class="sidebar-link-icon">🚪</span>
+                            <span class="sidebar-link-text">Logout</span>
+                        </a>
+                    </div>
+                </details>
             </nav>
 
             <!-- Footer: Doctor Info -->
@@ -296,7 +305,7 @@ $patStmt->close();
                                     $formattedDate = date('M d', strtotime($appt['appointment_date']));
                                 ?>
                                     <div class="appointment-item">
-                                        <div class="appointment-avatar" style="background: var(--bg-glass-hover); border: 1px solid var(--border-glass); display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--accent-light);">
+                                        <div class="appointment-avatar" style="background: var(--bg-glass-hover); border: 1px solid var(--border-glass); display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--accent);">
                                             <?php echo htmlspecialchars($patInitials); ?>
                                         </div>
                                         <div class="appointment-info">

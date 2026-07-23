@@ -144,14 +144,27 @@ foreach ($depts as $d) {
                 </a>
 
                 <div class="sidebar-nav-label">Account</div>
-                <a href="profile.php" class="sidebar-link" data-tooltip="My Profile">
-                    <span class="sidebar-link-icon">👤</span>
-                    <span class="sidebar-link-text">My Profile</span>
-                </a>
-                <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
-                    <span class="sidebar-link-icon">🚪</span>
-                    <span class="sidebar-link-text">Logout</span>
-                </a>
+                <details class="sidebar-dropdown">
+                    <summary class="sidebar-link" data-tooltip="Settings">
+                        <span class="sidebar-link-icon">⚙️</span>
+                        <span class="sidebar-link-text">Settings</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </summary>
+                    <div class="sidebar-submenu">
+                        <a href="profile.php" class="sidebar-link" data-tooltip="My Profile">
+                            <span class="sidebar-link-icon">👤</span>
+                            <span class="sidebar-link-text">My Profile</span>
+                        </a>
+                                                <a href="reset_password.php" class="sidebar-link" data-tooltip="Reset Password">
+                            <span class="sidebar-link-icon">🔐</span>
+                            <span class="sidebar-link-text">Reset Password</span>
+                        </a>
+                        <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
+                            <span class="sidebar-link-icon">🚪</span>
+                            <span class="sidebar-link-text">Logout</span>
+                        </a>
+                    </div>
+                </details>
             </nav>
 
             <div class="sidebar-footer">
@@ -212,8 +225,8 @@ foreach ($depts as $d) {
                                 </select>
                             </div>
 
-                            <div class="form-group" id="book_schedule_info" style="display:none; background:rgba(255,255,255,0.03); padding:10px 14px; border-radius:6px; border:1px solid var(--border-glass); margin-bottom:15px; font-size:0.82rem; color:var(--text-secondary);">
-                                📅 Doctor Schedule: <span id="book_schedule_text" style="color:var(--accent-light); font-weight:600;"></span>
+                            <div class="form-group" id="book_schedule_info" style="display:none; background:rgba(0,0,0,0.02); padding:10px 14px; border-radius:6px; border:1px solid var(--border-glass); margin-bottom:15px; font-size:0.82rem; color:var(--text-secondary);">
+                                📅 Doctor Schedule: <span id="book_schedule_text" style="color:var(--accent); font-weight:600;"></span>
                             </div>
 
                             <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap:16px;">
@@ -237,7 +250,7 @@ foreach ($depts as $d) {
 
                             <div class="form-group">
                                 <label class="form-label">Consultation Fee</label>
-                                <div class="fee-display" id="book_fee" style="font-size: 1.2rem; font-weight: 700; color: var(--accent); padding: 12px; background: rgba(0, 212, 170, 0.1); border-radius: var(--radius-sm); border: 1px solid rgba(0, 212, 170, 0.3);">Rs. 0.00</div>
+                                <div class="fee-display" id="book_fee" style="font-size: 1.2rem; font-weight: 700; color: var(--accent); padding: 12px; background: rgba(0, 184, 148, 0.08); border-radius: var(--radius-sm); border: 1px solid rgba(0, 184, 148, 0.15);">Rs. 0.00</div>
                             </div>
 
                             <div style="display:flex; gap:12px; margin-top:30px;">

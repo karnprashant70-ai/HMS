@@ -9,7 +9,7 @@
 /* --- Sidebar --- */
 .sidebar {
     width: 260px;
-    background: rgba(15, 20, 35, 0.95);
+    background: rgba(255, 255, 255, 0.97);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-right: 1px solid var(--border-glass);
@@ -88,7 +88,7 @@
     width: 28px;
     height: 28px;
     background: var(--primary);
-    border: 2px solid var(--bg-dark);
+    border: 2px solid #F0F2F5;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -103,7 +103,7 @@
 .sidebar-toggle:hover {
     background: var(--primary-light);
     transform: scale(1.1);
-    box-shadow: 0 0 12px rgba(108, 99, 255, 0.4);
+    box-shadow: 0 0 12px rgba(91, 84, 224, 0.4);
 }
 
 .sidebar-toggle svg {
@@ -165,9 +165,9 @@
 }
 
 .sidebar-link.active {
-    color: white;
-    background: linear-gradient(135deg, rgba(108, 99, 255, 0.2), rgba(0, 212, 170, 0.1));
-    border: 1px solid rgba(108, 99, 255, 0.25);
+    color: var(--primary-dark);
+    background: linear-gradient(135deg, rgba(91, 84, 224, 0.1), rgba(0, 184, 148, 0.06));
+    border: 1px solid rgba(91, 84, 224, 0.15);
 }
 
 .sidebar-link.active::before {
@@ -219,7 +219,7 @@
     left: calc(100% + 12px);
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(20, 25, 40, 0.95);
+    background: rgba(255, 255, 255, 0.97);
     backdrop-filter: blur(10px);
     color: var(--text-primary);
     padding: 6px 12px;
@@ -228,7 +228,47 @@
     white-space: nowrap;
     z-index: 999;
     border: 1px solid var(--border-glass);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Sidebar Dropdown --- */
+.sidebar-dropdown {
+    margin-bottom: 2px;
+}
+.sidebar-dropdown summary {
+    list-style: none;
+    cursor: pointer;
+}
+.sidebar-dropdown summary::-webkit-details-marker {
+    display: none;
+}
+.dropdown-arrow {
+    margin-left: auto;
+    font-size: 0.6rem;
+    transition: transform 0.3s ease;
+}
+.sidebar-dropdown[open] .dropdown-arrow {
+    transform: rotate(180deg);
+}
+.sidebar-submenu {
+    display: flex;
+    flex-direction: column;
+    padding-left: 20px;
+    margin-top: 2px;
+}
+.sidebar.collapsed .dropdown-arrow {
+    display: none;
+}
+.sidebar.collapsed .sidebar-dropdown[open] .sidebar-submenu {
+    padding-left: 0;
+    position: absolute;
+    left: calc(100% + 10px);
+    margin-top: -40px;
+    background: rgba(255, 255, 255, 0.97);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-sm);
+    min-width: 150px;
+    z-index: 100;
 }
 
 /* --- Sidebar Footer (Doctor Info) --- */
@@ -307,7 +347,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: rgba(11, 15, 26, 0.6);
+    background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(15px);
     -webkit-backdrop-filter: blur(15px);
     border-bottom: 1px solid var(--border-glass);
@@ -383,7 +423,7 @@
     height: 8px;
     background: #FF6B6B;
     border-radius: 50%;
-    border: 2px solid var(--bg-dark);
+    border: 2px solid #F0F2F5;
 }
 
 .header-profile {
@@ -493,7 +533,7 @@
     font-size: 1.3rem;
 }
 
-.stat-card-icon.purple { background: rgba(108, 99, 255, 0.15); }
+.stat-card-icon.purple { background: rgba(91, 84, 224, 0.15); }
 .stat-card-icon.teal { background: rgba(0, 212, 170, 0.15); }
 .stat-card-icon.orange { background: rgba(255, 140, 66, 0.15); }
 .stat-card-icon.pink { background: rgba(255, 107, 138, 0.15); }
@@ -694,12 +734,12 @@
     position: relative;
 }
 
-.chart-bar.purple { background: linear-gradient(to top, rgba(108, 99, 255, 0.4), var(--primary)); }
+.chart-bar.purple { background: linear-gradient(to top, rgba(91, 84, 224, 0.4), var(--primary)); }
 .chart-bar.teal { background: linear-gradient(to top, rgba(0, 212, 170, 0.4), var(--accent)); }
 
 .chart-bar:hover {
     filter: brightness(1.2);
-    box-shadow: 0 0 12px rgba(108, 99, 255, 0.3);
+    box-shadow: 0 0 12px rgba(91, 84, 224, 0.3);
 }
 
 .chart-day {

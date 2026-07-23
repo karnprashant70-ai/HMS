@@ -36,6 +36,14 @@ foreach ($profileFields as $f) {
 }
 $completionPct = round(($filledCount / count($profileFields)) * 100);
 
+// Fetch upcoming appointments count
+$apptStmt = $conn->prepare("SELECT COUNT(*) AS appt_count FROM tbl_appointment WHERE patient_id = ? AND status IN ('Pending', 'Confirmed')");
+$apptStmt->bind_param('i', $patientId);
+$apptStmt->execute();
+$apptRes = $apptStmt->get_result()->fetch_assoc();
+$upcomingAppointments = $apptRes['appt_count'] ?? 0;
+$apptStmt->close();
+
 // Check for login success toast
 $loginSuccess = '';
 if (!empty($_SESSION['login_success'])) {
@@ -114,18 +122,27 @@ if (!empty($_SESSION['login_success'])) {
                 </a>
 
                 <div class="sidebar-nav-label">Account</div>
-                <a href="profile.php" class="sidebar-link" data-tooltip="My Profile">
-                    <span class="sidebar-link-icon">👤</span>
-                    <span class="sidebar-link-text">My Profile</span>
-                </a>
-                <a href="#" class="sidebar-link" data-tooltip="Settings">
-                    <span class="sidebar-link-icon">⚙️</span>
-                    <span class="sidebar-link-text">Settings</span>
-                </a>
-                <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
-                    <span class="sidebar-link-icon">🚪</span>
-                    <span class="sidebar-link-text">Logout</span>
-                </a>
+                <details class="sidebar-dropdown">
+                    <summary class="sidebar-link" data-tooltip="Settings">
+                        <span class="sidebar-link-icon">⚙️</span>
+                        <span class="sidebar-link-text">Settings</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </summary>
+                    <div class="sidebar-submenu">
+                        <a href="profile.php" class="sidebar-link" data-tooltip="My Profile">
+                            <span class="sidebar-link-icon">👤</span>
+                            <span class="sidebar-link-text">My Profile</span>
+                        </a>
+                                                <a href="reset_password.php" class="sidebar-link" data-tooltip="Reset Password">
+                            <span class="sidebar-link-icon">🔐</span>
+                            <span class="sidebar-link-text">Reset Password</span>
+                        </a>
+                        <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
+                            <span class="sidebar-link-icon">🚪</span>
+                            <span class="sidebar-link-text">Logout</span>
+                        </a>
+                    </div>
+                </details>
             </nav>
 
             <!-- Footer: Patient Info -->
@@ -187,7 +204,7 @@ if (!empty($_SESSION['login_success'])) {
                             <div class="stat-card-icon teal">📅</div>
                             <span class="stat-card-trend up">Upcoming</span>
                         </div>
-                        <div class="stat-card-value">3</div>
+                        <div class="stat-card-value"><?php echo $upcomingAppointments; ?></div>
                         <div class="stat-card-label">Appointments</div>
                     </div>
                     <div class="stat-card purple">

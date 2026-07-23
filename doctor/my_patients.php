@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if ($checkRes && intval($checkRes['doctor_id']) === $doctorId) {
             $newStatus = ($action === 'confirm') ? 'Confirmed' : 'Cancelled';
-            $updateStmt = $conn->prepare('UPDATE tbl_appointment SET status = ? WHERE appointment_id = ?');
+            $updateStmt = $conn->prepare('UPDATE tbl_appointment SET status = ?, reschedule_note = NULL WHERE appointment_id = ?');
             $updateStmt->bind_param('si', $newStatus, $appointment_id);
             if ($updateStmt->execute()) {
                 $_SESSION['appt_success'] = 'Appointment ' . strtolower($newStatus) . ' successfully.';
@@ -111,14 +111,27 @@ if (!empty($_SESSION['appt_success'])) {
                     <span class="sidebar-link-text">My Patients</span>
                 </a>
                 <div class="sidebar-nav-label">Account</div>
-                <a href="profile.php" class="sidebar-link" data-tooltip="My Profile">
-                    <span class="sidebar-link-icon">👤</span>
-                    <span class="sidebar-link-text">My Profile</span>
-                </a>
-                <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
-                    <span class="sidebar-link-icon">🚪</span>
-                    <span class="sidebar-link-text">Logout</span>
-                </a>
+                <details class="sidebar-dropdown">
+                    <summary class="sidebar-link" data-tooltip="Settings">
+                        <span class="sidebar-link-icon">⚙️</span>
+                        <span class="sidebar-link-text">Settings</span>
+                        <span class="dropdown-arrow">▼</span>
+                    </summary>
+                    <div class="sidebar-submenu">
+                        <a href="profile.php" class="sidebar-link" data-tooltip="My Profile">
+                            <span class="sidebar-link-icon">👤</span>
+                            <span class="sidebar-link-text">My Profile</span>
+                        </a>
+                                                <a href="reset_password.php" class="sidebar-link" data-tooltip="Reset Password">
+                            <span class="sidebar-link-icon">🔐</span>
+                            <span class="sidebar-link-text">Reset Password</span>
+                        </a>
+                        <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
+                            <span class="sidebar-link-icon">🚪</span>
+                            <span class="sidebar-link-text">Logout</span>
+                        </a>
+                    </div>
+                </details>
             </nav>
             <div class="sidebar-footer">
                 <div class="sidebar-avatar">
@@ -208,17 +221,24 @@ if (!empty($_SESSION['appt_success'])) {
                                             </span>
                                         </td>
                                         <td><span style="color: var(--accent); font-weight:600;">Rs. <?php echo number_format($row['consultation_fee'], 2); ?></span></td>
-                                        <td style="text-align: right; display:flex; gap:8px; justify-content:flex-end;">
-                                            <form method="POST" action="" style="display:inline;">
-                                                <input type="hidden" name="appointment_id" value="<?php echo $row['appointment_id']; ?>">
-                                                <input type="hidden" name="action" value="confirm">
-                                                <button type="submit" class="btn-reschedule" style="background: rgba(34, 197, 94, 0.15); border-color: rgba(34, 197, 94, 0.3); color: #4ADE80;">Confirm</button>
-                                            </form>
-                                            <form method="POST" action="" style="display:inline;">
-                                                <input type="hidden" name="appointment_id" value="<?php echo $row['appointment_id']; ?>">
-                                                <input type="hidden" name="action" value="cancel">
-                                                <button type="submit" class="btn-reschedule" style="background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.25); color: #FCA5A5;">Decline</button>
-                                            </form>
+                                        <td style="text-align: right;">
+                                            <div class="dropdown-action-wrapper">
+                                                <button type="button" class="dropdown-action-trigger" onclick="toggleDropdown(this)">
+                                                    Actions <span class="arrow-icon">▼</span>
+                                                </button>
+                                                <div class="dropdown-action-menu">
+                                                    <form method="POST" action="">
+                                                        <input type="hidden" name="action" value="confirm">
+                                                        <input type="hidden" name="appointment_id" value="<?php echo $row['appointment_id']; ?>">
+                                                        <button type="submit" class="dropdown-action-item item-confirm">✓ Confirm</button>
+                                                    </form>
+                                                    <form method="POST" action="">
+                                                        <input type="hidden" name="action" value="cancel">
+                                                        <input type="hidden" name="appointment_id" value="<?php echo $row['appointment_id']; ?>">
+                                                        <button type="submit" class="dropdown-action-item item-decline">✕ Decline</button>
+                                                    </form>
+                                                </div>
+                                            </div>
                                         </td>
                                     </tr>
                             <?php
@@ -263,6 +283,28 @@ if (!empty($_SESSION['appt_success'])) {
             sidebarOverlay.classList.remove('active');
         });
 
+        // Dropdown toggle logic
+        function toggleDropdown(trigger) {
+            const wrapper = trigger.closest('.dropdown-action-wrapper');
+            const wasOpen = wrapper.classList.contains('open');
+            closeDropdowns();
+            if (!wasOpen) {
+                wrapper.classList.add('open');
+            }
+        }
+
+        function closeDropdowns() {
+            document.querySelectorAll('.dropdown-action-wrapper.open').forEach(el => {
+                el.classList.remove('open');
+            });
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown-action-wrapper')) {
+                closeDropdowns();
+            }
+        });
 
     </script>
 </body>

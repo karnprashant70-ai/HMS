@@ -20,7 +20,7 @@
     width: 100%;
     max-width: 500px;
     padding: 40px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.06);
     animation: authFadeUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -51,7 +51,7 @@
     font-size: 1.4rem;
     font-weight: 800;
     margin-bottom: 16px;
-    box-shadow: 0 8px 24px rgba(108, 99, 255, 0.25);
+    box-shadow: 0 8px 24px rgba(91, 84, 224, 0.15);
 }
 
 .auth-header h2 {
@@ -67,7 +67,7 @@
 }
 
 .auth-header p a {
-    color: var(--accent-light);
+    color: var(--accent);
     text-decoration: none;
     font-weight: 600;
     transition: var(--transition);
@@ -142,11 +142,11 @@
 .step-dot.active {
     border-color: var(--primary);
     color: var(--text-primary);
-    box-shadow: 0 0 15px rgba(108, 99, 255, 0.4);
+    box-shadow: 0 0 10px rgba(91, 84, 224, 0.2);
 }
 
 .step-dot.active::after {
-    color: var(--primary-light);
+    color: var(--primary);
     opacity: 1;
 }
 
@@ -205,7 +205,7 @@
 .form-input {
     width: 100%;
     padding: 12px 16px;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(0, 0, 0, 0.02);
     border: 1px solid var(--border-glass);
     border-radius: var(--radius-sm);
     color: var(--text-primary);
@@ -217,8 +217,8 @@
 
 .form-input:focus {
     border-color: var(--primary-light);
-    background: rgba(255, 255, 255, 0.06);
-    box-shadow: 0 0 0 3px rgba(108, 99, 255, 0.15);
+    background: rgba(0, 0, 0, 0.04);
+    box-shadow: 0 0 0 3px rgba(91, 84, 224, 0.15);
 }
 
 select.form-input {
@@ -248,7 +248,7 @@ textarea.form-input {
     height: 72px;
     border-radius: 50%;
     border: 2px dashed var(--border-glass);
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(0, 0, 0, 0.02);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -309,12 +309,12 @@ textarea.form-input {
 }
 
 .btn-auth-primary:hover {
-    box-shadow: 0 4px 15px rgba(108, 99, 255, 0.3);
+    box-shadow: 0 4px 15px rgba(91, 84, 224, 0.2);
     transform: translateY(-1px);
 }
 
 .btn-auth-secondary {
-    background: rgba(255, 255, 255, 0.04);
+    background: rgba(0, 0, 0, 0.03);
     color: var(--text-primary);
     border: 1px solid var(--border-glass);
 }
@@ -342,7 +342,7 @@ textarea.form-input {
 .otp-input {
     width: 50px;
     height: 60px;
-    background: rgba(255, 255, 255, 0.03);
+    background: rgba(0, 0, 0, 0.02);
     border: 1px solid var(--border-glass);
     border-radius: var(--radius-sm);
     color: var(--text-primary);
@@ -356,7 +356,7 @@ textarea.form-input {
 .otp-input:focus {
     border-color: var(--accent);
     box-shadow: 0 0 10px rgba(0, 212, 170, 0.2);
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(0, 0, 0, 0.04);
 }
 
 /* Help links */

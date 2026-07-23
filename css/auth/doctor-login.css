@@ -1,10 +1,10 @@
 /* ===== Doctor Login Page Styles ===== */
 .bg-pattern::before {
-    background: radial-gradient(circle, rgba(108, 99, 255, 0.12), transparent 70%);
+    background: radial-gradient(circle, rgba(91, 84, 224, 0.06), transparent 70%);
 }
 
 .bg-pattern::after {
-    background: radial-gradient(circle, rgba(0, 212, 170, 0.08), transparent 70%);
+    background: radial-gradient(circle, rgba(0, 184, 148, 0.04), transparent 70%);
 }
 
 .btn-full {

@@ -568,14 +568,14 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
                                             <strong>Dr. <?php echo htmlspecialchars($fullname); ?></strong>
                                         </td>
                                         <td><?php echo htmlspecialchars($doc['department']); ?></td>
-                                        <td><code style="background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px;"><?php echo htmlspecialchars($doc['licence_number']); ?></code></td>
+                                        <td><code style="background: rgba(0,0,0,0.04); padding: 2px 6px; border-radius: 4px;"><?php echo htmlspecialchars($doc['licence_number']); ?></code></td>
                                         <td>
                                             <?php if ($doc['status'] === 'Available'): ?>
                                                 <span class="status-badge active">Available</span>
                                             <?php elseif ($doc['status'] === 'Unavailable'): ?>
                                                 <span class="status-badge inactive">Unavailable</span>
                                             <?php else: ?>
-                                                <span class="status-badge" style="background: rgba(245, 158, 11, 0.15); color: #FBBF24; border: 1px solid rgba(245, 158, 11, 0.3);">On Leave</span>
+                                                <span class="status-badge" style="background: rgba(245, 158, 11, 0.15); color: #D97706; border: 1px solid rgba(245, 158, 11, 0.3);">On Leave</span>
                                             <?php endif; ?>
                                         </td>
                                         <td>

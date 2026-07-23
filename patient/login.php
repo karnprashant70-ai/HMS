@@ -177,7 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                     <div class="alert-box alert-error" id="errorAlert" style="margin-bottom: 1rem;">
                         <div class="alert-icon">⚠️</div>
                         <div class="alert-content">
-                            <p style="color: red; font-weight: bold; margin: 0;"><?php echo htmlspecialchars($loginError); ?></p>
+                            <p style="color: #EF4444; font-weight: bold; margin: 0;"><?php echo htmlspecialchars($loginError); ?></p>
                         </div>
                         <button type="button" class="alert-close" onclick="this.parentElement.style.display='none'" aria-label="Close alert">&times;</button>
                     </div>

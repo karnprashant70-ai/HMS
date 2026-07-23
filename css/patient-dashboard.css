@@ -2,8 +2,8 @@
 
 /* Patient-specific accent overrides */
 .sidebar-link.active {
-    background: linear-gradient(135deg, rgba(0, 212, 170, 0.2), rgba(52, 234, 191, 0.1));
-    border: 1px solid rgba(0, 212, 170, 0.25);
+    background: linear-gradient(135deg, rgba(0, 184, 148, 0.1), rgba(0, 212, 170, 0.06));
+    border: 1px solid rgba(0, 184, 148, 0.15);
 }
 
 .sidebar-link.active::before {
@@ -66,7 +66,7 @@
 }
 
 .quick-action-icon.teal { background: rgba(0, 212, 170, 0.15); }
-.quick-action-icon.purple { background: rgba(108, 99, 255, 0.15); }
+.quick-action-icon.purple { background: rgba(91, 84, 224, 0.15); }
 .quick-action-icon.orange { background: rgba(255, 140, 66, 0.15); }
 
 .quick-action-label {
@@ -108,7 +108,7 @@
     font-size: 0.9rem;
     font-weight: 600;
     margin-bottom: 4px;
-    color: var(--accent-light);
+    color: var(--accent);
 }
 
 .health-tip-content p {

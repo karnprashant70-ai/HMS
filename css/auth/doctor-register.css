@@ -1,14 +1,14 @@
 /* ===== Doctor Registration Page Styles ===== */
 .bg-pattern::before {
-    background: radial-gradient(circle, rgba(108, 99, 255, 0.12), transparent 70%);
+    background: radial-gradient(circle, rgba(91, 84, 224, 0.06), transparent 70%);
 }
 
 .bg-pattern::after {
-    background: radial-gradient(circle, rgba(0, 212, 170, 0.08), transparent 70%);
+    background: radial-gradient(circle, rgba(0, 184, 148, 0.04), transparent 70%);
 }
 
 .form-error {
-    color: #ff6b6b;
+    color: #EF4444;
     font-size: 0.78rem;
     margin-top: 5px;
     display: block;
@@ -38,7 +38,7 @@
 }
 
 .error-banner p {
-    color: #ff6b6b;
+    color: #EF4444;
     font-size: 0.84rem;
     font-weight: 600;
     margin: 0;
@@ -56,7 +56,7 @@
 }
 
 .success-banner.register-success-banner p {
-    color: #2ed573;
+    color: #16A34A;
     font-size: 0.84rem;
     font-weight: 600;
     margin: 0;
@@ -78,13 +78,13 @@
     display: flex;
     align-items: center;
     padding: 0 14px;
-    background: rgba(108, 99, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(91, 84, 224, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.08);
     border-right: none;
     border-radius: 10px 0 0 10px;
     font-size: 0.88rem;
     font-weight: 700;
-    color: #a78bfa;
+    color: var(--primary);
     letter-spacing: 0.5px;
     white-space: nowrap;
     user-select: none;
@@ -109,7 +109,7 @@
 }
 
 .registration-details-card {
-    background: rgba(255, 255, 255, 0.02);
+    background: rgba(0, 0, 0, 0.02);
     border: 1px solid var(--border-glass);
     border-radius: var(--radius-sm);
     padding: 16px;
@@ -128,7 +128,7 @@
 }
 
 .registration-details-card .accent-text {
-    color: var(--accent-light);
+    color: var(--accent);
 }
 
 .registration-details-card .accent-text-success {
@@ -146,7 +146,7 @@
 
 .login-link-row a {
     margin-left: 6px;
-    color: var(--primary-light);
+    color: var(--primary);
     font-weight: 600;
 }
 
