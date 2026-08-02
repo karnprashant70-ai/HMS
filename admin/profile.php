@@ -151,6 +151,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'delete_department') {
         $deptId = isset($_POST['department_id']) ? intval($_POST['department_id']) : 0;
+        $deptName = '';
 
         if ($deptId <= 0) {
             $errors[] = 'Invalid department ID.';
@@ -165,28 +166,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $deptData = $deptResult->fetch_assoc();
                 $deptName = $deptData['department_name'];
-
-                // Check if any doctors are registered in this department
-                $checkDoc = $conn->prepare("SELECT doctor_id FROM tbl_doctor WHERE department = ? LIMIT 1");
-                $checkDoc->bind_param("s", $deptName);
-                $checkDoc->execute();
-                if ($checkDoc->get_result()->num_rows > 0) {
-                    $errors[] = "Cannot delete department '$deptName' because doctors are currently registered under it.";
-                }
-                $checkDoc->close();
             }
             $getDept->close();
         }
 
         if (empty($errors)) {
-            $deleteDept = $conn->prepare("DELETE FROM tbl_department WHERE department_id = ?");
-            $deleteDept->bind_param("i", $deptId);
-            if ($deleteDept->execute()) {
-                $success = 'Department deleted successfully!';
-            } else {
-                $errors[] = 'Failed to delete department: ' . $conn->error;
+            try {
+                $conn->begin_transaction();
+
+                // Reassign any doctors registered under this department to 'Unassigned'
+                $updateDocs = $conn->prepare("UPDATE tbl_doctor SET department = 'Unassigned' WHERE department = ?");
+                $updateDocs->bind_param("s", $deptName);
+                $updateDocs->execute();
+                $updateDocs->close();
+
+                // Delete associated appointments for this department ID
+                $delAppts = $conn->prepare("DELETE FROM tbl_appointment WHERE department_id = ?");
+                $delAppts->bind_param("i", $deptId);
+                $delAppts->execute();
+                $delAppts->close();
+
+                // Delete department from tbl_department
+                $deleteDept = $conn->prepare("DELETE FROM tbl_department WHERE department_id = ?");
+                $deleteDept->bind_param("i", $deptId);
+                $deleteDept->execute();
+                $deleteDept->close();
+
+                $conn->commit();
+                $success = "Department '$deptName' deleted successfully!";
+            } catch (Exception $e) {
+                $conn->rollback();
+                $errors[] = 'Failed to delete department: ' . $e->getMessage();
             }
-            $deleteDept->close();
         }
     }
 
@@ -214,14 +225,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (empty($errors)) {
-            $updateDept = $conn->prepare("UPDATE tbl_department SET department_name = ? WHERE department_id = ?");
-            $updateDept->bind_param("si", $deptName, $deptId);
-            if ($updateDept->execute()) {
+            try {
+                $conn->begin_transaction();
+
+                // Get old department name to sync doctor records
+                $getOld = $conn->prepare("SELECT department_name FROM tbl_department WHERE department_id = ?");
+                $getOld->bind_param("i", $deptId);
+                $getOld->execute();
+                $oldRes = $getOld->get_result()->fetch_assoc();
+                $oldDeptName = $oldRes ? $oldRes['department_name'] : '';
+                $getOld->close();
+
+                // Update tbl_department
+                $updateDept = $conn->prepare("UPDATE tbl_department SET department_name = ? WHERE department_id = ?");
+                $updateDept->bind_param("si", $deptName, $deptId);
+                $updateDept->execute();
+                $updateDept->close();
+
+                // Sync tbl_doctor department name if changed
+                if (!empty($oldDeptName) && $oldDeptName !== $deptName) {
+                    $updateDocs = $conn->prepare("UPDATE tbl_doctor SET department = ? WHERE department = ?");
+                    $updateDocs->bind_param("ss", $deptName, $oldDeptName);
+                    $updateDocs->execute();
+                    $updateDocs->close();
+                }
+
+                $conn->commit();
                 $success = 'Department updated successfully!';
-            } else {
-                $errors[] = 'Failed to update department: ' . $conn->error;
+            } catch (Exception $e) {
+                $conn->rollback();
+                $errors[] = 'Failed to update department: ' . $e->getMessage();
             }
-            $updateDept->close();
         }
     }
 
