@@ -1,7 +1,7 @@
 <?php
 ob_start();
 session_start();
-$loginError = '';
+$errors = [];
 $registrationSuccess = '';
 if (!empty($_SESSION['registration_success'])) {
     $registrationSuccess = $_SESSION['registration_success'];
@@ -13,11 +13,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     $password = $_POST['password'] ?? '';
 
     if ($email === '' && $password === '') {
-        $loginError = 'Invalid Email and Password.';
+        $errors['email'] = 'Email is required.';
+        $errors['password'] = 'Password is required.';
     } elseif ($email === '') {
-        $loginError = 'Invalid Email.';
+        $errors['email'] = 'Invalid Email.';
     } elseif ($password === '') {
-        $loginError = 'Invalid Password.';
+        $errors['password'] = 'Invalid Password.';
     } else {
         $stmt = $conn->prepare('SELECT patient_id, password, first_name, middle_name, last_name FROM tbl_patient WHERE email = ? LIMIT 1');
         $stmt->bind_param('s', $email);
@@ -32,10 +33,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                 header('Location: dashboard.php');
                 exit;
             } else {
-                $loginError = 'Invalid Password.';
+                $errors['password'] = 'Invalid Password.';
             }
         } else {
-            $loginError = 'No account found for this email.';
+            $errors['email'] = 'No account found for this email.';
         }
         $stmt->close();
         $conn->close();
@@ -148,13 +149,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                 </div>
 
                 <form id="loginForm" method="POST" action="" novalidate>
+                    <?php if (!empty($errors)): ?>
+                        <div class="hms-error-box">
+                            <ul>
+                                <?php foreach ($errors as $error): ?>
+                                    <li><?php echo htmlspecialchars($error); ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                    <?php endif; ?>
                     <div class="form-group">
                         <label class="form-label" for="email">Email Address</label>
+                        <?php if (isset($errors['email'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['email']); ?></div><?php endif; ?>
                         <input type="email" id="email" name="email" class="form-input" placeholder="name@example.com" autocomplete="username" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label" for="password">Password</label>
+                        <?php if (isset($errors['password'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['password']); ?></div><?php endif; ?>
                         <div class="password-wrapper">
                             <input type="password" id="password" name="password" class="form-input" placeholder="••••••••" autocomplete="current-password">
                             <button type="button" class="password-toggle" id="passwordToggle" aria-label="Show password">👁️</button>
@@ -173,15 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                     </script>
                     <?php endif; ?>
 
-                    <?php if (!empty($loginError)): ?>
-                    <div class="alert-box alert-error" id="errorAlert" style="margin-bottom: 1rem;">
-                        <div class="alert-icon">⚠️</div>
-                        <div class="alert-content">
-                            <p style="color: #EF4444; font-weight: bold; margin: 0;"><?php echo htmlspecialchars($loginError); ?></p>
-                        </div>
-                        <button type="button" class="alert-close" onclick="this.parentElement.style.display='none'" aria-label="Close alert">&times;</button>
-                    </div>
-                    <?php endif; ?>
+
 
                     <button type="submit" name="login" value="1" class="btn-auth btn-auth-primary btn-full">Sign In</button>
                 </form>

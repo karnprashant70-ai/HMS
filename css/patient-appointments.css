@@ -114,10 +114,37 @@
     pointer-events: auto;
 }
 
-.appointment-table-card .admin-table th,
-.appointment-table-card .admin-table td {
+/* Table Styles */
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-md);
+    overflow: visible;
+}
+
+.admin-table th,
+.admin-table td {
+    padding: 14px 16px;
     text-align: center;
     vertical-align: middle;
+    border-bottom: 1px solid var(--border-glass);
+}
+
+.admin-table th {
+    background: rgba(0, 0, 0, 0.02);
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.admin-table tr:hover {
+    background: var(--bg-glass-hover);
+}
+
+.admin-table tr:last-child td {
+    border-bottom: none;
 }
 
 .btn-action-edit {

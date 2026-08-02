@@ -171,12 +171,6 @@ function errClass($errors, $field) {
                 <div class="step-dot <?php echo ($activeStep === 3) ? 'active' : ''; ?>">3</div>
             </div>
 
-            <?php if (!empty($errors)): ?>
-            <div class="error-banner">
-                <p>Please fix the highlighted errors below to continue.</p>
-            </div>
-            <?php endif; ?>
-
             <?php if (!empty($successMessage)): ?>
             <div class="toast-popup show" id="successToast">
                 <div class="toast-icon">✅</div>
@@ -193,32 +187,41 @@ function errClass($errors, $field) {
             <?php endif; ?>
 
             <form id="registrationForm" method="POST" action="" novalidate>
+                <?php if (!empty($errors)): ?>
+                    <div class="hms-error-box">
+                        <ul>
+                            <?php foreach ($errors as $error): ?>
+                                <li><?php echo htmlspecialchars($error); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
                 <div class="form-step <?php echo ($activeStep === 1) ? 'active' : ''; ?>" id="step1">
                     <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label" for="firstName">First Name *</label>
-                            <input type="text" id="firstName" name="firstName" class="form-input<?php echo errClass($errors, 'firstName'); ?>" value="<?php echo oldVal($formData, 'firstName'); ?>">
                             <?php echo showError($errors, 'firstName'); ?>
+                            <input type="text" id="firstName" name="firstName" class="form-input<?php echo errClass($errors, 'firstName'); ?>" value="<?php echo oldVal($formData, 'firstName'); ?>">
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="lastName">Last Name *</label>
-                            <input type="text" id="lastName" name="lastName" class="form-input<?php echo errClass($errors, 'lastName'); ?>" value="<?php echo oldVal($formData, 'lastName'); ?>">
                             <?php echo showError($errors, 'lastName'); ?>
+                            <input type="text" id="lastName" name="lastName" class="form-input<?php echo errClass($errors, 'lastName'); ?>" value="<?php echo oldVal($formData, 'lastName'); ?>">
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="gender">Gender *</label>
+                            <?php echo showError($errors, 'gender'); ?>
                             <select id="gender" name="gender" class="form-input<?php echo errClass($errors, 'gender'); ?>">
                                 <option value="" <?php echo (empty($formData['gender'] ?? '')) ? 'selected' : ''; ?>>Select Gender</option>
                                 <option value="Male" <?php echo (($formData['gender'] ?? '') === 'Male') ? 'selected' : ''; ?>>Male</option>
                                 <option value="Female" <?php echo (($formData['gender'] ?? '') === 'Female') ? 'selected' : ''; ?>>Female</option>
                                 <option value="Other" <?php echo (($formData['gender'] ?? '') === 'Other') ? 'selected' : ''; ?>>Other</option>
                             </select>
-                            <?php echo showError($errors, 'gender'); ?>
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="phoneNumber">Phone Number *</label>
-                            <input type="tel" id="phoneNumber" name="phoneNumber" class="form-input<?php echo errClass($errors, 'phoneNumber'); ?>" value="<?php echo oldVal($formData, 'phoneNumber'); ?>">
                             <?php echo showError($errors, 'phoneNumber'); ?>
+                            <input type="tel" id="phoneNumber" name="phoneNumber" class="form-input<?php echo errClass($errors, 'phoneNumber'); ?>" value="<?php echo oldVal($formData, 'phoneNumber'); ?>">
                         </div>
                     </div>
                     <div class="form-actions">
@@ -230,18 +233,18 @@ function errClass($errors, $field) {
                     <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label" for="email">Email Address *</label>
-                            <input type="email" id="email" name="email" class="form-input<?php echo errClass($errors, 'email'); ?>" value="<?php echo oldVal($formData, 'email'); ?>">
                             <?php echo showError($errors, 'email'); ?>
+                            <input type="email" id="email" name="email" class="form-input<?php echo errClass($errors, 'email'); ?>" value="<?php echo oldVal($formData, 'email'); ?>">
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="emergencyContact">Emergency Contact *</label>
-                            <input type="tel" id="emergencyContact" name="emergencyContact" class="form-input<?php echo errClass($errors, 'emergencyContact'); ?>" value="<?php echo oldVal($formData, 'emergencyContact'); ?>">
                             <?php echo showError($errors, 'emergencyContact'); ?>
+                            <input type="tel" id="emergencyContact" name="emergencyContact" class="form-input<?php echo errClass($errors, 'emergencyContact'); ?>" value="<?php echo oldVal($formData, 'emergencyContact'); ?>">
                         </div>
                         <div class="form-group full-width">
                             <label class="form-label" for="address">Address *</label>
-                            <textarea id="address" name="address" class="form-input<?php echo errClass($errors, 'address'); ?>"><?php echo oldVal($formData, 'address'); ?></textarea>
                             <?php echo showError($errors, 'address'); ?>
+                            <textarea id="address" name="address" class="form-input<?php echo errClass($errors, 'address'); ?>"><?php echo oldVal($formData, 'address'); ?></textarea>
                         </div>
                     </div>
                     <div class="form-actions">
@@ -254,13 +257,13 @@ function errClass($errors, $field) {
                     <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label" for="password">Password *</label>
-                            <input type="password" id="password" name="password" class="form-input<?php echo errClass($errors, 'password'); ?>">
                             <?php echo showError($errors, 'password'); ?>
+                            <input type="password" id="password" name="password" class="form-input<?php echo errClass($errors, 'password'); ?>">
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="confirmPassword">Confirm Password *</label>
-                            <input type="password" id="confirmPassword" name="confirmPassword" class="form-input<?php echo errClass($errors, 'confirmPassword'); ?>">
                             <?php echo showError($errors, 'confirmPassword'); ?>
+                            <input type="password" id="confirmPassword" name="confirmPassword" class="form-input<?php echo errClass($errors, 'confirmPassword'); ?>">
                         </div>
                     </div>
                     <div class="form-actions">

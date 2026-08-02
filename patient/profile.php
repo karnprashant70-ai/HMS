@@ -123,6 +123,7 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/index/variables.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="../css/patient-sidebar.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/doctor-dashboard.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/patient-dashboard.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/patient-profile.css?v=<?php echo time(); ?>">
@@ -133,95 +134,9 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
     <!-- Animated Background -->
     <div class="bg-pattern"></div>
 
-    <!-- Mobile Sidebar Overlay -->
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
-
     <div class="dashboard-layout">
 
-        <!-- ===== SIDEBAR ===== -->
-        <aside class="sidebar" id="sidebar">
-            <!-- Collapse Toggle -->
-            <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="15 18 9 12 15 6"></polyline>
-                </svg>
-            </button>
-
-            <!-- Brand -->
-            <div class="sidebar-header">
-                <div class="sidebar-brand-icon">M+</div>
-                <div class="sidebar-brand-text">Medi-<span>Care</span></div>
-            </div>
-
-            <!-- Navigation -->
-            <nav class="sidebar-nav">
-                <div class="sidebar-nav-label">Main</div>
-                <a href="dashboard.php" class="sidebar-link" data-tooltip="Dashboard">
-                    <span class="sidebar-link-icon">📊</span>
-                    <span class="sidebar-link-text">Dashboard</span>
-                </a>
-                <a href="#" class="sidebar-link" data-tooltip="Appointments">
-                    <span class="sidebar-link-icon">📅</span>
-                    <span class="sidebar-link-text">Appointments</span>
-                </a>
-                <a href="#" class="sidebar-link" data-tooltip="Medical Records">
-                    <span class="sidebar-link-icon">📋</span>
-                    <span class="sidebar-link-text">Medical Records</span>
-                </a>
-                <a href="#" class="sidebar-link" data-tooltip="Prescriptions">
-                    <span class="sidebar-link-icon">💊</span>
-                    <span class="sidebar-link-text">Prescriptions</span>
-                </a>
-
-                <div class="sidebar-nav-label">Health</div>
-                <a href="#" class="sidebar-link" data-tooltip="Lab Results">
-                    <span class="sidebar-link-icon">🔬</span>
-                    <span class="sidebar-link-text">Lab Results</span>
-                </a>
-                <a href="#" class="sidebar-link" data-tooltip="Billing">
-                    <span class="sidebar-link-icon">💳</span>
-                    <span class="sidebar-link-text">Billing</span>
-                </a>
-
-                <div class="sidebar-nav-label">Account</div>
-                <details class="sidebar-dropdown" open>
-                    <summary class="sidebar-link" data-tooltip="Settings">
-                        <span class="sidebar-link-icon">⚙️</span>
-                        <span class="sidebar-link-text">Settings</span>
-                        <span class="dropdown-arrow">▼</span>
-                    </summary>
-                    <div class="sidebar-submenu">
-                        <a href="profile.php" class="sidebar-link active" data-tooltip="My Profile">
-                            <span class="sidebar-link-icon">👤</span>
-                            <span class="sidebar-link-text">My Profile</span>
-                        </a>
-                                                <a href="reset_password.php" class="sidebar-link" data-tooltip="Reset Password">
-                            <span class="sidebar-link-icon">🔐</span>
-                            <span class="sidebar-link-text">Reset Password</span>
-                        </a>
-                        <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
-                            <span class="sidebar-link-icon">🚪</span>
-                            <span class="sidebar-link-text">Logout</span>
-                        </a>
-                    </div>
-                </details>
-            </nav>
-
-            <!-- Footer: Patient Info -->
-            <div class="sidebar-footer">
-                <div class="sidebar-avatar">
-                    <?php if ($profilePhoto): ?>
-                        <img src="<?php echo htmlspecialchars($profilePhoto); ?>" alt="Avatar">
-                    <?php else: ?>
-                        <?php echo $initials; ?>
-                    <?php endif; ?>
-                </div>
-                <div class="sidebar-user-info">
-                    <div class="sidebar-user-name"><?php echo htmlspecialchars($patientName); ?></div>
-                    <div class="sidebar-user-role">Patient</div>
-                </div>
-            </div>
-        </aside>
+        <?php include __DIR__ . '/includes/sidebar.php'; ?>
 
         <!-- ===== MAIN CONTENT ===== -->
         <main class="main-content">
@@ -411,32 +326,6 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
 
     <!-- ===== JavaScript ===== -->
     <script>
-        // --- Sidebar Collapse Toggle ---
-        const sidebar = document.getElementById('sidebar');
-        const sidebarToggle = document.getElementById('sidebarToggle');
-
-        if (localStorage.getItem('sidebarCollapsed') === 'true') {
-            sidebar.classList.add('collapsed');
-        }
-
-        sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
-            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-        });
-
-        // --- Mobile Menu ---
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-        const sidebarOverlay = document.getElementById('sidebarOverlay');
-
-        mobileMenuBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('mobile-open');
-            sidebarOverlay.classList.toggle('active');
-        });
-
-        sidebarOverlay.addEventListener('click', () => {
-            sidebar.classList.remove('mobile-open');
-            sidebarOverlay.classList.remove('active');
-        });
 
         // --- Profile Photo Preview ---
         const photoInput = document.getElementById('profilePhotoInput');
