@@ -27,10 +27,12 @@ $profilePhoto = !empty($patient['profile_photo']) ? '../uploads/patients/' . $pa
 
 $errors = [];
 $successMessage = '';
+$submittedAction = '';
 
 // Handle Appointment Book/Update/Delete actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['update_appointment'])) {
+        $submittedAction = 'update_appointment';
         $appointment_id = intval($_POST['appointment_id'] ?? 0);
         $doctor_id = intval($_POST['doctor_id'] ?? 0);
         $department_id = intval($_POST['department_id'] ?? 0);
@@ -40,11 +42,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Validation
         if ($appointment_id <= 0) $errors[] = 'Invalid appointment transaction.';
-        if ($doctor_id <= 0) $errors[] = 'Please select a doctor.';
-        if ($department_id <= 0) $errors[] = 'Please select a department.';
-        if (empty($appointment_date)) $errors[] = 'Appointment date is required.';
-        if (empty($appointment_time)) $errors[] = 'Appointment time is required.';
-        if (empty($appointment_type)) $errors[] = 'Appointment type is required.';
+        if ($doctor_id <= 0) $errors['doctor_id'] = 'Please select a doctor.';
+        if ($department_id <= 0) $errors['department_id'] = 'Please select a department.';
+        if (empty($appointment_date)) $errors['appointment_date'] = 'Appointment date is required.';
+        if (empty($appointment_time)) {
+            $errors['appointment_time'] = 'Appointment time is required.';
+        } else {
+            $parsedTime = strtotime($appointment_time);
+            if ($parsedTime) {
+                $appointment_time = date('H:i:s', $parsedTime);
+            }
+        }
+        if (empty($appointment_type)) $errors['appointment_type'] = 'Appointment type is required.';
 
         if (empty($errors)) {
             // Verify ownership
@@ -83,6 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (isset($_POST['delete_appointment'])) {
+        $submittedAction = 'delete_appointment';
         $appointment_id = intval($_POST['appointment_id'] ?? 0);
         if ($appointment_id > 0) {
             // Verify ownership
@@ -149,6 +159,7 @@ foreach ($depts as $d) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/index/variables.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="../css/patient-sidebar.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/doctor-dashboard.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/patient-dashboard.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/auth/auth.css?v=<?php echo time(); ?>">
@@ -157,75 +168,10 @@ foreach ($depts as $d) {
 <body>
 
     <div class="bg-pattern"></div>
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <div class="dashboard-layout">
-        <!-- ===== SIDEBAR ===== -->
-        <aside class="sidebar" id="sidebar">
-            <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="15 18 9 12 15 6"></polyline>
-                </svg>
-            </button>
-            <div class="sidebar-header">
-                <div class="sidebar-brand-icon">M+</div>
-                <div class="sidebar-brand-text">Medi-<span>Care</span></div>
-            </div>
-            <nav class="sidebar-nav">
-                <div class="sidebar-nav-label">Main</div>
-                <a href="dashboard.php" class="sidebar-link" data-tooltip="Dashboard">
-                    <span class="sidebar-link-icon">📊</span>
-                    <span class="sidebar-link-text">Dashboard</span>
-                </a>
-                <a href="appointments.php" class="sidebar-link active" data-tooltip="Appointments">
-                    <span class="sidebar-link-icon">📅</span>
-                    <span class="sidebar-link-text">Appointments</span>
-                </a>
-                <a href="#" class="sidebar-link" data-tooltip="Medical Records">
-                    <span class="sidebar-link-icon">📋</span>
-                    <span class="sidebar-link-text">Medical Records</span>
-                </a>
-                <a href="book_appointment.php" class="sidebar-link" data-tooltip="Book Appointment">
-                    <span class="sidebar-link-icon">➕</span>
-                    <span class="sidebar-link-text">Book Appointment</span>
-                </a>
-                <div class="sidebar-nav-label">Account</div>
-                <details class="sidebar-dropdown">
-                    <summary class="sidebar-link" data-tooltip="Settings">
-                        <span class="sidebar-link-icon">⚙️</span>
-                        <span class="sidebar-link-text">Settings</span>
-                        <span class="dropdown-arrow">▼</span>
-                    </summary>
-                    <div class="sidebar-submenu">
-                        <a href="profile.php" class="sidebar-link" data-tooltip="My Profile">
-                            <span class="sidebar-link-icon">👤</span>
-                            <span class="sidebar-link-text">My Profile</span>
-                        </a>
-                                                <a href="reset_password.php" class="sidebar-link" data-tooltip="Reset Password">
-                            <span class="sidebar-link-icon">🔐</span>
-                            <span class="sidebar-link-text">Reset Password</span>
-                        </a>
-                        <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
-                            <span class="sidebar-link-icon">🚪</span>
-                            <span class="sidebar-link-text">Logout</span>
-                        </a>
-                    </div>
-                </details>
-            </nav>
-            <div class="sidebar-footer">
-                <div class="sidebar-avatar">
-                    <?php if ($profilePhoto): ?>
-                        <img src="<?php echo htmlspecialchars($profilePhoto); ?>" alt="Avatar">
-                    <?php else: ?>
-                        <?php echo $initials; ?>
-                    <?php endif; ?>
-                </div>
-                <div class="sidebar-user-info">
-                    <div class="sidebar-user-name"><?php echo htmlspecialchars($patientName); ?></div>
-                    <div class="sidebar-user-role">Patient</div>
-                </div>
-            </div>
-        </aside>
+
+        <?php include __DIR__ . '/includes/sidebar.php'; ?>
 
         <!-- ===== MAIN CONTENT ===== -->
         <main class="main-content">
@@ -240,11 +186,13 @@ foreach ($depts as $d) {
             </header>
 
             <div class="dashboard-content">
-                <?php if (!empty($errors)): ?>
-                    <div class="error-banner" style="margin-bottom: 20px;">
-                        <?php foreach ($errors as $e): ?>
-                            <p>⚠️ <?php echo htmlspecialchars($e); ?></p>
-                        <?php endforeach; ?>
+                <?php if (!empty($errors) && $submittedAction === 'delete_appointment'): ?>
+                    <div class="hms-error-box">
+                        <ul>
+                            <?php foreach ($errors as $e): ?>
+                                <li><?php echo htmlspecialchars($e); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
                     </div>
                 <?php endif; ?>
 
@@ -302,13 +250,14 @@ foreach ($depts as $d) {
                         </thead>
                         <tbody>
                             <?php if ($count > 0): 
+                                $serial_no = 1;
                                 while ($row = $result->fetch_assoc()):
                                     $docName = trim($row['first_name'] . ' ' . $row['middle_name'] . ' ' . $row['last_name']);
                                     $status = $row['status'];
                                     $statusLower = strtolower($status);
                             ?>
                                 <tr>
-                                    <td>#<?php echo $row['appointment_id']; ?></td>
+                                    <td><?php echo $serial_no++; ?></td>
                                     <td><strong>Dr. <?php echo htmlspecialchars($docName); ?></strong></td>
                                     <td><?php echo htmlspecialchars($row['department_name']); ?></td>
                                     <td><?php echo date('M d, Y', strtotime($row['appointment_date'])); ?></td>
@@ -346,6 +295,10 @@ foreach ($depts as $d) {
                                                     </form>
                                                 </div>
                                             </div>
+                                        <?php elseif ($status === 'Completed'): ?>
+                                            <a href="view_prescription.php?appointment_id=<?php echo (int)$row['appointment_id']; ?>" class="btn-auth btn-auth-secondary" style="padding: 4px 10px; font-size: 0.78rem; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                                                💊 View Rx
+                                            </a>
                                         <?php else: ?>
                                             <span style="color: var(--text-muted); font-size: 0.82rem;">—</span>
                                         <?php endif; ?>
@@ -377,8 +330,24 @@ foreach ($depts as $d) {
                 <input type="hidden" name="update_appointment" value="1">
                 <input type="hidden" id="edit_appt_id" name="appointment_id">
                 
+                <?php 
+                $generalUpdateErrors = array_filter($errors, function($key) {
+                    return is_numeric($key);
+                }, ARRAY_FILTER_USE_KEY);
+                if (!empty($generalUpdateErrors) && $submittedAction === 'update_appointment'): 
+                ?>
+                    <div class="hms-error-box">
+                        <ul>
+                            <?php foreach ($generalUpdateErrors as $error): ?>
+                                <li><?php echo htmlspecialchars($error); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+                
                 <div class="form-group">
-                    <label class="form-label" for="edit_dept">Select Department *</label>
+                    <label class="form-label" for="edit_dept">Department *</label>
+                    <?php if (isset($errors['department_id'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['department_id']); ?></div><?php endif; ?>
                     <select id="edit_dept" name="department_id" class="form-input" onchange="filterDoctors('edit')" required>
                         <option value="" disabled>Choose Department</option>
                         <?php foreach ($depts as $d): ?>
@@ -388,8 +357,9 @@ foreach ($depts as $d) {
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="edit_doc">Select Doctor *</label>
-                    <select id="edit_doc" name="doctor_id" class="form-input" onchange="updateFee('edit')" required>
+                    <label class="form-label" for="edit_doc">Doctor *</label>
+                    <?php if (isset($errors['doctor_id'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['doctor_id']); ?></div><?php endif; ?>
+                    <select id="edit_doc" name="doctor_id" class="form-input" onchange="updateFee('edit')" required disabled>
                         <option value="" disabled>Choose Doctor</option>
                     </select>
                 </div>
@@ -401,16 +371,27 @@ foreach ($depts as $d) {
                 <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap:16px;">
                     <div class="form-group">
                         <label class="form-label" for="edit_date">Date *</label>
-                        <input type="date" id="edit_date" name="appointment_date" class="form-input" min="<?php echo date('Y-m-d'); ?>" required>
+                        <?php if (isset($errors['appointment_date'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['appointment_date']); ?></div><?php endif; ?>
+                        <input type="date" id="edit_date" name="appointment_date" class="form-input" min="<?php echo date('Y-m-d'); ?>" onchange="loadSlots('edit')" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label" for="edit_time">Time *</label>
-                        <input type="time" id="edit_time" name="appointment_time" class="form-input" required>
+                        <label class="form-label">Selected Time *</label>
+                        <?php if (isset($errors['appointment_time'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['appointment_time']); ?></div><?php endif; ?>
+                        <input type="text" id="edit_time_display" class="form-input" placeholder="Click a slot below" readonly required>
+                        <input type="hidden" id="edit_time" name="appointment_time" required>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 10px;">
+                    <label class="form-label">Available Time Slots</label>
+                    <div id="edit_slots_container" style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; min-height:42px; align-items:center;">
+                        <span style="font-size:0.85rem; color:var(--text-secondary);">Select a doctor and date to view available time slots.</span>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label">Appointment Type *</label>
+                    <?php if (isset($errors['appointment_type'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['appointment_type']); ?></div><?php endif; ?>
                     <select id="edit_type" name="appointment_type" class="form-input" required>
                         <option value="Physical">Physical (In-Person)</option>
                         <option value="Online">Online Consultation</option>
@@ -436,28 +417,7 @@ foreach ($depts as $d) {
         const doctorsData = <?php echo json_encode($docs); ?>;
         const deptNameToIdMap = <?php echo json_encode($deptNameToIdMap); ?>;
 
-        // Sidebar logic
-        const sidebar = document.getElementById('sidebar');
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        if (localStorage.getItem('sidebarCollapsed') === 'true') {
-            sidebar.classList.add('collapsed');
-        }
-        sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
-            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-        });
 
-        // Mobile Menu
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-        const sidebarOverlay = document.getElementById('sidebarOverlay');
-        mobileMenuBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('mobile-open');
-            sidebarOverlay.classList.toggle('active');
-        });
-        sidebarOverlay.addEventListener('click', () => {
-            sidebar.classList.remove('mobile-open');
-            sidebarOverlay.classList.remove('active');
-        });
 
         // Modal triggers
         function openEditModal(button) {
@@ -555,10 +515,85 @@ foreach ($depts as $d) {
                 } else {
                     document.getElementById(`${prefix}_schedule_info`).style.display = 'none';
                 }
+                loadSlots(prefix);
             } else {
                 document.getElementById(`${prefix}_fee`).textContent = 'Rs. 0.00';
                 document.getElementById(`${prefix}_schedule_info`).style.display = 'none';
             }
+        }
+
+        function loadSlots(prefix = 'edit') {
+            const docSelect = document.getElementById(`${prefix}_doc`);
+            const dateInput = document.getElementById(`${prefix}_date`);
+            const container = document.getElementById(`${prefix}_slots_container`);
+            const timeInput = document.getElementById(`${prefix}_time`);
+            const timeDisplay = document.getElementById(`${prefix}_time_display`);
+
+            if (!docSelect || !dateInput || !container) return;
+
+            const docId = docSelect.value;
+            const dateVal = dateInput.value;
+
+            if (!docId || !dateVal) {
+                container.innerHTML = '<span style="font-size:0.85rem; color:var(--text-secondary);">Select a doctor and date to view available time slots.</span>';
+                return;
+            }
+
+            container.innerHTML = '<span style="font-size:0.85rem; color:var(--accent);">⏳ Loading available slots...</span>';
+
+            fetch(`get_available_slots.php?doctor_id=${docId}&date=${dateVal}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (!data.success || !data.slots || data.slots.length === 0) {
+                        container.innerHTML = '<span style="font-size:0.85rem; color:#e74c3c;">No available slots for this date.</span>';
+                        return;
+                    }
+
+                    container.innerHTML = '';
+                    data.slots.forEach(s => {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.textContent = s.time;
+                        btn.style.padding = '6px 14px';
+                        btn.style.borderRadius = '20px';
+                        btn.style.fontSize = '0.82rem';
+                        btn.style.fontWeight = '600';
+                        btn.style.cursor = s.available ? 'pointer' : 'not-allowed';
+                        btn.style.border = '1px solid';
+                        btn.style.transition = 'all 0.2s ease';
+
+                        if (s.available) {
+                            btn.style.backgroundColor = 'rgba(0, 184, 148, 0.1)';
+                            btn.style.borderColor = 'rgba(0, 184, 148, 0.4)';
+                            btn.style.color = 'var(--accent)';
+
+                            btn.onclick = () => {
+                                container.querySelectorAll('button').forEach(b => {
+                                    if (!b.disabled) {
+                                        b.style.backgroundColor = 'rgba(0, 184, 148, 0.1)';
+                                        b.style.color = 'var(--accent)';
+                                    }
+                                });
+                                btn.style.backgroundColor = 'var(--accent)';
+                                btn.style.color = '#ffffff';
+
+                                timeInput.value = s.time;
+                                if (timeDisplay) timeDisplay.value = s.time;
+                            };
+                        } else {
+                            btn.disabled = true;
+                            btn.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+                            btn.style.borderColor = 'rgba(0, 0, 0, 0.1)';
+                            btn.style.color = 'var(--text-muted, #aaa)';
+                            btn.title = s.reason === 'Booked' ? 'Already Booked' : 'Past Time';
+                        }
+
+                        container.appendChild(btn);
+                    });
+                })
+                .catch(err => {
+                    container.innerHTML = '<span style="font-size:0.85rem; color:#e74c3c;">Failed to load slots.</span>';
+                });
         }
     </script>
 </body>
