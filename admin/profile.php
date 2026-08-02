@@ -26,9 +26,11 @@ if (!$admin) {
 // Handle profile update
 $errors = [];
 $success = '';
+$submittedAction = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = isset($_POST['action']) ? $_POST['action'] : '';
+    $submittedAction = $action;
 
     if ($action === 'update_profile') {
         $name = isset($_POST['name']) ? trim($_POST['name']) : '';
@@ -36,24 +38,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Validation
         if (empty($name)) {
-            $errors[] = 'Name is required.';
+            $errors['name'] = 'Name is required.';
         } elseif (strlen($name) < 2) {
-            $errors[] = 'Name must be at least 2 characters.';
+            $errors['name'] = 'Name must be at least 2 characters.';
         } elseif (strlen($name) > 100) {
-            $errors[] = 'Name must not exceed 100 characters.';
+            $errors['name'] = 'Name must not exceed 100 characters.';
         }
 
         if (empty($email)) {
-            $errors[] = 'Email is required.';
+            $errors['email'] = 'Email is required.';
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            $errors[] = 'Please enter a valid email address.';
+            $errors['email'] = 'Please enter a valid email address.';
         } else {
             // Check if email is taken by another admin
             $checkEmail = $conn->prepare("SELECT admin_id FROM tbl_admin WHERE email = ? AND admin_id != ?");
             $checkEmail->bind_param("si", $email, $admin['admin_id']);
             $checkEmail->execute();
             if ($checkEmail->get_result()->num_rows > 0) {
-                $errors[] = 'This email is already used by another admin.';
+                $errors['email'] = 'This email is already used by another admin.';
             }
             $checkEmail->close();
         }
@@ -85,24 +87,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $confirmPassword = isset($_POST['confirm_password']) ? $_POST['confirm_password'] : '';
 
         if (empty($currentPassword)) {
-            $errors[] = 'Current password is required.';
+            $errors['current_password'] = 'Current password is required.';
         }
 
         if (empty($newPassword)) {
-            $errors[] = 'New password is required.';
+            $errors['new_password'] = 'New password is required.';
         } elseif (strlen($newPassword) < 6) {
-            $errors[] = 'New password must be at least 6 characters.';
+            $errors['new_password'] = 'New password must be at least 6 characters.';
         }
 
         if (empty($confirmPassword)) {
-            $errors[] = 'Please confirm your new password.';
+            $errors['confirm_password'] = 'Please confirm your new password.';
         } elseif ($newPassword !== $confirmPassword) {
-            $errors[] = 'New passwords do not match.';
+            $errors['confirm_password'] = 'New passwords do not match.';
         }
 
         if (empty($errors)) {
             if (!password_verify($currentPassword, $admin['password'])) {
-                $errors[] = 'Current password is incorrect.';
+                $errors['current_password'] = 'Current password is incorrect.';
             } else {
                 $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
                 $updatePwd = $conn->prepare("UPDATE tbl_admin SET password = ? WHERE admin_id = ?");
@@ -119,18 +121,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $deptName = isset($_POST['department_name']) ? trim($_POST['department_name']) : '';
 
         if (empty($deptName)) {
-            $errors[] = 'Department name is required.';
+            $errors['department_name'] = 'Department name is required.';
         } elseif (strlen($deptName) < 2) {
-            $errors[] = 'Department name must be at least 2 characters.';
+            $errors['department_name'] = 'Department name must be at least 2 characters.';
         } elseif (strlen($deptName) > 100) {
-            $errors[] = 'Department name must not exceed 100 characters.';
+            $errors['department_name'] = 'Department name must not exceed 100 characters.';
         } else {
             // Check if department name already exists
             $checkDept = $conn->prepare("SELECT department_id FROM tbl_department WHERE department_name = ?");
             $checkDept->bind_param("s", $deptName);
             $checkDept->execute();
             if ($checkDept->get_result()->num_rows > 0) {
-                $errors[] = 'This department already exists.';
+                $errors['department_name'] = 'This department already exists.';
             }
             $checkDept->close();
         }
@@ -308,19 +310,6 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
             </div>
         </div>
 
-        <!-- Alerts -->
-        <?php if (!empty($errors)): ?>
-            <div class="alert-box alert-error" id="errorAlert">
-                <div class="alert-icon">⚠️</div>
-                <div class="alert-content">
-                    <?php foreach ($errors as $error): ?>
-                        <p><?php echo htmlspecialchars($error); ?></p>
-                    <?php endforeach; ?>
-                </div>
-                <button class="alert-close" onclick="this.parentElement.style.display='none'">&times;</button>
-            </div>
-        <?php endif; ?>
-
         <?php if (!empty($success)): ?>
             <div class="alert-box alert-success" id="successAlert">
                 <div class="alert-icon">✅</div>
@@ -397,14 +386,25 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
                         <div class="profile-card-body">
                             <form method="POST" action="" novalidate id="editProfileForm">
                                 <input type="hidden" name="action" value="update_profile">
+                                <?php if (!empty($errors) && $submittedAction === 'update_profile'): ?>
+                                    <div class="hms-error-box">
+                                        <ul>
+                                            <?php foreach ($errors as $error): ?>
+                                                <li><?php echo htmlspecialchars($error); ?></li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    </div>
+                                <?php endif; ?>
                                 <div class="form-group">
                                     <label class="form-label" for="name">Full Name</label>
+                                    <?php if (isset($errors['name'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['name']); ?></div><?php endif; ?>
                                     <input type="text" class="form-input" id="name" name="name"
                                            value="<?php echo htmlspecialchars($admin['name']); ?>"
                                            placeholder="Enter your full name">
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label" for="profile_email">Email Address</label>
+                                    <?php if (isset($errors['email'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['email']); ?></div><?php endif; ?>
                                     <input type="text" class="form-input" id="profile_email" name="email"
                                            value="<?php echo htmlspecialchars($admin['email']); ?>"
                                            placeholder="Enter your email">
@@ -426,18 +426,30 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
                         <div class="profile-card-body">
                             <form method="POST" action="" novalidate id="changePasswordForm">
                                 <input type="hidden" name="action" value="change_password">
+                                <?php if (!empty($errors) && $submittedAction === 'change_password'): ?>
+                                    <div class="hms-error-box">
+                                        <ul>
+                                            <?php foreach ($errors as $error): ?>
+                                                <li><?php echo htmlspecialchars($error); ?></li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    </div>
+                                <?php endif; ?>
                                 <div class="form-group">
                                     <label class="form-label" for="current_password">Current Password</label>
+                                    <?php if (isset($errors['current_password'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['current_password']); ?></div><?php endif; ?>
                                     <input type="password" class="form-input" id="current_password" name="current_password"
                                            placeholder="Enter current password">
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label" for="new_password">New Password</label>
+                                    <?php if (isset($errors['new_password'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['new_password']); ?></div><?php endif; ?>
                                     <input type="password" class="form-input" id="new_password" name="new_password"
                                            placeholder="Enter new password">
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label" for="confirm_password">Confirm New Password</label>
+                                    <?php if (isset($errors['confirm_password'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['confirm_password']); ?></div><?php endif; ?>
                                     <input type="password" class="form-input" id="confirm_password" name="confirm_password"
                                            placeholder="Confirm new password">
                                 </div>
@@ -466,8 +478,18 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
                         <div class="profile-card-body">
                             <form method="POST" action="" novalidate>
                                 <input type="hidden" name="action" value="add_department">
+                                <?php if (!empty($errors) && $submittedAction === 'add_department'): ?>
+                                    <div class="hms-error-box">
+                                        <ul>
+                                            <?php foreach ($errors as $error): ?>
+                                                <li><?php echo htmlspecialchars($error); ?></li>
+                                            <?php endforeach; ?>
+                                        </ul>
+                                    </div>
+                                <?php endif; ?>
                                 <div class="form-group">
                                     <label class="form-label" for="department_name">Department Name</label>
+                                    <?php if (isset($errors['department_name'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['department_name']); ?></div><?php endif; ?>
                                     <input type="text" class="form-input" id="department_name" name="department_name" placeholder="e.g. Cardiology" required>
                                 </div>
                                 <div class="form-actions" style="margin-top: 15px;">
@@ -487,6 +509,15 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
                             <h2>📋 Existing Departments</h2>
                         </div>
                         <div class="profile-card-body" style="overflow-x: auto;">
+                            <?php if (!empty($errors) && in_array($submittedAction, ['delete_department', 'update_department'])): ?>
+                                <div class="hms-error-box">
+                                    <ul>
+                                        <?php foreach ($errors as $error): ?>
+                                            <li><?php echo htmlspecialchars($error); ?></li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                </div>
+                            <?php endif; ?>
                             <table class="admin-table">
                                 <thead>
                                     <tr>
@@ -545,6 +576,15 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
                     <h2>🩺 Registered Doctors & Consultation Fees</h2>
                 </div>
                 <div class="profile-card-body" style="overflow-x: auto;">
+                    <?php if (!empty($errors) && $submittedAction === 'update_consultation_fee'): ?>
+                        <div class="hms-error-box">
+                            <ul>
+                                <?php foreach ($errors as $error): ?>
+                                    <li><?php echo htmlspecialchars($error); ?></li>
+                                <?php endforeach; ?>
+                            </ul>
+                        </div>
+                    <?php endif; ?>
                     <table class="admin-table">
                         <thead>
                             <tr>

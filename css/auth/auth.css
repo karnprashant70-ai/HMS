@@ -437,3 +437,39 @@ textarea.form-input {
     justify-content: center;
     border-radius: 50%;
 }
+
+.form-error,
+.field-error {
+    color: #e74c3c;
+    font-size: 0.85rem;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 5px;
+    margin-top: 2px;
+}
+
+/* ===== Reusable Form-Level Error Box ===== */
+.hms-error-box {
+    background-color: rgba(231, 76, 60, 0.08);
+    border: 1px solid rgba(231, 76, 60, 0.2);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    color: #e74c3c;
+    font-size: 0.88rem;
+    font-weight: 500;
+    text-align: left;
+    width: 100%;
+}
+.hms-error-box ul {
+    margin: 0;
+    padding-left: 20px;
+}
+.hms-error-box li {
+    list-style-type: disc;
+    margin-bottom: 4px;
+    color: #e74c3c;
+}
+.hms-error-box li:last-child {
+    margin-bottom: 0;
+}

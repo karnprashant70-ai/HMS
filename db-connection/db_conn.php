@@ -164,4 +164,81 @@ if ($rescheduleNoteCheck && $rescheduleNoteCheck->num_rows === 0) {
         die("Error adding reschedule_note column to tbl_appointment: " . $conn->error);
     }
 }
+
+// Ensure tbl_appointment has the report column for doctor report notes.
+$reportCheck = $conn->query("SHOW COLUMNS FROM tbl_appointment LIKE 'report'");
+if ($reportCheck && $reportCheck->num_rows === 0) {
+    $alterReportSql = "ALTER TABLE tbl_appointment ADD COLUMN report TEXT DEFAULT NULL AFTER reschedule_note";
+    if ($conn->query($alterReportSql) !== TRUE) {
+        die("Error adding report column to tbl_appointment: " . $conn->error);
+    }
+}
+
+// Ensure tbl_appointment has the investigation column for doctor investigation notes.
+$investigationCheck = $conn->query("SHOW COLUMNS FROM tbl_appointment LIKE 'investigation'");
+if ($investigationCheck && $investigationCheck->num_rows === 0) {
+    $alterInvestigationSql = "ALTER TABLE tbl_appointment ADD COLUMN investigation TEXT DEFAULT NULL AFTER report";
+    if ($conn->query($alterInvestigationSql) !== TRUE) {
+        die("Error adding investigation column to tbl_appointment: " . $conn->error);
+    }
+}
+
+// Ensure tbl_appointment has the follow_up column for doctor follow-up instructions.
+$followUpCheck = $conn->query("SHOW COLUMNS FROM tbl_appointment LIKE 'follow_up'");
+if ($followUpCheck && $followUpCheck->num_rows === 0) {
+    $alterFollowUpSql = "ALTER TABLE tbl_appointment ADD COLUMN follow_up TEXT DEFAULT NULL AFTER investigation";
+    if ($conn->query($alterFollowUpSql) !== TRUE) {
+        die("Error adding follow_up column to tbl_appointment: " . $conn->error);
+    }
+}
+
+// Create tbl_follow_up table if not exists
+$followUpTableSql = "CREATE TABLE IF NOT EXISTS tbl_follow_up (
+    follow_up_id INT AUTO_INCREMENT PRIMARY KEY,
+    appointment_id INT(11) NOT NULL,
+    patient_id INT(11) NOT NULL,
+    doctor_id INT(11) NOT NULL,
+    follow_up_date DATE NOT NULL,
+    follow_up_reason TEXT NOT NULL,
+    status ENUM('Pending', 'Completed') NOT NULL DEFAULT 'Pending',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (appointment_id) REFERENCES tbl_appointment(appointment_id) ON DELETE CASCADE,
+    FOREIGN KEY (patient_id) REFERENCES tbl_patient(patient_id) ON DELETE CASCADE,
+    FOREIGN KEY (doctor_id) REFERENCES tbl_doctor(doctor_id) ON DELETE CASCADE
+)";
+
+if ($conn->query($followUpTableSql) !== TRUE) {
+    die("Error creating tbl_follow_up table: " . $conn->error);
+}
+
+// Ensure tbl_doctor has shift_start, shift_end, slot_duration
+$shiftStartCheck = $conn->query("SHOW COLUMNS FROM tbl_doctor LIKE 'shift_start'");
+if ($shiftStartCheck && $shiftStartCheck->num_rows === 0) {
+    $conn->query("ALTER TABLE tbl_doctor ADD COLUMN shift_start TIME DEFAULT '09:00:00'");
+}
+$shiftEndCheck = $conn->query("SHOW COLUMNS FROM tbl_doctor LIKE 'shift_end'");
+if ($shiftEndCheck && $shiftEndCheck->num_rows === 0) {
+    $conn->query("ALTER TABLE tbl_doctor ADD COLUMN shift_end TIME DEFAULT '17:00:00'");
+}
+$slotDurationCheck = $conn->query("SHOW COLUMNS FROM tbl_doctor LIKE 'slot_duration'");
+if ($slotDurationCheck && $slotDurationCheck->num_rows === 0) {
+    $conn->query("ALTER TABLE tbl_doctor ADD COLUMN slot_duration INT DEFAULT 30");
+}
+
+// Create tbl_prescription table if not exists
+$prescriptionTableSql = "CREATE TABLE IF NOT EXISTS tbl_prescription (
+    prescription_id INT AUTO_INCREMENT PRIMARY KEY,
+    appointment_id INT(11) NOT NULL,
+    patient_id INT(11) NOT NULL,
+    doctor_id INT(11) NOT NULL,
+    medications TEXT NOT NULL,
+    instructions TEXT DEFAULT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (appointment_id) REFERENCES tbl_appointment(appointment_id) ON DELETE CASCADE,
+    FOREIGN KEY (patient_id) REFERENCES tbl_patient(patient_id) ON DELETE CASCADE,
+    FOREIGN KEY (doctor_id) REFERENCES tbl_doctor(doctor_id) ON DELETE CASCADE
+)";
+if ($conn->query($prescriptionTableSql) !== TRUE) {
+    die("Error creating tbl_prescription table: " . $conn->error);
+}
 ?>

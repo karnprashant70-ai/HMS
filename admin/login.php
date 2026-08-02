@@ -12,13 +12,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // PHP Validation — no HTML5 validation used
     if (empty($email)) {
-        $errors[] = 'Email address is required.';
+        $errors['email'] = 'Email address is required.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $errors[] = 'Please enter a valid email address.';
+        $errors['email'] = 'Please enter a valid email address.';
     }
 
     if (empty($password)) {
-        $errors[] = 'Password is required.';
+        $errors['password'] = 'Password is required.';
     }
 
     // Authenticate if no validation errors
@@ -41,10 +41,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 header("Location: profile.php");
                 exit;
             } else {
-                $errors[] = 'Incorrect password. Please try again.';
+                $errors['password'] = 'Incorrect password. Please try again.';
             }
         } else {
-            $errors[] = 'No admin account found with that email.';
+            $errors['email'] = 'No admin account found with that email.';
         }
         $stmt->close();
     }
@@ -89,23 +89,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <p>Sign in to access the administration dashboard</p>
             </div>
 
-            <!-- Error Messages -->
-            <?php if (!empty($errors)): ?>
-                <div class="alert-box alert-error" id="errorAlert">
-                    <div class="alert-icon">⚠️</div>
-                    <div class="alert-content">
-                        <?php foreach ($errors as $error): ?>
-                            <p><?php echo htmlspecialchars($error); ?></p>
-                        <?php endforeach; ?>
-                    </div>
-                    <button class="alert-close" onclick="this.parentElement.style.display='none'" aria-label="Close alert">&times;</button>
-                </div>
-            <?php endif; ?>
-
             <!-- Login Form — novalidate disables HTML5 validation -->
             <form method="POST" action="" novalidate id="adminLoginForm">
+                <?php if (!empty($errors)): ?>
+                    <div class="hms-error-box">
+                        <ul>
+                            <?php foreach ($errors as $error): ?>
+                                <li><?php echo htmlspecialchars($error); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
                 <div class="form-group">
                     <label class="form-label" for="email">Email Address</label>
+                    <?php if (isset($errors['email'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['email']); ?></div><?php endif; ?>
                     <div class="input-icon-wrapper">
                         <span class="input-icon">✉️</span>
                         <input
@@ -122,6 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <div class="form-group">
                     <label class="form-label" for="password">Password</label>
+                    <?php if (isset($errors['password'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['password']); ?></div><?php endif; ?>
                     <div class="input-icon-wrapper">
                         <span class="input-icon">🔒</span>
                         <input
