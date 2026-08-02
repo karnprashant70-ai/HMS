@@ -75,6 +75,7 @@ if (!empty($_SESSION['appt_success'])) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/index/variables.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="../css/sidebar.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/doctor-dashboard.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/auth/auth.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/doctor-appointments.css?v=<?php echo time(); ?>">
@@ -82,71 +83,10 @@ if (!empty($_SESSION['appt_success'])) {
 <body>
 
     <div class="bg-pattern"></div>
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <!-- Shared Sidebar Component -->
+    <?php include __DIR__ . '/../includes/sidebar.php'; ?>
 
     <div class="dashboard-layout">
-        <!-- ===== SIDEBAR ===== -->
-        <aside class="sidebar" id="sidebar">
-            <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="15 18 9 12 15 6"></polyline>
-                </svg>
-            </button>
-            <div class="sidebar-header">
-                <div class="sidebar-brand-icon">M+</div>
-                <div class="sidebar-brand-text">Medi-<span>Care</span></div>
-            </div>
-            <nav class="sidebar-nav">
-                <div class="sidebar-nav-label">Main</div>
-                <a href="dashboard.php" class="sidebar-link" data-tooltip="Dashboard">
-                    <span class="sidebar-link-icon">📊</span>
-                    <span class="sidebar-link-text">Dashboard</span>
-                </a>
-                <a href="appointments.php" class="sidebar-link" data-tooltip="Appointments">
-                    <span class="sidebar-link-icon">📅</span>
-                    <span class="sidebar-link-text">Appointments</span>
-                </a>
-                <a href="my_patients.php" class="sidebar-link active" data-tooltip="My Patients">
-                    <span class="sidebar-link-icon">🧑‍🤝‍🧑</span>
-                    <span class="sidebar-link-text">My Patients</span>
-                </a>
-                <div class="sidebar-nav-label">Account</div>
-                <details class="sidebar-dropdown">
-                    <summary class="sidebar-link" data-tooltip="Settings">
-                        <span class="sidebar-link-icon">⚙️</span>
-                        <span class="sidebar-link-text">Settings</span>
-                        <span class="dropdown-arrow">▼</span>
-                    </summary>
-                    <div class="sidebar-submenu">
-                        <a href="profile.php" class="sidebar-link" data-tooltip="My Profile">
-                            <span class="sidebar-link-icon">👤</span>
-                            <span class="sidebar-link-text">My Profile</span>
-                        </a>
-                                                <a href="reset_password.php" class="sidebar-link" data-tooltip="Reset Password">
-                            <span class="sidebar-link-icon">🔐</span>
-                            <span class="sidebar-link-text">Reset Password</span>
-                        </a>
-                        <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
-                            <span class="sidebar-link-icon">🚪</span>
-                            <span class="sidebar-link-text">Logout</span>
-                        </a>
-                    </div>
-                </details>
-            </nav>
-            <div class="sidebar-footer">
-                <div class="sidebar-avatar">
-                    <?php if ($profilePhoto): ?>
-                        <img src="<?php echo htmlspecialchars($profilePhoto); ?>" alt="Avatar">
-                    <?php else: ?>
-                        <?php echo $initials; ?>
-                    <?php endif; ?>
-                </div>
-                <div class="sidebar-user-info">
-                    <div class="sidebar-user-name">Dr. <?php echo htmlspecialchars($doctorName); ?></div>
-                    <div class="sidebar-user-role"><?php echo htmlspecialchars($department); ?></div>
-                </div>
-            </div>
-        </aside>
 
         <!-- ===== MAIN CONTENT ===== -->
         <main class="main-content">
@@ -162,10 +102,12 @@ if (!empty($_SESSION['appt_success'])) {
 
             <div class="dashboard-content">
                 <?php if (!empty($errors)): ?>
-                    <div class="error-banner" style="margin-bottom: 20px;">
-                        <?php foreach ($errors as $e): ?>
-                            <p>⚠️ <?php echo htmlspecialchars($e); ?></p>
-                        <?php endforeach; ?>
+                    <div class="hms-error-box">
+                        <ul>
+                            <?php foreach ($errors as $e): ?>
+                                <li><?php echo htmlspecialchars($e); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
                     </div>
                 <?php endif; ?>
 
@@ -260,28 +202,7 @@ if (!empty($_SESSION['appt_success'])) {
 
     <!-- ===== JS LOGIC ===== -->
     <script>
-        // Sidebar collapse logic
-        const sidebar = document.getElementById('sidebar');
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        if (localStorage.getItem('sidebarCollapsed') === 'true') {
-            sidebar.classList.add('collapsed');
-        }
-        sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
-            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-        });
 
-        // Mobile Menu
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-        const sidebarOverlay = document.getElementById('sidebarOverlay');
-        mobileMenuBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('mobile-open');
-            sidebarOverlay.classList.toggle('active');
-        });
-        sidebarOverlay.addEventListener('click', () => {
-            sidebar.classList.remove('mobile-open');
-            sidebarOverlay.classList.remove('active');
-        });
 
         // Dropdown toggle logic
         function toggleDropdown(trigger) {

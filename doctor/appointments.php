@@ -38,7 +38,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reschedule_appointmen
     // Validation
     if ($appointment_id <= 0) $errors[] = 'Invalid appointment.';
     if (empty($appointment_date)) $errors[] = 'New appointment date is required.';
-    if (empty($appointment_time)) $errors[] = 'New appointment time is required.';
+    if (empty($appointment_time)) {
+        $errors[] = 'New appointment time is required.';
+    } else {
+        $parsedTime = strtotime($appointment_time);
+        if ($parsedTime) {
+            $appointment_time = date('H:i:s', $parsedTime);
+        }
+    }
 
     if (empty($errors)) {
         // Verify this appointment belongs to this doctor
@@ -116,6 +123,88 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 }
 
+// Handle save medical records (Report, Investigation, Follow Up) for Timeline Appointments
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_medical_records'])) {
+    $appointment_id = intval($_POST['appointment_id'] ?? 0);
+    $report = trim($_POST['report'] ?? '');
+    $investigation = trim($_POST['investigation'] ?? '');
+    $follow_up_required = $_POST['follow_up_required'] ?? 'no';
+    $follow_up_date = $_POST['follow_up_date'] ?? '';
+    $follow_up_reason = trim($_POST['follow_up_reason'] ?? '');
+
+    // Validation
+    if ($appointment_id <= 0) {
+        $errors[] = 'Invalid appointment.';
+    }
+    if (empty($report)) {
+        $errors[] = 'Report details are required.';
+    }
+    if ($follow_up_required === 'yes') {
+        $min_fup_date = date('Y-m-d', strtotime('+1 day'));
+        if (empty($follow_up_date) || $follow_up_date < $min_fup_date) {
+            $errors[] = 'Please select a valid date.';
+        }
+        if (empty($follow_up_reason)) {
+            $errors[] = 'Follow-up reason is required.';
+        }
+    }
+
+    $medications = trim($_POST['medications'] ?? '');
+    $instructions = trim($_POST['instructions'] ?? '');
+
+    if (empty($errors)) {
+        // Verify this appointment belongs to this doctor and get patient_id
+        $checkStmt = $conn->prepare('SELECT doctor_id, patient_id FROM tbl_appointment WHERE appointment_id = ? LIMIT 1');
+        $checkStmt->bind_param('i', $appointment_id);
+        $checkStmt->execute();
+        $checkRes = $checkStmt->get_result()->fetch_assoc();
+        $checkStmt->close();
+
+        if ($checkRes && intval($checkRes['doctor_id']) === $doctorId) {
+            $patient_id = intval($checkRes['patient_id']);
+            $conn->begin_transaction();
+
+            try {
+                // Update existing appointment: save report, investigation, and follow_up text (if required, save date & reason, else NULL)
+                $follow_up_text = ($follow_up_required === 'yes') ? "Required on " . $follow_up_date . " - " . $follow_up_reason : NULL;
+
+                $updateStmt = $conn->prepare('UPDATE tbl_appointment SET report = ?, investigation = ?, follow_up = ?, status = ? WHERE appointment_id = ?');
+                $status = 'Completed';
+                $updateStmt->bind_param('ssssi', $report, $investigation, $follow_up_text, $status, $appointment_id);
+                $updateStmt->execute();
+                $updateStmt->close();
+
+                // If follow-up required, insert into tbl_follow_up
+                if ($follow_up_required === 'yes') {
+                    $insertFUP = $conn->prepare('INSERT INTO tbl_follow_up (appointment_id, patient_id, doctor_id, follow_up_date, follow_up_reason, status) VALUES (?, ?, ?, ?, ?, ?)');
+                    $fupStatus = 'Pending';
+                    $insertFUP->bind_param('iiisss', $appointment_id, $patient_id, $doctorId, $follow_up_date, $follow_up_reason, $fupStatus);
+                    $insertFUP->execute();
+                    $insertFUP->close();
+                }
+
+                // Insert into tbl_prescription if medications are provided
+                if (!empty($medications)) {
+                    $insertRx = $conn->prepare('INSERT INTO tbl_prescription (appointment_id, patient_id, doctor_id, medications, instructions) VALUES (?, ?, ?, ?, ?)');
+                    $insertRx->bind_param('iiiss', $appointment_id, $patient_id, $doctorId, $medications, $instructions);
+                    $insertRx->execute();
+                    $insertRx->close();
+                }
+
+                $conn->commit();
+                $_SESSION['appt_success'] = 'Medical records and follow-up saved successfully.';
+                header('Location: appointments.php');
+                exit;
+            } catch (Exception $e) {
+                $conn->rollback();
+                $errors[] = 'Failed to save medical records: ' . $e->getMessage();
+            }
+        } else {
+            $errors[] = 'Access denied or invalid appointment.';
+        }
+    }
+}
+
 if (!empty($_SESSION['appt_success'])) {
     $successMessage = $_SESSION['appt_success'];
     unset($_SESSION['appt_success']);
@@ -131,6 +220,7 @@ if (!empty($_SESSION['appt_success'])) {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../css/index/variables.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="../css/sidebar.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/doctor-dashboard.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/auth/auth.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/doctor-appointments.css?v=<?php echo time(); ?>">
@@ -138,71 +228,10 @@ if (!empty($_SESSION['appt_success'])) {
 <body>
 
     <div class="bg-pattern"></div>
-    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+    <!-- Shared Sidebar Component -->
+    <?php include __DIR__ . '/../includes/sidebar.php'; ?>
 
     <div class="dashboard-layout">
-        <!-- ===== SIDEBAR ===== -->
-        <aside class="sidebar" id="sidebar">
-            <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="15 18 9 12 15 6"></polyline>
-                </svg>
-            </button>
-            <div class="sidebar-header">
-                <div class="sidebar-brand-icon">M+</div>
-                <div class="sidebar-brand-text">Medi-<span>Care</span></div>
-            </div>
-            <nav class="sidebar-nav">
-                <div class="sidebar-nav-label">Main</div>
-                <a href="dashboard.php" class="sidebar-link" data-tooltip="Dashboard">
-                    <span class="sidebar-link-icon">📊</span>
-                    <span class="sidebar-link-text">Dashboard</span>
-                </a>
-                <a href="appointments.php" class="sidebar-link active" data-tooltip="Appointments">
-                    <span class="sidebar-link-icon">📅</span>
-                    <span class="sidebar-link-text">Appointments</span>
-                </a>
-                <a href="my_patients.php" class="sidebar-link" data-tooltip="My Patients">
-                    <span class="sidebar-link-icon">🧑‍🤝‍🧑</span>
-                    <span class="sidebar-link-text">My Patients</span>
-                </a>
-                <div class="sidebar-nav-label">Account</div>
-                <details class="sidebar-dropdown">
-                    <summary class="sidebar-link" data-tooltip="Settings">
-                        <span class="sidebar-link-icon">⚙️</span>
-                        <span class="sidebar-link-text">Settings</span>
-                        <span class="dropdown-arrow">▼</span>
-                    </summary>
-                    <div class="sidebar-submenu">
-                        <a href="profile.php" class="sidebar-link" data-tooltip="My Profile">
-                            <span class="sidebar-link-icon">👤</span>
-                            <span class="sidebar-link-text">My Profile</span>
-                        </a>
-                                                <a href="reset_password.php" class="sidebar-link" data-tooltip="Reset Password">
-                            <span class="sidebar-link-icon">🔐</span>
-                            <span class="sidebar-link-text">Reset Password</span>
-                        </a>
-                        <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
-                            <span class="sidebar-link-icon">🚪</span>
-                            <span class="sidebar-link-text">Logout</span>
-                        </a>
-                    </div>
-                </details>
-            </nav>
-            <div class="sidebar-footer">
-                <div class="sidebar-avatar">
-                    <?php if ($profilePhoto): ?>
-                        <img src="<?php echo htmlspecialchars($profilePhoto); ?>" alt="Avatar">
-                    <?php else: ?>
-                        <?php echo $initials; ?>
-                    <?php endif; ?>
-                </div>
-                <div class="sidebar-user-info">
-                    <div class="sidebar-user-name">Dr. <?php echo htmlspecialchars($doctorName); ?></div>
-                    <div class="sidebar-user-role"><?php echo htmlspecialchars($department); ?></div>
-                </div>
-            </div>
-        </aside>
 
         <!-- ===== MAIN CONTENT ===== -->
         <main class="main-content">
@@ -218,10 +247,12 @@ if (!empty($_SESSION['appt_success'])) {
 
                 <div class="dashboard-content">
                     <?php if (!empty($errors)): ?>
-                        <div class="error-banner" style="margin-bottom: 20px;">
-                            <?php foreach ($errors as $e): ?>
-                                <p>⚠️ <?php echo htmlspecialchars($e); ?></p>
-                            <?php endforeach; ?>
+                        <div class="hms-error-box">
+                            <ul>
+                                <?php foreach ($errors as $e): ?>
+                                    <li><?php echo htmlspecialchars($e); ?></li>
+                                <?php endforeach; ?>
+                            </ul>
                         </div>
                     <?php endif; ?>
 
@@ -238,19 +269,49 @@ if (!empty($_SESSION['appt_success'])) {
                     <?php endif; ?>
 
                     <?php
+                    $todayDate = date('Y-m-d');
+
+                    // Fetch Normal Appointments (Everything EXCEPT today's confirmed/completed appointments)
                     $stmt = $conn->prepare("SELECT a.*, p.first_name, p.middle_name, p.last_name 
                                             FROM tbl_appointment a
                                             JOIN tbl_patient p ON a.patient_id = p.patient_id
                                             WHERE a.doctor_id = ?
+                                              AND NOT (a.appointment_date = ? AND a.status IN ('Confirmed', 'Completed'))
                                             ORDER BY a.appointment_date DESC, a.appointment_time DESC");
-                    $stmt->bind_param('i', $doctorId);
+                    $stmt->bind_param('is', $doctorId, $todayDate);
                     $stmt->execute();
                     $result = $stmt->get_result();
                     $count = $result ? $result->num_rows : 0;
                     $stmt->close();
+
+                    // Fetch Timeline Appointments (Confirmed/Completed AND appointment date is exactly today)
+                    $stmtTimeline = $conn->prepare("SELECT a.*, p.first_name, p.middle_name, p.last_name 
+                                                    FROM tbl_appointment a
+                                                    JOIN tbl_patient p ON a.patient_id = p.patient_id
+                                                    WHERE a.doctor_id = ?
+                                                      AND a.appointment_date = ?
+                                                      AND a.status IN ('Confirmed', 'Completed')
+                                                    ORDER BY a.appointment_date DESC, a.appointment_time DESC");
+                    $stmtTimeline->bind_param('is', $doctorId, $todayDate);
+                    $stmtTimeline->execute();
+                    $resultTimeline = $stmtTimeline->get_result();
+                    $countTimeline = $resultTimeline ? $resultTimeline->num_rows : 0;
+                    $stmtTimeline->close();
                     ?>
 
-                    <div class="appointment-table-card" style="margin-bottom: 24px;">
+                    <!-- Tabs Navigation -->
+                    <div class="appt-tabs">
+                        <button type="button" class="appt-tab-btn active" data-tab="scheduled" onclick="switchTab('scheduled')">
+                            📅 Scheduled Appointments (<?php echo $count; ?>)
+                        </button>
+                        <button type="button" class="appt-tab-btn" data-tab="timeline" onclick="switchTab('timeline')">
+                            🕒 Timeline Appointments (<?php echo $countTimeline; ?>)
+                        </button>
+                    </div>
+
+                    <!-- Scheduled Appointments Tab Content -->
+                    <div id="scheduled-tab" class="tab-content active">
+                        <div class="appointment-table-card" style="margin-bottom: 24px;">
                         <div class="card-header" style="margin-bottom: 16px;">
                             <h3 class="card-title">All Appointments</h3>
                             <span class="card-badge"><?php echo $count; ?> record<?php echo $count !== 1 ? 's' : ''; ?></span>
@@ -270,6 +331,7 @@ if (!empty($_SESSION['appt_success'])) {
                             </thead>
                             <tbody>
                                 <?php if ($count > 0): 
+                                    $serial_no = 1;
                                     while ($row = $result->fetch_assoc()):
                                         $patName = trim($row['first_name'] . ' ' . $row['middle_name'] . ' ' . $row['last_name']);
                                         $status = $row['status'];
@@ -277,7 +339,7 @@ if (!empty($_SESSION['appt_success'])) {
                                         $rescheduleNote = $row['reschedule_note'] ?? null;
                                 ?>
                                     <tr>
-                                        <td>#<?php echo $row['appointment_id']; ?></td>
+                                        <td><?php echo $serial_no++; ?></td>
                                         <td><strong><?php echo htmlspecialchars($patName); ?></strong></td>
                                         <td><?php echo date('M d, Y', strtotime($row['appointment_date'])); ?></td>
                                         <td><?php echo date('h:i A', strtotime($row['appointment_time'])); ?></td>
@@ -341,6 +403,116 @@ if (!empty($_SESSION['appt_success'])) {
                             </tbody>
                         </table>
                     </div>
+                    </div> <!-- End of scheduled-tab -->
+
+                    <!-- Timeline Appointments Tab Content -->
+                    <div id="timeline-tab" class="tab-content">
+                        <!-- ===== TIMELINE APPOINTMENTS SUBSECTION ===== -->
+                        <div class="timeline-section" style="margin-bottom: 40px;">
+                        <div class="timeline-header" style="margin-bottom: 20px;">
+                            <h3 class="card-title" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">📅 Timeline Appointments</h3>
+                            <span class="card-badge" style="background: var(--primary); color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;"><?php echo $countTimeline; ?> record<?php echo $countTimeline !== 1 ? 's' : ''; ?></span>
+                        </div>
+
+                        <?php if ($countTimeline > 0): ?>
+                            <div class="timeline-container">
+                                <?php 
+                                while ($tRow = $resultTimeline->fetch_assoc()):
+                                    $tPatName = trim($tRow['first_name'] . ' ' . $tRow['middle_name'] . ' ' . $tRow['last_name']);
+                                    $tStatus = $tRow['status'];
+                                    $tStatusLower = strtolower($tStatus);
+                                    
+                                    // Formatting Booking Time (created_at)
+                                    $bookingTimeStr = !empty($tRow['created_at']) ? date('M d, Y h:i A', strtotime($tRow['created_at'])) : 'N/A';
+                                ?>
+                                    <div class="timeline-item">
+                                        <div class="timeline-marker"></div>
+                                        <div class="timeline-card">
+                                            <div class="timeline-card-header">
+                                                <div>
+                                                    <h4 class="patient-info-title"><?php echo htmlspecialchars($tPatName); ?></h4>
+                                                    <div class="booking-time-meta">Booked on: <?php echo htmlspecialchars($bookingTimeStr); ?></div>
+                                                </div>
+                                                <div class="timeline-badges">
+                                                    <span class="appt-badge <?php echo strtolower($tRow['appointment_type']) === 'online' ? 'online' : 'in-person'; ?>">
+                                                        <?php echo htmlspecialchars($tRow['appointment_type']); ?>
+                                                    </span>
+                                                    <span class="appt-badge status-badge <?php echo $tStatusLower; ?>">
+                                                        <?php echo htmlspecialchars($tStatus); ?>
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <div class="timeline-card-body">
+                                                <div class="appt-datetime-detail">
+                                                    <div class="detail-item">
+                                                        <span class="detail-label">Appointment Date</span>
+                                                        <span class="detail-value"><?php echo date('M d, Y', strtotime($tRow['appointment_date'])); ?></span>
+                                                    </div>
+                                                    <div class="detail-item">
+                                                        <span class="detail-label">Appointment Time</span>
+                                                        <span class="detail-value"><?php echo date('h:i A', strtotime($tRow['appointment_time'])); ?></span>
+                                                    </div>
+                                                </div>
+
+                                                <form method="POST" action="" class="medical-records-form" novalidate>
+                                                    <input type="hidden" name="save_medical_records" value="1">
+                                                    <input type="hidden" name="appointment_id" value="<?php echo $tRow['appointment_id']; ?>">
+                                                    
+                                                    <div class="form-row-grid">
+                                                        <div class="timeline-textarea-group">
+                                                            <label for="report_<?php echo $tRow['appointment_id']; ?>">Report *</label>
+                                                            <textarea id="report_<?php echo $tRow['appointment_id']; ?>" name="report" class="timeline-textarea" placeholder="Enter patient diagnosis and medical report details..."></textarea>
+                                                        </div>
+                                                        <div class="timeline-textarea-group">
+                                                            <label for="investigation_<?php echo $tRow['appointment_id']; ?>">Investigation</label>
+                                                            <textarea id="investigation_<?php echo $tRow['appointment_id']; ?>" name="investigation" class="timeline-textarea" placeholder="Enter requested lab tests or diagnostic investigations..."></textarea>
+                                                        </div>
+                                                        <div class="timeline-textarea-group" style="grid-column: span 2;">
+                                                            <label for="medications_<?php echo $tRow['appointment_id']; ?>">💊 Prescription / Medications</label>
+                                                            <textarea id="medications_<?php echo $tRow['appointment_id']; ?>" name="medications" class="timeline-textarea" placeholder="e.g. Paracetamol 500mg - 1 tablet 3x daily after meals x 5 days&#10;Amoxicillin 250mg - 1 capsule 2x daily x 7 days"></textarea>
+                                                        </div>
+                                                        <div class="timeline-textarea-group">
+                                                            <label for="instructions_<?php echo $tRow['appointment_id']; ?>">Advice / Special Instructions</label>
+                                                            <textarea id="instructions_<?php echo $tRow['appointment_id']; ?>" name="instructions" class="timeline-textarea" placeholder="e.g. Drink plenty of water, rest for 3 days..."></textarea>
+                                                        </div>
+                                                        <div class="timeline-textarea-group">
+                                                            <label for="follow_up_required_<?php echo $tRow['appointment_id']; ?>">Follow Up Required?</label>
+                                                            <select id="follow_up_required_<?php echo $tRow['appointment_id']; ?>" name="follow_up_required" class="timeline-textarea" style="padding: 10px 12px; height: auto;" onchange="toggleFollowUpFields(<?php echo $tRow['appointment_id']; ?>)">
+                                                                <option value="no">No</option>
+                                                                <option value="yes">Yes</option>
+                                                            </select>
+                                                        </div>
+                                                    </div>
+
+                                                    <div id="follow_up_details_<?php echo $tRow['appointment_id']; ?>" class="form-row-grid" style="display: none; margin-top: 16px; border-top: 1px dashed var(--border-glass); padding-top: 16px;">
+                                                        <div class="timeline-textarea-group">
+                                                            <label for="follow_up_date_<?php echo $tRow['appointment_id']; ?>">Follow-up Date *</label>
+                                                            <input type="date" id="follow_up_date_<?php echo $tRow['appointment_id']; ?>" name="follow_up_date" class="timeline-textarea" style="padding: 10px 12px;">
+                                                        </div>
+                                                        <div class="timeline-textarea-group" style="grid-column: span 2;">
+                                                            <label for="follow_up_reason_<?php echo $tRow['appointment_id']; ?>">Follow-up Reason *</label>
+                                                            <textarea id="follow_up_reason_<?php echo $tRow['appointment_id']; ?>" name="follow_up_reason" class="timeline-textarea" placeholder="Enter follow-up reason and medical instructions..."></textarea>
+                                                        </div>
+                                                    </div>
+
+                                                    <div style="display: flex; justify-content: flex-end;">
+                                                        <button type="submit" class="btn-timeline-save">
+                                                            💾 Save Medical Records & Complete
+                                                        </button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <?php endwhile; ?>
+                            </div>
+                        <?php else: ?>
+                            <div class="appointment-table-card" style="padding: 32px; text-align: center; color: var(--text-secondary);">
+                                <p style="font-size: 0.95rem; font-weight: 500;">No confirmed appointments scheduled for today or past days.</p>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                    </div> <!-- End of timeline-tab -->
             </div>
         </main>
     </div>
@@ -381,28 +553,7 @@ if (!empty($_SESSION['appt_success'])) {
 
     <!-- ===== JS LOGIC ===== -->
     <script>
-        // Sidebar collapse logic
-        const sidebar = document.getElementById('sidebar');
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        if (localStorage.getItem('sidebarCollapsed') === 'true') {
-            sidebar.classList.add('collapsed');
-        }
-        sidebarToggle.addEventListener('click', () => {
-            sidebar.classList.toggle('collapsed');
-            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-        });
 
-        // Mobile Menu
-        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-        const sidebarOverlay = document.getElementById('sidebarOverlay');
-        mobileMenuBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('mobile-open');
-            sidebarOverlay.classList.toggle('active');
-        });
-        sidebarOverlay.addEventListener('click', () => {
-            sidebar.classList.remove('mobile-open');
-            sidebarOverlay.classList.remove('active');
-        });
 
         // Reschedule modal logic
         function openRescheduleModal(apptData, patientName) {
@@ -442,6 +593,43 @@ if (!empty($_SESSION['appt_success'])) {
                     w.classList.remove('open');
                 });
             }
+        });
+
+        // Tab switching logic
+        function switchTab(tabId) {
+            document.querySelectorAll('.appt-tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+
+            // Find matching button and content
+            const activeBtn = document.querySelector(`.appt-tab-btn[data-tab="${tabId}"]`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            const activeContent = document.getElementById(`${tabId}-tab`);
+            if (activeContent) activeContent.classList.add('active');
+
+            localStorage.setItem('activeApptTab', tabId);
+        }
+
+        // Toggle Follow-up fields dynamically based on selection
+        function toggleFollowUpFields(apptId) {
+            const selectEl = document.getElementById('follow_up_required_' + apptId);
+            const detailsContainer = document.getElementById('follow_up_details_' + apptId);
+
+            if (selectEl && selectEl.value === 'yes') {
+                if (detailsContainer) detailsContainer.style.display = 'grid';
+            } else {
+                if (detailsContainer) detailsContainer.style.display = 'none';
+            }
+        }
+
+        // On page load, restore active tab if exists
+        document.addEventListener('DOMContentLoaded', () => {
+            const activeTab = localStorage.getItem('activeApptTab') || 'scheduled';
+            switchTab(activeTab);
         });
     </script>
 </body>

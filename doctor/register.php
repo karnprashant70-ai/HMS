@@ -492,56 +492,51 @@ function errClass($errors, $field) {
             </script>
             <?php endif; ?>
 
-            <?php if (!empty($errors)): ?>
-            <div class="error-banner">
-                <span style="font-size: 1.2rem;">⚠️</span>
-                <p>
-                    <?php 
-                        if (isset($errors['db'])) {
-                            echo htmlspecialchars($errors['db']);
-                        } else {
-                            echo "Please fix the highlighted errors below to continue.";
-                        }
-                    ?>
-                </p>
-            </div>
-            <?php endif; ?>
-
             <form id="registrationForm" method="POST" action="" enctype="multipart/form-data" novalidate>
+                <?php if (!empty($errors)): ?>
+                    <div class="hms-error-box">
+                        <ul>
+                            <?php foreach ($errors as $error): ?>
+                                <li><?php echo htmlspecialchars($error); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
                 <!-- STEP 1: PERSONAL DETAILS -->
                 <div class="form-step <?php echo ($activeStep === 1) ? 'active' : ''; ?>" id="step1">
                     <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label" for="firstName">First Name *</label>
-                            <input type="text" id="firstName" name="firstName" class="form-input<?php echo errClass($errors, 'firstName'); ?>" placeholder="e.g. Ram" value="<?php echo oldVal($formData, 'firstName'); ?>">
                             <?php echo showError($errors, 'firstName'); ?>
+                            <input type="text" id="firstName" name="firstName" class="form-input<?php echo errClass($errors, 'firstName'); ?>" placeholder="e.g. Ram" value="<?php echo oldVal($formData, 'firstName'); ?>">
                         </div>
 
                         <div class="form-group">
                             <label class="form-label" for="middleName">Middle Name</label>
-                            <input type="text" id="middleName" name="middleName" class="form-input<?php echo errClass($errors, 'middleName'); ?>" placeholder="e.g. Bahadur" value="<?php echo oldVal($formData, 'middleName'); ?>">
                             <?php echo showError($errors, 'middleName'); ?>
+                            <input type="text" id="middleName" name="middleName" class="form-input<?php echo errClass($errors, 'middleName'); ?>" placeholder="e.g. Bahadur" value="<?php echo oldVal($formData, 'middleName'); ?>">
                         </div>
 
                         <div class="form-group">
                             <label class="form-label" for="doctor_lname">Last Name *</label>
-                            <input type="text" id="doctor_lname" name="doctor_lname" class="form-input<?php echo errClass($errors, 'lastName'); ?>" placeholder="e.g. Sharma" value="<?php echo oldVal($formData, 'lastName'); ?>" autocomplete="off">
                             <?php echo showError($errors, 'lastName'); ?>
+                            <input type="text" id="doctor_lname" name="doctor_lname" class="form-input<?php echo errClass($errors, 'lastName'); ?>" placeholder="e.g. Sharma" value="<?php echo oldVal($formData, 'lastName'); ?>" autocomplete="off">
                         </div>
 
                         <div class="form-group">
                             <label class="form-label" for="gender">Gender *</label>
+                            <?php echo showError($errors, 'gender'); ?>
                             <select id="gender" name="gender" class="form-input<?php echo errClass($errors, 'gender'); ?>">
                                 <option value="" disabled <?php echo (empty($formData['gender'] ?? '')) ? 'selected' : ''; ?>>Select Gender</option>
                                 <option value="Male" <?php echo (($formData['gender'] ?? '') === 'Male') ? 'selected' : ''; ?>>Male</option>
                                 <option value="Female" <?php echo (($formData['gender'] ?? '') === 'Female') ? 'selected' : ''; ?>>Female</option>
                                 <option value="Other" <?php echo (($formData['gender'] ?? '') === 'Other') ? 'selected' : ''; ?>>Other</option>
                             </select>
-                            <?php echo showError($errors, 'gender'); ?>
                         </div>
 
                         <div class="form-group">
                             <label class="form-label" for="maritalStatus">Marital Status *</label>
+                            <?php echo showError($errors, 'maritalStatus'); ?>
                             <select id="maritalStatus" name="maritalStatus" class="form-input<?php echo errClass($errors, 'maritalStatus'); ?>">
                                 <option value="" disabled <?php echo (empty($formData['maritalStatus'] ?? '')) ? 'selected' : ''; ?>>Select Marital Status</option>
                                 <option value="Single" <?php echo (($formData['maritalStatus'] ?? '') === 'Single') ? 'selected' : ''; ?>>Single</option>
@@ -549,12 +544,12 @@ function errClass($errors, $field) {
                                 <option value="Divorced" <?php echo (($formData['maritalStatus'] ?? '') === 'Divorced') ? 'selected' : ''; ?>>Divorced</option>
                                 <option value="Widowed" <?php echo (($formData['maritalStatus'] ?? '') === 'Widowed') ? 'selected' : ''; ?>>Widowed</option>
                             </select>
-                            <?php echo showError($errors, 'maritalStatus'); ?>
                         </div>
 
                         <!-- Profile Photo Upload -->
                         <div class="form-group">
                             <label class="form-label">Profile Photo </label>
+                            <?php echo showError($errors, 'profilePhoto'); ?>
                             <div class="photo-upload-container">
                                 <div class="photo-preview" id="photoPreview">
                                     <span>📷</span>
@@ -564,7 +559,6 @@ function errClass($errors, $field) {
                                     <input type="file" id="profilePhoto" name="profilePhoto" accept="image/*" onchange="previewImage(event)">
                                 </div>
                             </div>
-                            <?php echo showError($errors, 'profilePhoto'); ?>
                         </div>
                     </div>
 
@@ -581,23 +575,23 @@ function errClass($errors, $field) {
                     <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label" for="phoneNumber">Phone Number *</label>
+                            <?php echo showError($errors, 'phoneNumber'); ?>
                             <div class="phone-input-group">
                                 <span class="phone-prefix">🇳🇵 +977</span>
                                 <input type="tel" id="phoneNumber" name="phoneNumber" class="form-input<?php echo errClass($errors, 'phoneNumber'); ?>" placeholder="98XXXXXXXX" value="<?php echo oldVal($formData, 'phoneNumber'); ?>">
                             </div>
-                            <?php echo showError($errors, 'phoneNumber'); ?>
                         </div>
 
                         <div class="form-group">
                             <label class="form-label" for="email">Email Address *</label>
-                            <input type="text" id="email" name="email" class="form-input<?php echo errClass($errors, 'email'); ?>" placeholder="dr.ram@medicare.com" value="<?php echo oldVal($formData, 'email'); ?>">
                             <?php echo showError($errors, 'email'); ?>
+                            <input type="text" id="email" name="email" class="form-input<?php echo errClass($errors, 'email'); ?>" placeholder="dr.ram@medicare.com" value="<?php echo oldVal($formData, 'email'); ?>">
                         </div>
 
                         <div class="form-group full-width">
                             <label class="form-label" for="tempAddress">Temporary Address *</label>
-                            <textarea id="tempAddress" name="tempAddress" class="form-input<?php echo errClass($errors, 'tempAddress'); ?>" placeholder="Street address, City, District"><?php echo oldVal($formData, 'tempAddress'); ?></textarea>
                             <?php echo showError($errors, 'tempAddress'); ?>
+                            <textarea id="tempAddress" name="tempAddress" class="form-input<?php echo errClass($errors, 'tempAddress'); ?>" placeholder="Street address, City, District"><?php echo oldVal($formData, 'tempAddress'); ?></textarea>
                         </div>
 
                         <div class="form-group full-width">
@@ -627,42 +621,42 @@ function errClass($errors, $field) {
                     <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label" for="department">Department *</label>
+                            <?php echo showError($errors, 'department'); ?>
                             <select id="department" name="department" class="form-input<?php echo errClass($errors, 'department'); ?>">
                                 <option value="" disabled <?php echo (empty($formData['department'] ?? '')) ? 'selected' : ''; ?>>Select Department</option>
                                 <?php foreach ($validDepartments as $deptName): ?>
                                     <option value="<?php echo htmlspecialchars($deptName); ?>" <?php echo (($formData['department'] ?? '') === $deptName) ? 'selected' : ''; ?>><?php echo htmlspecialchars($deptName); ?></option>
                                 <?php endforeach; ?>
                             </select>
-                            <?php echo showError($errors, 'department'); ?>
                         </div>
 
                         <div class="form-group">
                             <label class="form-label" for="specialization">Specialization *</label>
-                            <input type="text" id="specialization" name="specialization" class="form-input<?php echo errClass($errors, 'specialization'); ?>" placeholder="e.g. Pediatric Cardiology" value="<?php echo oldVal($formData, 'specialization'); ?>">
                             <?php echo showError($errors, 'specialization'); ?>
+                            <input type="text" id="specialization" name="specialization" class="form-input<?php echo errClass($errors, 'specialization'); ?>" placeholder="e.g. Pediatric Cardiology" value="<?php echo oldVal($formData, 'specialization'); ?>">
                         </div>
 
                         <div class="form-group">
                             <label class="form-label" for="qualification">Qualification *</label>
-                            <input type="text" id="qualification" name="qualification" class="form-input<?php echo errClass($errors, 'qualification'); ?>" placeholder="e.g. MD, MBBS" value="<?php echo oldVal($formData, 'qualification'); ?>">
                             <?php echo showError($errors, 'qualification'); ?>
+                            <input type="text" id="qualification" name="qualification" class="form-input<?php echo errClass($errors, 'qualification'); ?>" placeholder="e.g. MD, MBBS" value="<?php echo oldVal($formData, 'qualification'); ?>">
                         </div>
 
                         <div class="form-group">
                             <label class="form-label" for="licenceNumber">NMC Registration Number *</label>
-                            <input type="text" id="licenceNumber" name="licenceNumber" class="form-input<?php echo errClass($errors, 'licenceNumber'); ?>" placeholder="e.g. NMC-12345" value="<?php echo oldVal($formData, 'licenceNumber'); ?>">
                             <?php echo showError($errors, 'licenceNumber'); ?>
+                            <input type="text" id="licenceNumber" name="licenceNumber" class="form-input<?php echo errClass($errors, 'licenceNumber'); ?>" placeholder="e.g. NMC-12345" value="<?php echo oldVal($formData, 'licenceNumber'); ?>">
                         </div>
 
                         <div class="form-group">
                             <label class="form-label" for="experience">Years of Experience *</label>
+                            <?php echo showError($errors, 'experience'); ?>
                             <select id="experience" name="experience" class="form-input<?php echo errClass($errors, 'experience'); ?>">
                                 <option value="">Select years</option>
                                 <?php for ($i = 0; $i <= 70; $i++): ?>
                                     <option value="<?php echo $i; ?>" <?php echo ((string)($formData['experience'] ?? '') === (string)$i) ? 'selected' : ''; ?>><?php echo $i; ?><?php echo $i === 1 ? ' year' : ' years'; ?></option>
                                 <?php endfor; ?>
                             </select>
-                            <?php echo showError($errors, 'experience'); ?>
                         </div>
                     </div>
 
@@ -681,14 +675,14 @@ function errClass($errors, $field) {
                     <div class="form-grid">
                         <div class="form-group">
                             <label class="form-label" for="password">Password *</label>
-                            <input type="password" id="password" name="password" class="form-input<?php echo errClass($errors, 'password'); ?>" placeholder="••••••••">
                             <?php echo showError($errors, 'password'); ?>
+                            <input type="password" id="password" name="password" class="form-input<?php echo errClass($errors, 'password'); ?>" placeholder="••••••••">
                         </div>
 
                         <div class="form-group">
                             <label class="form-label" for="confirmPassword">Confirm Password *</label>
-                            <input type="password" id="confirmPassword" name="confirmPassword" class="form-input<?php echo errClass($errors, 'confirmPassword'); ?>" placeholder="••••••••">
                             <?php echo showError($errors, 'confirmPassword'); ?>
+                            <input type="password" id="confirmPassword" name="confirmPassword" class="form-input<?php echo errClass($errors, 'confirmPassword'); ?>" placeholder="••••••••">
                         </div>
 
                         <!-- Info Fields -->
