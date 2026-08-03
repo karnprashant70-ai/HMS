@@ -44,6 +44,57 @@ $apptRes = $apptStmt->get_result()->fetch_assoc();
 $upcomingAppointments = $apptRes['appt_count'] ?? 0;
 $apptStmt->close();
 
+// Fetch active prescriptions count
+$rxCountStmt = $conn->prepare("SELECT COUNT(*) AS rx_count FROM tbl_prescription WHERE patient_id = ?");
+$rxCountStmt->bind_param('i', $patientId);
+$rxCountStmt->execute();
+$rxCountRes = $rxCountStmt->get_result()->fetch_assoc();
+$totalPrescriptions = $rxCountRes['rx_count'] ?? 0;
+$rxCountStmt->close();
+
+// Fetch total completed medical records count
+$recStmt = $conn->prepare("SELECT COUNT(*) AS rec_count FROM tbl_appointment WHERE patient_id = ? AND status = 'Completed'");
+$recStmt->bind_param('i', $patientId);
+$recStmt->execute();
+$recRes = $recStmt->get_result()->fetch_assoc();
+$totalMedicalRecords = $recRes['rec_count'] ?? 0;
+$recStmt->close();
+
+// Fetch days to next visit
+$nextStmt = $conn->prepare("SELECT DATEDIFF(MIN(appointment_date), CURRENT_DATE()) AS days_left, MIN(appointment_date) as next_date FROM tbl_appointment WHERE patient_id = ? AND appointment_date >= CURRENT_DATE() AND status IN ('Pending', 'Confirmed')");
+$nextStmt->bind_param('i', $patientId);
+$nextStmt->execute();
+$nextRes = $nextStmt->get_result()->fetch_assoc();
+$daysToNextVisit = isset($nextRes['days_left']) && $nextRes['days_left'] !== null ? intval($nextRes['days_left']) : '—';
+$nextVisitTrend = !empty($nextRes['next_date']) ? date('M d', strtotime($nextRes['next_date'])) : 'Upcoming';
+$nextStmt->close();
+
+// Fetch complete chronological medical history timeline records for currently logged-in patient
+$timelineSql = "SELECT a.*, 
+                       d.first_name AS doc_fname, d.middle_name AS doc_mname, d.last_name AS doc_lname, d.specialization AS doc_spec,
+                       dept.department_name,
+                       pr.prescription_id, pr.medications, pr.instructions AS rx_instructions,
+                       fup.follow_up_id, fup.follow_up_date, fup.follow_up_reason, fup.status AS fup_status
+                FROM tbl_appointment a
+                JOIN tbl_doctor d ON a.doctor_id = d.doctor_id
+                JOIN tbl_department dept ON a.department_id = dept.department_id
+                LEFT JOIN tbl_prescription pr ON a.appointment_id = pr.appointment_id
+                LEFT JOIN tbl_follow_up fup ON a.appointment_id = fup.appointment_id
+                WHERE a.patient_id = ?
+                ORDER BY a.appointment_date DESC, a.appointment_time DESC, a.appointment_id DESC";
+$tStmt = $conn->prepare($timelineSql);
+$tStmt->bind_param('i', $patientId);
+$tStmt->execute();
+$timelineRes = $tStmt->get_result();
+$timelineRecords = [];
+if ($timelineRes) {
+    while ($row = $timelineRes->fetch_assoc()) {
+        $timelineRecords[] = $row;
+    }
+}
+$tStmt->close();
+$totalHistoryCount = count($timelineRecords);
+
 // Check for login success toast
 $loginSuccess = '';
 if (!empty($_SESSION['login_success'])) {
@@ -127,7 +178,7 @@ if (!empty($_SESSION['login_success'])) {
                             <div class="stat-card-icon purple">💊</div>
                             <span class="stat-card-trend up">Active</span>
                         </div>
-                        <div class="stat-card-value">5</div>
+                        <div class="stat-card-value"><?php echo $totalPrescriptions; ?></div>
                         <div class="stat-card-label">Prescriptions</div>
                     </div>
                     <div class="stat-card orange">
@@ -135,15 +186,15 @@ if (!empty($_SESSION['login_success'])) {
                             <div class="stat-card-icon orange">📋</div>
                             <span class="stat-card-trend up">Total</span>
                         </div>
-                        <div class="stat-card-value">12</div>
+                        <div class="stat-card-value"><?php echo $totalMedicalRecords; ?></div>
                         <div class="stat-card-label">Medical Records</div>
                     </div>
                     <div class="stat-card pink">
                         <div class="stat-card-header">
                             <div class="stat-card-icon pink">🩺</div>
-                            <span class="stat-card-trend up">Jul 15</span>
+                            <span class="stat-card-trend up"><?php echo htmlspecialchars($nextVisitTrend); ?></span>
                         </div>
-                        <div class="stat-card-value">10</div>
+                        <div class="stat-card-value"><?php echo $daysToNextVisit; ?></div>
                         <div class="stat-card-label">Days to Next Visit</div>
                     </div>
                 </div>
@@ -163,7 +214,7 @@ if (!empty($_SESSION['login_success'])) {
                                 <div class="quick-action-label">Book Appointment</div>
                                 <div class="quick-action-desc">Schedule a visit with a doctor</div>
                             </a>
-                            <a href="#" class="quick-action-card">
+                            <a href="#timeline" class="quick-action-card">
                                 <div class="quick-action-icon purple">📋</div>
                                 <div class="quick-action-label">View Records</div>
                                 <div class="quick-action-desc">Access your medical history</div>
@@ -209,35 +260,121 @@ if (!empty($_SESSION['login_success'])) {
                     </div>
                 </div>
 
-                <!-- Recent Activity -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Recent Activity</h3>
-                        <span class="card-badge">Last 7 Days</span>
+                <!-- Chronological Medical History Timeline -->
+                <div class="card" id="timeline" style="margin-top: 24px;">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h3 class="card-title">⏳ Timeline / Medical History</h3>
+                            <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 2px;">Your complete healthcare journey in chronological order</p>
+                        </div>
+                        <span class="card-badge"><?php echo $totalHistoryCount; ?> record<?php echo $totalHistoryCount !== 1 ? 's' : ''; ?></span>
                     </div>
-                    <div class="activity-list">
-                        <div class="activity-item">
-                            <div class="activity-dot teal"></div>
-                            <div>
-                                <div class="activity-text"><strong>Account created</strong> — Welcome to Medi-Care! Complete your profile to get started.</div>
-                                <div class="activity-time"><?php echo date('M j, Y', strtotime($patient['created_at'] ?? 'now')); ?></div>
-                            </div>
+
+                    <?php if ($totalHistoryCount > 0): ?>
+                        <div class="patient-timeline">
+                            <?php foreach ($timelineRecords as $item): 
+                                $docName = trim('Dr. ' . $item['doc_fname'] . ' ' . $item['doc_mname'] . ' ' . $item['doc_lname']);
+                                $statusLower = strtolower($item['appt_status']);
+                                $dateFormatted = date('d F Y', strtotime($item['appointment_date']));
+                                $timeFormatted = date('h:i A', strtotime($item['appointment_time']));
+                            ?>
+                                <div class="patient-timeline-item">
+                                    <div class="patient-timeline-dot <?php echo $statusLower; ?>"></div>
+                                    <div class="patient-timeline-card">
+                                        <div class="timeline-date-title"><?php echo $dateFormatted; ?></div>
+                                        <div class="timeline-doc-dept">
+                                            <?php echo htmlspecialchars($docName); ?> • <span style="color: var(--accent);"><?php echo htmlspecialchars($item['department_name']); ?></span>
+                                        </div>
+                                        <div class="timeline-meta-bar">
+                                            <span>🕒 <?php echo $timeFormatted; ?></span>
+                                            <span>•</span>
+                                            <span class="appt-badge <?php echo strtolower($item['appointment_type']) === 'online' ? 'online' : 'in-person'; ?>">
+                                                <?php echo htmlspecialchars($item['appointment_type']); ?>
+                                            </span>
+                                            <span>•</span>
+                                            <span class="appt-badge status-badge <?php echo $statusLower; ?>">
+                                                <?php echo htmlspecialchars($item['appt_status']); ?>
+                                            </span>
+                                        </div>
+
+                                        <!-- Consultation / Medical Report Section -->
+                                        <?php if (!empty($item['report'])): ?>
+                                            <div class="timeline-section-block">
+                                                <div class="timeline-section-title">📄 Consultation / Medical Report</div>
+                                                <div class="timeline-section-content">
+                                                    <?php echo nl2br(htmlspecialchars($item['report'])); ?>
+                                                </div>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <!-- Investigation Section -->
+                                        <?php if (!empty($item['investigation'])): ?>
+                                            <div class="timeline-section-block">
+                                                <div class="timeline-section-title">🔬 Investigation & Tests</div>
+                                                <div class="timeline-section-content">
+                                                    <?php echo nl2br(htmlspecialchars($item['investigation'])); ?>
+                                                </div>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <!-- Prescription Section -->
+                                        <?php if (!empty($item['medications']) || !empty($item['prescription_id'])): ?>
+                                            <div class="timeline-section-block">
+                                                <div class="timeline-section-title">💊 Prescription / Medication</div>
+                                                <div class="timeline-section-content">
+                                                    <?php if (!empty($item['medications'])): ?>
+                                                        <div style="font-weight: 600; margin-bottom: 4px;">Medications:</div>
+                                                        <div><?php echo nl2br(htmlspecialchars($item['medications'])); ?></div>
+                                                    <?php endif; ?>
+                                                    <?php if (!empty($item['rx_instructions'])): ?>
+                                                        <div style="font-weight: 600; margin-top: 8px; margin-bottom: 4px;">Instructions:</div>
+                                                        <div><?php echo nl2br(htmlspecialchars($item['rx_instructions'])); ?></div>
+                                                    <?php endif; ?>
+                                                    <div style="margin-top: 10px;">
+                                                        <a href="view_prescription.php?appointment_id=<?php echo (int)$item['appointment_id']; ?>" class="btn-auth btn-auth-secondary" style="padding: 6px 12px; font-size: 0.78rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                                                            📄 View Full Prescription
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <!-- Follow Up Section -->
+                                        <?php 
+                                        $hasFup = !empty($item['follow_up_date']) || !empty($item['follow_up_reason']) || !empty($item['appointment_follow_up_text']);
+                                        if ($hasFup): 
+                                            $fupDate = !empty($item['follow_up_date']) ? date('d F Y', strtotime($item['follow_up_date'])) : 'Scheduled';
+                                            $fupReason = !empty($item['follow_up_reason']) ? $item['follow_up_reason'] : $item['appointment_follow_up_text'];
+                                            $fupStatus = !empty($item['fup_status']) ? $item['fup_status'] : 'Pending';
+                                            $fupStatusLower = strtolower($fupStatus);
+                                        ?>
+                                            <div class="timeline-section-block">
+                                                <div class="timeline-section-title">🔄 Follow Up</div>
+                                                <div class="timeline-followup-card">
+                                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                                        <strong style="color: var(--text-primary); font-size: 0.88rem;"><?php echo $fupDate; ?></strong>
+                                                        <span class="appt-badge status-badge <?php echo $fupStatusLower; ?>">
+                                                            Status: <?php echo htmlspecialchars($fupStatus); ?>
+                                                        </span>
+                                                    </div>
+                                                    <?php if (!empty($fupReason)): ?>
+                                                        <div style="font-size: 0.84rem; color: var(--text-secondary);">
+                                                            <strong>Reason:</strong> <?php echo htmlspecialchars($fupReason); ?>
+                                                        </div>
+                                                    <?php endif; ?>
+                                                </div>
+                                            </div>
+                                        <?php endif; ?>
+
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
-                        <div class="activity-item">
-                            <div class="activity-dot purple"></div>
-                            <div>
-                                <div class="activity-text"><strong>Profile reminder</strong> — Please add your date of birth and address for better care.</div>
-                                <div class="activity-time">System notification</div>
-                            </div>
+                    <?php else: ?>
+                        <div style="padding: 30px; text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
+                            No medical history or appointment timeline records found.
                         </div>
-                        <div class="activity-item">
-                            <div class="activity-dot orange"></div>
-                            <div>
-                                <div class="activity-text"><strong>Health tip</strong> — Regular health check-ups can help detect potential issues early.</div>
-                                <div class="activity-time">Wellness update</div>
-                            </div>
-                        </div>
-                    </div>
+                    <?php endif; ?>
                 </div>
 
             </div>

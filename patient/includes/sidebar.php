@@ -72,17 +72,17 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <span class="sidebar-link-icon">📅</span>
             <span class="sidebar-link-text">My Appointments</span>
         </a>
-        <a href="appointments.php#timeline" class="sidebar-link" data-tooltip="Timeline / Appointment History">
+        <a href="dashboard.php#timeline" class="sidebar-link" data-tooltip="Timeline / Appointment History">
             <span class="sidebar-link-icon">⏳</span>
             <span class="sidebar-link-text">Timeline / History</span>
         </a>
 
         <div class="sidebar-nav-label">Medical</div>
-        <a href="#" class="sidebar-link" data-tooltip="Medical Records">
+        <a href="dashboard.php#timeline" class="sidebar-link" data-tooltip="Medical Records">
             <span class="sidebar-link-icon">📋</span>
             <span class="sidebar-link-text">Medical Records</span>
         </a>
-        <a href="#" class="sidebar-link" data-tooltip="Follow Up">
+        <a href="dashboard.php#timeline" class="sidebar-link" data-tooltip="Follow Up">
             <span class="sidebar-link-icon">🔄</span>
             <span class="sidebar-link-text">Follow Up</span>
         </a>

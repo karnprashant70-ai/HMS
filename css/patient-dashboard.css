@@ -164,3 +164,136 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ===== Timeline / Medical History Styles ===== */
+.patient-timeline {
+    position: relative;
+    padding-left: 28px;
+    margin-top: 20px;
+}
+
+.patient-timeline::before {
+    content: '';
+    position: absolute;
+    top: 10px;
+    bottom: 10px;
+    left: 10px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--accent), var(--primary));
+    border-radius: 2px;
+}
+
+.patient-timeline-item {
+    position: relative;
+    margin-bottom: 24px;
+}
+
+.patient-timeline-item:last-child {
+    margin-bottom: 0;
+}
+
+.patient-timeline-dot {
+    position: absolute;
+    left: -28px;
+    top: 18px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--bg-card, #ffffff);
+    border: 3px solid var(--accent);
+    box-shadow: 0 0 10px rgba(0, 184, 148, 0.4);
+    z-index: 2;
+}
+
+.patient-timeline-dot.completed {
+    border-color: #16A34A;
+    box-shadow: 0 0 10px rgba(22, 163, 74, 0.4);
+}
+
+.patient-timeline-dot.pending {
+    border-color: #D97706;
+    box-shadow: 0 0 10px rgba(217, 119, 6, 0.4);
+}
+
+.patient-timeline-dot.confirmed {
+    border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(0, 212, 170, 0.4);
+}
+
+.patient-timeline-dot.cancelled {
+    border-color: #EF4444;
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+}
+
+.patient-timeline-card {
+    background: var(--bg-glass, #ffffff);
+    border: 1px solid var(--border-glass, #e2e8f0);
+    border-radius: var(--radius-md, 12px);
+    padding: 20px 24px;
+    transition: var(--transition);
+}
+
+.patient-timeline-card:hover {
+    border-color: var(--border-hover, #cbd5e1);
+    box-shadow: var(--shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+}
+
+.timeline-date-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 4px;
+}
+
+.timeline-doc-dept {
+    font-size: 0.98rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.timeline-meta-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+.timeline-section-block {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--border-glass, #e2e8f0);
+}
+
+.timeline-section-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted, #64748b);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.timeline-section-content {
+    font-size: 0.88rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+    background: rgba(0, 0, 0, 0.02);
+    padding: 12px 14px;
+    border-radius: var(--radius-sm, 8px);
+    border: 1px solid var(--border-glass, #e2e8f0);
+}
+
+.timeline-followup-card {
+    background: rgba(91, 84, 224, 0.04);
+    border: 1px solid rgba(91, 84, 224, 0.15);
+    border-radius: var(--radius-sm, 8px);
+    padding: 12px 14px;
+    margin-top: 6px;
+}
