@@ -162,10 +162,11 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             });
         }
 
-        // Dynamic active state resolution with Hash support
+        // Dynamic active state resolution with Search Query and Hash support
         function updateActiveLink() {
             const currentPath = window.location.pathname.split('/').pop() || 'dashboard.php';
-            const currentHash = window.location.hash;
+            const currentSearch = window.location.search || '';
+            const currentHash = window.location.hash || '';
 
             sidebarLinks.forEach(link => {
                 const href = link.getAttribute('href');
@@ -175,10 +176,11 @@ $currentPage = basename($_SERVER['PHP_SELF']);
                 const tempAnchor = document.createElement('a');
                 tempAnchor.href = href;
                 const targetPath = tempAnchor.pathname.split('/').pop();
-                const targetHash = tempAnchor.hash;
+                const targetSearch = tempAnchor.search || '';
+                const targetHash = tempAnchor.hash || '';
 
-                // Exact match: matching path and hash, or matching path and no target/current hash
-                if (targetPath === currentPath && (targetHash === currentHash || (!targetHash && !currentHash))) {
+                // Exact match: matching path, search query params, and hash
+                if (targetPath === currentPath && targetSearch === currentSearch && targetHash === currentHash) {
                     link.classList.add('active');
                 } else {
                     link.classList.remove('active');
