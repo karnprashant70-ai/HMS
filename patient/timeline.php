@@ -25,6 +25,23 @@ if (!empty($patient['last_name'])) $initials .= strtoupper($patient['last_name']
 if (empty($initials)) $initials = 'PT';
 $profilePhoto = !empty($patient['profile_photo']) ? '../uploads/patients/' . $patient['profile_photo'] : '';
 
+$viewMode = $_GET['view'] ?? '';
+
+// Handle view mode specific titles & filtering
+$headerTitle = 'Timeline / History';
+$cardTitle = '<i class="fi fi-rr-time-past"></i> Timeline / Medical History';
+$cardSubtitle = 'Your complete healthcare journey in chronological order';
+
+if ($viewMode === 'records') {
+    $headerTitle = 'Medical Records';
+    $cardTitle = '<i class="fi fi-rr-document-medical"></i> Medical Records';
+    $cardSubtitle = 'Your diagnostic consultation reports, test investigations, and prescriptions';
+} elseif ($viewMode === 'followup') {
+    $headerTitle = 'Follow Up Records';
+    $cardTitle = '<i class="fi fi-rr-refresh"></i> Follow Up Visits';
+    $cardSubtitle = 'Scheduled follow-up appointments and doctor follow-up instructions';
+}
+
 // Fetch complete chronological medical history timeline records for currently logged-in patient
 $timelineSql = "SELECT a.*, 
                        d.first_name AS doc_fname, d.middle_name AS doc_mname, d.last_name AS doc_lname, d.specialization AS doc_spec,
@@ -45,6 +62,15 @@ $timelineRes = $tStmt->get_result();
 $timelineRecords = [];
 if ($timelineRes) {
     while ($row = $timelineRes->fetch_assoc()) {
+        if ($viewMode === 'records') {
+            if (empty($row['report']) && empty($row['investigation']) && empty($row['medications']) && empty($row['prescription_id'])) {
+                continue;
+            }
+        } elseif ($viewMode === 'followup') {
+            if (empty($row['follow_up_date']) && empty($row['follow_up_reason']) && empty($row['follow_up_id'])) {
+                continue;
+            }
+        }
         $timelineRecords[] = $row;
     }
 }
@@ -56,8 +82,8 @@ $totalHistoryCount = count($timelineRecords);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Timeline / History | Medi-Care Hospital Management System">
-    <title>Timeline / History | <?php echo htmlspecialchars($patientName); ?> | Medi-Care</title>
+    <meta name="description" content="<?php echo htmlspecialchars($headerTitle); ?> | Medi-Care Hospital Management System">
+    <title><?php echo htmlspecialchars($headerTitle); ?> | <?php echo htmlspecialchars($patientName); ?> | Medi-Care</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -85,7 +111,7 @@ $totalHistoryCount = count($timelineRecords);
                 <div class="top-header-left">
                     <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">☰</button>
                     <div>
-                        <h1>Timeline / History</h1>
+                        <h1><?php echo htmlspecialchars($headerTitle); ?></h1>
                 </div>
                 <div class="top-header-right">
                     <button class="header-icon-btn" title="Notifications">
@@ -115,8 +141,8 @@ $totalHistoryCount = count($timelineRecords);
                 <div class="card" id="timeline">
                     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <h3 class="card-title"><i class="fi fi-rr-time-past"></i> Timeline / Medical History</h3>
-                            <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 2px;">Your complete healthcare journey in chronological order</p>
+                            <h3 class="card-title"><?php echo $cardTitle; ?></h3>
+                            <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 2px;"><?php echo htmlspecialchars($cardSubtitle); ?></p>
                         </div>
                         <span class="card-badge"><?php echo $totalHistoryCount; ?> record<?php echo $totalHistoryCount !== 1 ? 's' : ''; ?></span>
                     </div>

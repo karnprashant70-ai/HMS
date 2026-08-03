@@ -72,17 +72,17 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <span class="sidebar-link-icon"><i class="fi fi-rr-calendar"></i></span>
             <span class="sidebar-link-text">My Appointments</span>
         </a>
-        <a href="timeline.php" class="sidebar-link <?php echo $currentPage === 'timeline.php' ? 'active' : ''; ?>" data-tooltip="Timeline / Appointment History">
+        <a href="timeline.php" class="sidebar-link <?php echo ($currentPage === 'timeline.php' && empty($_GET['view'])) ? 'active' : ''; ?>" data-tooltip="Timeline / Appointment History">
             <span class="sidebar-link-icon"><i class="fi fi-rr-time-past"></i></span>
             <span class="sidebar-link-text">Timeline / History</span>
         </a>
 
         <div class="sidebar-nav-label">Medical</div>
-        <a href="timeline.php" class="sidebar-link <?php echo $currentPage === 'timeline.php' ? 'active' : ''; ?>" data-tooltip="Medical Records">
+        <a href="timeline.php?view=records" class="sidebar-link <?php echo ($currentPage === 'timeline.php' && ($_GET['view'] ?? '') === 'records') ? 'active' : ''; ?>" data-tooltip="Medical Records">
             <span class="sidebar-link-icon"><i class="fi fi-rr-document-medical"></i></span>
             <span class="sidebar-link-text">Medical Records</span>
         </a>
-        <a href="timeline.php" class="sidebar-link <?php echo $currentPage === 'timeline.php' ? 'active' : ''; ?>" data-tooltip="Follow Up">
+        <a href="timeline.php?view=followup" class="sidebar-link <?php echo ($currentPage === 'timeline.php' && ($_GET['view'] ?? '') === 'followup') ? 'active' : ''; ?>" data-tooltip="Follow Up">
             <span class="sidebar-link-icon"><i class="fi fi-rr-refresh"></i></span>
             <span class="sidebar-link-text">Follow Up</span>
         </a>
