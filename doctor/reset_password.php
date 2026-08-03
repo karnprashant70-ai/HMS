@@ -130,10 +130,9 @@ $department = $doctor['department'] ?? 'General';
     <!-- Animated Background -->
     <div class="bg-pattern"></div>
 
-    <!-- Shared Sidebar Component -->
-    <?php include __DIR__ . '/../includes/sidebar.php'; ?>
-
     <div class="dashboard-layout">
+        <!-- Shared Sidebar Component -->
+        <?php include __DIR__ . '/../includes/sidebar.php'; ?>
 
         <!-- ===== MAIN CONTENT ===== -->
         <main class="main-content">

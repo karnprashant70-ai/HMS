@@ -364,7 +364,10 @@
     flex-direction: column;
 }
 
-.sidebar.collapsed ~ .main-content {
+.sidebar.collapsed ~ .main-content,
+.sidebar.collapsed ~ .dashboard-layout .main-content,
+.dashboard-layout:has(.sidebar.collapsed) .main-content,
+body:has(.sidebar.collapsed) .main-content {
     margin-left: 72px;
 }
 
