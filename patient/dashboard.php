@@ -183,7 +183,7 @@ if (!empty($_SESSION['login_success'])) {
                     </div>
                     <div class="stat-card orange">
                         <div class="stat-card-header">
-                            <div class="stat-card-icon orange"><i class="fi fi-rr-document-medical"></i></div>
+                            <div class="stat-card-icon orange"><i class="fi fi-rr-file-medical"></i></div>
                             <span class="stat-card-trend up">Total</span>
                         </div>
                         <div class="stat-card-value"><?php echo $totalMedicalRecords; ?></div>
@@ -215,7 +215,7 @@ if (!empty($_SESSION['login_success'])) {
                                 <div class="quick-action-desc">Schedule a visit with a doctor</div>
                             </a>
                             <a href="timeline.php" class="quick-action-card">
-                                <div class="quick-action-icon purple"><i class="fi fi-rr-document-medical"></i></div>
+                                <div class="quick-action-icon purple"><i class="fi fi-rr-file-medical"></i></div>
                                 <div class="quick-action-label">View Records</div>
                                 <div class="quick-action-desc">Access your medical history</div>
                             </a>

@@ -34,7 +34,7 @@ $cardSubtitle = 'Your complete healthcare journey in chronological order';
 
 if ($viewMode === 'records') {
     $headerTitle = 'Medical Records';
-    $cardTitle = '<i class="fi fi-rr-document-medical"></i> Medical Records';
+    $cardTitle = '<i class="fi fi-rr-file-medical"></i> Medical Records';
     $cardSubtitle = 'Your diagnostic consultation reports, test investigations, and prescriptions';
 } elseif ($viewMode === 'followup') {
     $headerTitle = 'Follow Up Records';
@@ -177,7 +177,7 @@ $totalHistoryCount = count($timelineRecords);
                                         <!-- Consultation / Medical Report Section -->
                                         <?php if (!empty($item['report'])): ?>
                                             <div class="timeline-section-block">
-                                                <div class="timeline-section-title"><i class="fi fi-rr-document-medical"></i> Consultation / Medical Report</div>
+                                                <div class="timeline-section-title"><i class="fi fi-rr-file-medical"></i> Consultation / Medical Report</div>
                                                 <div class="timeline-section-content">
                                                     <?php echo nl2br(htmlspecialchars($item['report'])); ?>
                                                 </div>

@@ -88,7 +88,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <span class="sidebar-link-text">Prescriptions</span>
         </a>
         <a href="#" class="sidebar-link" data-tooltip="Medical Records">
-            <span class="sidebar-link-icon"><i class="fi fi-rr-document-medical"></i></span>
+            <span class="sidebar-link-icon"><i class="fi fi-rr-file-medical"></i></span>
             <span class="sidebar-link-text">Medical Records</span>
         </a>
         <a href="#" class="sidebar-link" data-tooltip="Reports">

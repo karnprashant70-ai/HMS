@@ -371,7 +371,7 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
                     <!-- Account Info Card -->
                     <div class="profile-card">
                         <div class="profile-card-header">
-                            <h2><i class="fi fi-rr-document-medical"></i> Account Details</h2>
+                            <h2><i class="fi fi-rr-file-medical"></i> Account Details</h2>
                         </div>
                         <div class="profile-card-body">
                             <div class="info-row">
@@ -540,7 +540,7 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
                 <div class="profile-col">
                     <div class="profile-card">
                         <div class="profile-card-header">
-                            <h2><i class="fi fi-rr-document-medical"></i> Existing Departments</h2>
+                            <h2><i class="fi fi-rr-file-medical"></i> Existing Departments</h2>
                         </div>
                         <div class="profile-card-body" style="overflow-x: auto;">
                             <?php if (!empty($errors) && in_array($submittedAction, ['delete_department', 'update_department'])): ?>

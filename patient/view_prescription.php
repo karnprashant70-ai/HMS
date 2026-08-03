@@ -216,7 +216,7 @@ $patientName = trim($rx['pat_fname'] . ' ' . $rx['pat_mname'] . ' ' . $rx['pat_l
         <!-- Diagnosis / Medical Report -->
         <?php if (!empty($rx['report'])): ?>
         <div class="section-box">
-            <div class="section-title"><i class="fi fi-rr-document-medical"></i> Clinical Diagnosis & Diagnosis Report</div>
+            <div class="section-title"><i class="fi fi-rr-file-medical"></i> Clinical Diagnosis & Diagnosis Report</div>
             <div class="section-content"><?php echo htmlspecialchars($rx['report']); ?></div>
         </div>
         <?php endif; ?>

@@ -79,7 +79,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 
         <div class="sidebar-nav-label">Medical</div>
         <a href="timeline.php?view=records" class="sidebar-link <?php echo ($currentPage === 'timeline.php' && ($_GET['view'] ?? '') === 'records') ? 'active' : ''; ?>" data-tooltip="Medical Records">
-            <span class="sidebar-link-icon"><i class="fi fi-rr-document-medical"></i></span>
+            <span class="sidebar-link-icon"><i class="fi fi-rr-file-medical"></i></span>
             <span class="sidebar-link-text">Medical Records</span>
         </a>
         <a href="timeline.php?view=followup" class="sidebar-link <?php echo ($currentPage === 'timeline.php' && ($_GET['view'] ?? '') === 'followup') ? 'active' : ''; ?>" data-tooltip="Follow Up">
