@@ -214,7 +214,7 @@ if (!empty($_SESSION['login_success'])) {
                                 <div class="quick-action-label">Book Appointment</div>
                                 <div class="quick-action-desc">Schedule a visit with a doctor</div>
                             </a>
-                            <a href="#timeline" class="quick-action-card">
+                            <a href="timeline.php" class="quick-action-card">
                                 <div class="quick-action-icon purple">📋</div>
                                 <div class="quick-action-label">View Records</div>
                                 <div class="quick-action-desc">Access your medical history</div>
@@ -258,123 +258,6 @@ if (!empty($_SESSION['login_success'])) {
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Chronological Medical History Timeline -->
-                <div class="card" id="timeline" style="margin-top: 24px;">
-                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <h3 class="card-title">⏳ Timeline / Medical History</h3>
-                            <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 2px;">Your complete healthcare journey in chronological order</p>
-                        </div>
-                        <span class="card-badge"><?php echo $totalHistoryCount; ?> record<?php echo $totalHistoryCount !== 1 ? 's' : ''; ?></span>
-                    </div>
-
-                    <?php if ($totalHistoryCount > 0): ?>
-                        <div class="patient-timeline">
-                            <?php foreach ($timelineRecords as $item): 
-                                $docName = trim('Dr. ' . $item['doc_fname'] . ' ' . $item['doc_mname'] . ' ' . $item['doc_lname']);
-                                $statusLower = strtolower($item['appt_status']);
-                                $dateFormatted = date('d F Y', strtotime($item['appointment_date']));
-                                $timeFormatted = date('h:i A', strtotime($item['appointment_time']));
-                            ?>
-                                <div class="patient-timeline-item">
-                                    <div class="patient-timeline-dot <?php echo $statusLower; ?>"></div>
-                                    <div class="patient-timeline-card">
-                                        <div class="timeline-date-title"><?php echo $dateFormatted; ?></div>
-                                        <div class="timeline-doc-dept">
-                                            <?php echo htmlspecialchars($docName); ?> • <span style="color: var(--accent);"><?php echo htmlspecialchars($item['department_name']); ?></span>
-                                        </div>
-                                        <div class="timeline-meta-bar">
-                                            <span>🕒 <?php echo $timeFormatted; ?></span>
-                                            <span>•</span>
-                                            <span class="appt-badge <?php echo strtolower($item['appointment_type']) === 'online' ? 'online' : 'in-person'; ?>">
-                                                <?php echo htmlspecialchars($item['appointment_type']); ?>
-                                            </span>
-                                            <span>•</span>
-                                            <span class="appt-badge status-badge <?php echo $statusLower; ?>">
-                                                <?php echo htmlspecialchars($item['appt_status']); ?>
-                                            </span>
-                                        </div>
-
-                                        <!-- Consultation / Medical Report Section -->
-                                        <?php if (!empty($item['report'])): ?>
-                                            <div class="timeline-section-block">
-                                                <div class="timeline-section-title">📄 Consultation / Medical Report</div>
-                                                <div class="timeline-section-content">
-                                                    <?php echo nl2br(htmlspecialchars($item['report'])); ?>
-                                                </div>
-                                            </div>
-                                        <?php endif; ?>
-
-                                        <!-- Investigation Section -->
-                                        <?php if (!empty($item['investigation'])): ?>
-                                            <div class="timeline-section-block">
-                                                <div class="timeline-section-title">🔬 Investigation & Tests</div>
-                                                <div class="timeline-section-content">
-                                                    <?php echo nl2br(htmlspecialchars($item['investigation'])); ?>
-                                                </div>
-                                            </div>
-                                        <?php endif; ?>
-
-                                        <!-- Prescription Section -->
-                                        <?php if (!empty($item['medications']) || !empty($item['prescription_id'])): ?>
-                                            <div class="timeline-section-block">
-                                                <div class="timeline-section-title">💊 Prescription / Medication</div>
-                                                <div class="timeline-section-content">
-                                                    <?php if (!empty($item['medications'])): ?>
-                                                        <div style="font-weight: 600; margin-bottom: 4px;">Medications:</div>
-                                                        <div><?php echo nl2br(htmlspecialchars($item['medications'])); ?></div>
-                                                    <?php endif; ?>
-                                                    <?php if (!empty($item['rx_instructions'])): ?>
-                                                        <div style="font-weight: 600; margin-top: 8px; margin-bottom: 4px;">Instructions:</div>
-                                                        <div><?php echo nl2br(htmlspecialchars($item['rx_instructions'])); ?></div>
-                                                    <?php endif; ?>
-                                                    <div style="margin-top: 10px;">
-                                                        <a href="view_prescription.php?appointment_id=<?php echo (int)$item['appointment_id']; ?>" class="btn-auth btn-auth-secondary" style="padding: 6px 12px; font-size: 0.78rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-                                                            📄 View Full Prescription
-                                                        </a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        <?php endif; ?>
-
-                                        <!-- Follow Up Section -->
-                                        <?php 
-                                        $hasFup = !empty($item['follow_up_date']) || !empty($item['follow_up_reason']) || !empty($item['appointment_follow_up_text']);
-                                        if ($hasFup): 
-                                            $fupDate = !empty($item['follow_up_date']) ? date('d F Y', strtotime($item['follow_up_date'])) : 'Scheduled';
-                                            $fupReason = !empty($item['follow_up_reason']) ? $item['follow_up_reason'] : $item['appointment_follow_up_text'];
-                                            $fupStatus = !empty($item['fup_status']) ? $item['fup_status'] : 'Pending';
-                                            $fupStatusLower = strtolower($fupStatus);
-                                        ?>
-                                            <div class="timeline-section-block">
-                                                <div class="timeline-section-title">🔄 Follow Up</div>
-                                                <div class="timeline-followup-card">
-                                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                                        <strong style="color: var(--text-primary); font-size: 0.88rem;"><?php echo $fupDate; ?></strong>
-                                                        <span class="appt-badge status-badge <?php echo $fupStatusLower; ?>">
-                                                            Status: <?php echo htmlspecialchars($fupStatus); ?>
-                                                        </span>
-                                                    </div>
-                                                    <?php if (!empty($fupReason)): ?>
-                                                        <div style="font-size: 0.84rem; color: var(--text-secondary);">
-                                                            <strong>Reason:</strong> <?php echo htmlspecialchars($fupReason); ?>
-                                                        </div>
-                                                    <?php endif; ?>
-                                                </div>
-                                            </div>
-                                        <?php endif; ?>
-
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php else: ?>
-                        <div style="padding: 30px; text-align: center; color: var(--text-secondary); font-size: 0.9rem;">
-                            No medical history or appointment timeline records found.
-                        </div>
-                    <?php endif; ?>
                 </div>
 
             </div>
