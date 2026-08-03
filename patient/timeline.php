@@ -86,16 +86,14 @@ $totalHistoryCount = count($timelineRecords);
                     <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">☰</button>
                     <div>
                         <h1>Timeline / History</h1>
-                        <p>View your complete healthcare journey in chronological order</p>
-                    </div>
                 </div>
                 <div class="top-header-right">
                     <button class="header-icon-btn" title="Notifications">
-                        🔔
+                        <i class="fi fi-rr-bell"></i>
                         <span class="notification-dot"></span>
                     </button>
                     <button class="header-icon-btn" title="Messages">
-                        ✉️
+                        <i class="fi fi-rr-envelope"></i>
                     </button>
                     <a href="profile.php" class="header-profile">
                         <div class="header-profile-avatar">
@@ -117,7 +115,7 @@ $totalHistoryCount = count($timelineRecords);
                 <div class="card" id="timeline">
                     <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                            <h3 class="card-title">⏳ Timeline / Medical History</h3>
+                            <h3 class="card-title"><i class="fi fi-rr-time-past"></i> Timeline / Medical History</h3>
                             <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 2px;">Your complete healthcare journey in chronological order</p>
                         </div>
                         <span class="card-badge"><?php echo $totalHistoryCount; ?> record<?php echo $totalHistoryCount !== 1 ? 's' : ''; ?></span>
@@ -139,7 +137,7 @@ $totalHistoryCount = count($timelineRecords);
                                             <?php echo htmlspecialchars($docName); ?> • <span style="color: var(--accent);"><?php echo htmlspecialchars($item['department_name']); ?></span>
                                         </div>
                                         <div class="timeline-meta-bar">
-                                            <span>🕒 <?php echo $timeFormatted; ?></span>
+                                            <span><i class="fi fi-rr-clock"></i> <?php echo $timeFormatted; ?></span>
                                             <span>•</span>
                                             <span class="appt-badge <?php echo strtolower($item['appointment_type']) === 'online' ? 'online' : 'in-person'; ?>">
                                                 <?php echo htmlspecialchars($item['appointment_type']); ?>
@@ -153,7 +151,7 @@ $totalHistoryCount = count($timelineRecords);
                                         <!-- Consultation / Medical Report Section -->
                                         <?php if (!empty($item['report'])): ?>
                                             <div class="timeline-section-block">
-                                                <div class="timeline-section-title">📄 Consultation / Medical Report</div>
+                                                <div class="timeline-section-title"><i class="fi fi-rr-document-medical"></i> Consultation / Medical Report</div>
                                                 <div class="timeline-section-content">
                                                     <?php echo nl2br(htmlspecialchars($item['report'])); ?>
                                                 </div>
@@ -163,7 +161,7 @@ $totalHistoryCount = count($timelineRecords);
                                         <!-- Investigation Section -->
                                         <?php if (!empty($item['investigation'])): ?>
                                             <div class="timeline-section-block">
-                                                <div class="timeline-section-title">🔬 Investigation & Tests</div>
+                                                <div class="timeline-section-title"><i class="fi fi-rr-microscope"></i> Investigation & Tests</div>
                                                 <div class="timeline-section-content">
                                                     <?php echo nl2br(htmlspecialchars($item['investigation'])); ?>
                                                 </div>
@@ -173,7 +171,7 @@ $totalHistoryCount = count($timelineRecords);
                                         <!-- Prescription Section -->
                                         <?php if (!empty($item['medications']) || !empty($item['prescription_id'])): ?>
                                             <div class="timeline-section-block">
-                                                <div class="timeline-section-title">💊 Prescription / Medication</div>
+                                                <div class="timeline-section-title"><i class="fi fi-rr-medicine"></i> Prescription / Medication</div>
                                                 <div class="timeline-section-content">
                                                     <?php if (!empty($item['medications'])): ?>
                                                         <div style="font-weight: 600; margin-bottom: 4px;">Medications:</div>
@@ -185,7 +183,7 @@ $totalHistoryCount = count($timelineRecords);
                                                     <?php endif; ?>
                                                     <div style="margin-top: 10px;">
                                                         <a href="view_prescription.php?appointment_id=<?php echo (int)$item['appointment_id']; ?>" class="btn-auth btn-auth-secondary" style="padding: 6px 12px; font-size: 0.78rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
-                                                            📄 View Full Prescription
+                                                            <i class="fi fi-rr-file-medical"></i> View Full Prescription
                                                         </a>
                                                     </div>
                                                 </div>
@@ -202,7 +200,7 @@ $totalHistoryCount = count($timelineRecords);
                                             $fupStatusLower = strtolower($fupStatus);
                                         ?>
                                             <div class="timeline-section-block">
-                                                <div class="timeline-section-title">🔄 Follow Up</div>
+                                                <div class="timeline-section-title"><i class="fi fi-rr-refresh"></i> Follow Up</div>
                                                 <div class="timeline-followup-card">
                                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                                                         <strong style="color: var(--text-primary); font-size: 0.88rem;"><?php echo $fupDate; ?></strong>

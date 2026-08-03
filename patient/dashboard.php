@@ -141,11 +141,11 @@ if (!empty($_SESSION['login_success'])) {
                 </div>
                 <div class="top-header-right">
                     <button class="header-icon-btn" title="Notifications">
-                        🔔
+                        <i class="fi fi-rr-bell"></i>
                         <span class="notification-dot"></span>
                     </button>
                     <button class="header-icon-btn" title="Messages">
-                        ✉️
+                        <i class="fi fi-rr-envelope"></i>
                     </button>
                     <a href="profile.php" class="header-profile">
                         <div class="header-profile-avatar">
@@ -167,7 +167,7 @@ if (!empty($_SESSION['login_success'])) {
                 <div class="stats-grid">
                     <div class="stat-card teal">
                         <div class="stat-card-header">
-                            <div class="stat-card-icon teal">📅</div>
+                            <div class="stat-card-icon teal"><i class="fi fi-rr-calendar"></i></div>
                             <span class="stat-card-trend up">Upcoming</span>
                         </div>
                         <div class="stat-card-value"><?php echo $upcomingAppointments; ?></div>
@@ -175,7 +175,7 @@ if (!empty($_SESSION['login_success'])) {
                     </div>
                     <div class="stat-card purple">
                         <div class="stat-card-header">
-                            <div class="stat-card-icon purple">💊</div>
+                            <div class="stat-card-icon purple"><i class="fi fi-rr-medicine"></i></div>
                             <span class="stat-card-trend up">Active</span>
                         </div>
                         <div class="stat-card-value"><?php echo $totalPrescriptions; ?></div>
@@ -183,7 +183,7 @@ if (!empty($_SESSION['login_success'])) {
                     </div>
                     <div class="stat-card orange">
                         <div class="stat-card-header">
-                            <div class="stat-card-icon orange">📋</div>
+                            <div class="stat-card-icon orange"><i class="fi fi-rr-document-medical"></i></div>
                             <span class="stat-card-trend up">Total</span>
                         </div>
                         <div class="stat-card-value"><?php echo $totalMedicalRecords; ?></div>
@@ -191,7 +191,7 @@ if (!empty($_SESSION['login_success'])) {
                     </div>
                     <div class="stat-card pink">
                         <div class="stat-card-header">
-                            <div class="stat-card-icon pink">🩺</div>
+                            <div class="stat-card-icon pink"><i class="fi fi-rr-stethoscope"></i></div>
                             <span class="stat-card-trend up"><?php echo htmlspecialchars($nextVisitTrend); ?></span>
                         </div>
                         <div class="stat-card-value"><?php echo $daysToNextVisit; ?></div>
@@ -210,17 +210,17 @@ if (!empty($_SESSION['login_success'])) {
                         </div>
                         <div class="quick-actions-grid">
                             <a href="book_appointment.php" class="quick-action-card">
-                                <div class="quick-action-icon teal">📅</div>
+                                <div class="quick-action-icon teal"><i class="fi fi-rr-calendar-plus"></i></div>
                                 <div class="quick-action-label">Book Appointment</div>
                                 <div class="quick-action-desc">Schedule a visit with a doctor</div>
                             </a>
                             <a href="timeline.php" class="quick-action-card">
-                                <div class="quick-action-icon purple">📋</div>
+                                <div class="quick-action-icon purple"><i class="fi fi-rr-document-medical"></i></div>
                                 <div class="quick-action-label">View Records</div>
                                 <div class="quick-action-desc">Access your medical history</div>
                             </a>
                             <a href="profile.php" class="quick-action-card">
-                                <div class="quick-action-icon orange">👤</div>
+                                <div class="quick-action-icon orange"><i class="fi fi-rr-user"></i></div>
                                 <div class="quick-action-label">Edit Profile</div>
                                 <div class="quick-action-desc">Update your personal info</div>
                             </a>
@@ -251,7 +251,7 @@ if (!empty($_SESSION['login_success'])) {
 
                         <!-- Health Tip -->
                         <div class="health-tip-card">
-                            <div class="health-tip-icon">💡</div>
+                            <div class="health-tip-icon"><i class="fi fi-rr-bulb"></i></div>
                             <div class="health-tip-content">
                                 <h4>Health Tip of the Day</h4>
                                 <p>Stay hydrated! Drinking 8 glasses of water daily helps maintain energy levels and supports overall health.</p>

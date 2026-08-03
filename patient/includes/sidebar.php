@@ -61,50 +61,50 @@ $currentPage = basename($_SERVER['PHP_SELF']);
     <nav class="sidebar-nav">
         <div class="sidebar-nav-label">Main</div>
         <a href="dashboard.php" class="sidebar-link <?php echo $currentPage === 'dashboard.php' ? 'active' : ''; ?>" data-tooltip="Dashboard">
-            <span class="sidebar-link-icon">📊</span>
+            <span class="sidebar-link-icon"><i class="fi fi-rr-apps"></i></span>
             <span class="sidebar-link-text">Dashboard</span>
         </a>
         <a href="book_appointment.php" class="sidebar-link <?php echo $currentPage === 'book_appointment.php' ? 'active' : ''; ?>" data-tooltip="Book Appointment">
-            <span class="sidebar-link-icon">➕</span>
+            <span class="sidebar-link-icon"><i class="fi fi-rr-calendar-plus"></i></span>
             <span class="sidebar-link-text">Book Appointment</span>
         </a>
         <a href="appointments.php" class="sidebar-link <?php echo $currentPage === 'appointments.php' ? 'active' : ''; ?>" data-tooltip="My Appointments">
-            <span class="sidebar-link-icon">📅</span>
+            <span class="sidebar-link-icon"><i class="fi fi-rr-calendar"></i></span>
             <span class="sidebar-link-text">My Appointments</span>
         </a>
         <a href="timeline.php" class="sidebar-link <?php echo $currentPage === 'timeline.php' ? 'active' : ''; ?>" data-tooltip="Timeline / Appointment History">
-            <span class="sidebar-link-icon">⏳</span>
+            <span class="sidebar-link-icon"><i class="fi fi-rr-time-past"></i></span>
             <span class="sidebar-link-text">Timeline / History</span>
         </a>
 
         <div class="sidebar-nav-label">Medical</div>
         <a href="timeline.php" class="sidebar-link <?php echo $currentPage === 'timeline.php' ? 'active' : ''; ?>" data-tooltip="Medical Records">
-            <span class="sidebar-link-icon">📋</span>
+            <span class="sidebar-link-icon"><i class="fi fi-rr-document-medical"></i></span>
             <span class="sidebar-link-text">Medical Records</span>
         </a>
         <a href="timeline.php" class="sidebar-link <?php echo $currentPage === 'timeline.php' ? 'active' : ''; ?>" data-tooltip="Follow Up">
-            <span class="sidebar-link-icon">🔄</span>
+            <span class="sidebar-link-icon"><i class="fi fi-rr-refresh"></i></span>
             <span class="sidebar-link-text">Follow Up</span>
         </a>
 
         <div class="sidebar-nav-label">Account</div>
         <details class="sidebar-dropdown" <?php echo in_array($currentPage, ['profile.php', 'reset_password.php']) ? 'open' : ''; ?>>
             <summary class="sidebar-link" data-tooltip="Settings">
-                <span class="sidebar-link-icon">⚙️</span>
+                <span class="sidebar-link-icon"><i class="fi fi-rr-settings"></i></span>
                 <span class="sidebar-link-text">Settings</span>
                 <span class="dropdown-arrow">▼</span>
             </summary>
             <div class="sidebar-submenu">
                 <a href="profile.php" class="sidebar-link <?php echo $currentPage === 'profile.php' ? 'active' : ''; ?>" data-tooltip="My Profile">
-                    <span class="sidebar-link-icon">👤</span>
+                    <span class="sidebar-link-icon"><i class="fi fi-rr-user"></i></span>
                     <span class="sidebar-link-text">My Profile</span>
                 </a>
                 <a href="reset_password.php" class="sidebar-link <?php echo $currentPage === 'reset_password.php' ? 'active' : ''; ?>" data-tooltip="Reset Password">
-                    <span class="sidebar-link-icon">🔐</span>
+                    <span class="sidebar-link-icon"><i class="fi fi-rr-lock"></i></span>
                     <span class="sidebar-link-text">Reset Password</span>
                 </a>
                 <a href="logout.php" class="sidebar-link" data-tooltip="Logout" onclick="return confirm('Are you sure you want to logout?');">
-                    <span class="sidebar-link-icon">🚪</span>
+                    <span class="sidebar-link-icon"><i class="fi fi-rr-power"></i></span>
                     <span class="sidebar-link-text">Logout</span>
                 </a>
             </div>

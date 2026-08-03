@@ -211,7 +211,7 @@ foreach ($depts as $d) {
                 <div class="appt-header-actions">
                     <h2 style="font-size: 1.25rem; font-weight: 700;">Your Scheduled Visits</h2>
                     <a href="book_appointment.php" class="btn-book" style="text-decoration: none;">
-                        <span>➕</span> Book New Appointment
+                        <span><i class="fi fi-rr-calendar-plus"></i></span> Book New Appointment
                     </a>
                 </div>
 
