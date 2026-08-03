@@ -334,10 +334,10 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
                     <p class="profile-email"><?php echo htmlspecialchars($admin['email']); ?></p>
                     <div class="profile-badges">
                         <?php if ($admin['isAdmin']): ?>
-                            <span class="badge badge-admin">🛡️ Admin</span>
+                            <span class="badge badge-admin"><i class="fi fi-rr-shield"></i> Admin</span>
                         <?php endif; ?>
                         <?php if ($admin['isStaff']): ?>
-                            <span class="badge badge-staff">👤 Staff</span>
+                            <span class="badge badge-staff"><i class="fi fi-rr-user"></i> Staff</span>
                         <?php endif; ?>
                     </div>
                 </div>
@@ -346,7 +346,7 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
 
         <?php if (!empty($success)): ?>
             <div class="alert-box alert-success" id="successAlert">
-                <div class="alert-icon">✅</div>
+                <div class="alert-icon"><i class="fi fi-rr-check-circle"></i></div>
                 <div class="alert-content">
                     <p><?php echo htmlspecialchars($success); ?></p>
                 </div>
@@ -356,9 +356,9 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
 
         <!-- Admin Navigation Tabs -->
         <div class="admin-tabs">
-            <button class="tab-btn active" onclick="switchTab('profile')">👤 My Profile</button>
-            <button class="tab-btn" onclick="switchTab('departments')">🏥 Manage Departments</button>
-            <button class="tab-btn" onclick="switchTab('doctors')">🩺 Doctor Consultation Fees</button>
+            <button class="tab-btn active" onclick="switchTab('profile')"><i class="fi fi-rr-user"></i> My Profile</button>
+            <button class="tab-btn" onclick="switchTab('departments')"><i class="fi fi-rr-hospital"></i> Manage Departments</button>
+            <button class="tab-btn" onclick="switchTab('doctors')"><i class="fi fi-rr-stethoscope"></i> Doctor Consultation Fees</button>
         </div>
 
         <!-- Tab 1: Admin Profile -->
@@ -371,7 +371,7 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
                     <!-- Account Info Card -->
                     <div class="profile-card">
                         <div class="profile-card-header">
-                            <h2>📋 Account Details</h2>
+                            <h2><i class="fi fi-rr-document-medical"></i> Account Details</h2>
                         </div>
                         <div class="profile-card-body">
                             <div class="info-row">
@@ -415,7 +415,7 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
                     <!-- Edit Profile Card -->
                     <div class="profile-card">
                         <div class="profile-card-header">
-                            <h2>✏️ Edit Profile</h2>
+                            <h2><i class="fi fi-rr-edit"></i> Edit Profile</h2>
                         </div>
                         <div class="profile-card-body">
                             <form method="POST" action="" novalidate id="editProfileForm">
@@ -445,7 +445,7 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
                                 </div>
                                 <div class="form-actions">
                                     <button type="submit" class="btn-auth btn-auth-primary">
-                                        💾 Save Changes
+                                        <i class="fi fi-rr-disk"></i> Save Changes
                                     </button>
                                 </div>
                             </form>
@@ -455,7 +455,7 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
                     <!-- Change Password Card -->
                     <div class="profile-card">
                         <div class="profile-card-header">
-                            <h2>🔐 Change Password</h2>
+                            <h2><i class="fi fi-rr-lock"></i> Change Password</h2>
                         </div>
                         <div class="profile-card-body">
                             <form method="POST" action="" novalidate id="changePasswordForm">
@@ -489,7 +489,7 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
                                 </div>
                                 <div class="form-actions">
                                     <button type="submit" class="btn-auth btn-auth-primary">
-                                        🔑 Update Password
+                                        <i class="fi fi-rr-key"></i> Update Password
                                     </button>
                                 </div>
                             </form>
@@ -507,7 +507,7 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
                 <div class="profile-col">
                     <div class="profile-card">
                         <div class="profile-card-header">
-                            <h2>➕ Add New Department</h2>
+                            <h2><i class="fi fi-rr-plus"></i> Add New Department</h2>
                         </div>
                         <div class="profile-card-body">
                             <form method="POST" action="" novalidate>
@@ -528,7 +528,7 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
                                 </div>
                                 <div class="form-actions" style="margin-top: 15px;">
                                     <button type="submit" class="btn-auth btn-auth-primary">
-                                        🏥 Add Department
+                                        <i class="fi fi-rr-hospital"></i> Add Department
                                     </button>
                                 </div>
                             </form>
@@ -540,7 +540,7 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
                 <div class="profile-col">
                     <div class="profile-card">
                         <div class="profile-card-header">
-                            <h2>📋 Existing Departments</h2>
+                            <h2><i class="fi fi-rr-document-medical"></i> Existing Departments</h2>
                         </div>
                         <div class="profile-card-body" style="overflow-x: auto;">
                             <?php if (!empty($errors) && in_array($submittedAction, ['delete_department', 'update_department'])): ?>
@@ -576,12 +576,12 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
                                                         </button>
                                                         <div class="dropdown-action-menu">
                                                             <button type="button" class="dropdown-action-item item-edit" onclick="openUpdateDeptModal(<?php echo $dept['department_id']; ?>, '<?php echo htmlspecialchars(addslashes($dept['department_name'])); ?>')">
-                                                                ✏️ Edit
+                                                                <i class="fi fi-rr-edit"></i> Edit
                                                             </button>
                                                             <form method="POST" action="" class="dept-action-form" onsubmit="return confirmDelete(event);">
                                                                 <input type="hidden" name="action" value="delete_department">
                                                                 <input type="hidden" name="department_id" value="<?php echo $dept['department_id']; ?>">
-                                                                <button type="submit" class="dropdown-action-item item-delete">🗑️ Delete</button>
+                                                                <button type="submit" class="dropdown-action-item item-delete"><i class="fi fi-rr-trash"></i> Delete</button>
                                                             </form>
                                                         </div>
                                                     </div>
@@ -607,7 +607,7 @@ $initials = strtoupper(substr($admin['name'], 0, 1));
         <div id="tab-doctors" class="tab-content">
             <div class="profile-card" style="width: 100%;">
                 <div class="profile-card-header">
-                    <h2>🩺 Registered Doctors & Consultation Fees</h2>
+                    <h2><i class="fi fi-rr-stethoscope"></i> Registered Doctors & Consultation Fees</h2>
                 </div>
                 <div class="profile-card-body" style="overflow-x: auto;">
                     <?php if (!empty($errors) && $submittedAction === 'update_consultation_fee'): ?>

@@ -180,7 +180,7 @@ foreach ($depts as $d) {
                             </div>
 
                             <div class="form-group" id="book_schedule_info" style="display:none; background:rgba(0,0,0,0.02); padding:10px 14px; border-radius:6px; border:1px solid var(--border-glass); margin-bottom:15px; font-size:0.82rem; color:var(--text-secondary);">
-                                📅 Doctor Schedule: <span id="book_schedule_text" style="color:var(--accent); font-weight:600;"></span>
+                                <i class="fi fi-rr-calendar"></i> Doctor Schedule: <span id="book_schedule_text" style="color:var(--accent); font-weight:600;"></span>
                             </div>
 
                             <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap:16px;">

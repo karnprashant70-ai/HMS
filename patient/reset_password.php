@@ -180,7 +180,7 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
                     <!-- Section: Security -->
                     <div class="profile-section" id="security-section">
                         <div class="profile-section-header">
-                            <div class="profile-section-icon pink">🔒</div>
+                            <div class="profile-section-icon pink"><i class="fi fi-rr-lock"></i></div>
                             <div>
                                 <div class="profile-section-title">Security</div>
                                 <div class="profile-section-subtitle">Update your password</div>
@@ -209,7 +209,7 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
                     <!-- Save Actions -->
                     <div class="profile-save-bar">
                         <a href="dashboard.php" class="btn-profile-cancel">Cancel</a>
-                        <button type="submit" name="save_profile" value="1" class="btn-profile-save">💾 Update Password</button>
+                        <button type="submit" name="save_profile" value="1" class="btn-profile-save"><i class="fi fi-rr-key"></i> Update Password</button>
                     </div>
 
                 </form>
@@ -221,7 +221,7 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
     <!-- Toast Notification -->
     <?php if (!empty($message)): ?>
     <div class="toast-popup <?php echo $messageType; ?> show" id="profileToast">
-        <div class="toast-icon"><?php echo $messageType === 'success' ? '✅' : '❌'; ?></div>
+        <div class="toast-icon"><?php echo $messageType === 'success' ? '<i class="fi fi-rr-check-circle"></i>' : '<i class="fi fi-rr-cross-circle"></i>'; ?></div>
         <p><?php echo htmlspecialchars($message); ?></p>
     </div>
     <script>

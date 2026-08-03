@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                         </div>
                     </a>
                     <a href="login.php" class="dropdown-item" role="menuitem">
-                        <div class="dropdown-item-icon patient">🧑</div>
+                        <div class="dropdown-item-icon patient"><i class="fi fi-rr-user"></i></div>
                         <div class="dropdown-item-info">
                             <h4>Patient</h4>
                             <p>View appointments & records</p>
@@ -112,14 +112,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                 <div class="dropdown-menu" role="menu">
                     <div class="dropdown-label">Register as</div>
                     <a href="../doctor/register.php" class="dropdown-item" role="menuitem">
-                        <div class="dropdown-item-icon doctor">🩺</div>
+                        <div class="dropdown-item-icon doctor"><i class="fi fi-rr-stethoscope"></i></div>
                         <div class="dropdown-item-info">
                             <h4>Doctor</h4>
                             <p>Join our medical network</p>
                         </div>
                     </a>
                     <a href="register.php" class="dropdown-item" role="menuitem">
-                        <div class="dropdown-item-icon patient">🧑</div>
+                        <div class="dropdown-item-icon patient"><i class="fi fi-rr-user"></i></div>
                         <div class="dropdown-item-info">
                             <h4>Patient</h4>
                             <p>Create your health profile</p>
@@ -143,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             <!-- Login Form -->
             <div id="loginStep" class="form-step active">
                 <div class="auth-header">
-                    <div class="auth-logo">🧑</div>
+                    <div class="auth-logo"><i class="fi fi-rr-user"></i></div>
                     <h2>Patient Portal</h2>
                     <p>Sign in to access your health dashboard</p>
                 </div>
@@ -169,13 +169,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                         <?php if (isset($errors['password'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['password']); ?></div><?php endif; ?>
                         <div class="password-wrapper">
                             <input type="password" id="password" name="password" class="form-input" placeholder="••••••••" autocomplete="current-password">
-                            <button type="button" class="password-toggle" id="passwordToggle" aria-label="Show password">👁️</button>
+                            <button type="button" class="password-toggle" id="passwordToggle" aria-label="Show password"><i class="fi fi-rr-eye"></i></button>
                         </div>
                     </div>
 
                     <?php if (!empty($registrationSuccess)): ?>
                     <div class="toast-popup show" id="regSuccessToast">
-                        <div class="toast-icon">✅</div>
+                        <div class="toast-icon"><i class="fi fi-rr-check-circle"></i></div>
                         <p><?php echo htmlspecialchars($registrationSuccess); ?></p>
                     </div>
                     <script>
@@ -241,7 +241,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
         passwordToggle.addEventListener('click', () => {
             const isPassword = passwordInput.type === 'password';
             passwordInput.type = isPassword ? 'text' : 'password';
-            passwordToggle.textContent = isPassword ? '🙈' : '👁️';
+            passwordToggle.innerHTML = isPassword ? '<i class="fi fi-rr-eye-crossed"></i>' : '<i class="fi fi-rr-eye"></i>';
         });
 
 

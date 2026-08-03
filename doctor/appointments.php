@@ -355,7 +355,7 @@ if (!empty($_SESSION['appt_success'])) {
                                             </span>
                                             <?php if (!empty($rescheduleNote)): ?>
                                                 <div class="reschedule-alert" style="margin-top: 6px;">
-                                                    <span class="reschedule-alert-text">🔄 <?php echo htmlspecialchars($rescheduleNote); ?></span>
+                                                    <span class="reschedule-alert-text"><i class="fi fi-rr-refresh"></i> <?php echo htmlspecialchars($rescheduleNote); ?></span>
                                                     <form method="POST" action="" style="display:inline; margin-left: 6px;">
                                                         <input type="hidden" name="action" value="acknowledge_reschedule">
                                                         <input type="hidden" name="appointment_id" value="<?php echo $row['appointment_id']; ?>">
@@ -374,18 +374,18 @@ if (!empty($_SESSION['appt_success'])) {
                                                         <form method="POST" action="">
                                                             <input type="hidden" name="action" value="confirm">
                                                             <input type="hidden" name="appointment_id" value="<?php echo $row['appointment_id']; ?>">
-                                                            <button type="submit" class="dropdown-action-item item-confirm">✓ Confirm</button>
+                                                            <button type="submit" class="dropdown-action-item item-confirm"><i class="fi fi-rr-check"></i> Confirm</button>
                                                         </form>
                                                         <form method="POST" action="">
                                                             <input type="hidden" name="action" value="cancel">
                                                             <input type="hidden" name="appointment_id" value="<?php echo $row['appointment_id']; ?>">
-                                                            <button type="submit" class="dropdown-action-item item-decline">✕ Decline</button>
+                                                            <button type="submit" class="dropdown-action-item item-decline"><i class="fi fi-rr-cross"></i> Decline</button>
                                                         </form>
                                                         <div class="dropdown-divider"></div>
                                                     <?php endif; ?>
                                                     <?php if ($status === 'Pending' || $status === 'Confirmed'): ?>
                                                         <button type="button" class="dropdown-action-item item-reschedule" onclick='openRescheduleModal(<?php echo json_encode($row); ?>, "<?php echo htmlspecialchars($patName); ?>")'>
-                                                            🕒 Reschedule
+                                                            <i class="fi fi-rr-clock"></i> Reschedule
                                                         </button>
                                                     <?php endif; ?>
                                                 </div>
@@ -410,7 +410,7 @@ if (!empty($_SESSION['appt_success'])) {
                         <!-- ===== TIMELINE APPOINTMENTS SUBSECTION ===== -->
                         <div class="timeline-section" style="margin-bottom: 40px;">
                         <div class="timeline-header" style="margin-bottom: 20px;">
-                            <h3 class="card-title" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);">📅 Timeline Appointments</h3>
+                            <h3 class="card-title" style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary);"><i class="fi fi-rr-calendar"></i> Timeline Appointments</h3>
                             <span class="card-badge" style="background: var(--primary); color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;"><?php echo $countTimeline; ?> record<?php echo $countTimeline !== 1 ? 's' : ''; ?></span>
                         </div>
 
@@ -419,56 +419,54 @@ if (!empty($_SESSION['appt_success'])) {
                                 <?php 
                                 while ($tRow = $resultTimeline->fetch_assoc()):
                                     $tPatName = trim($tRow['first_name'] . ' ' . $tRow['middle_name'] . ' ' . $tRow['last_name']);
-                                    $tStatus = $tRow['status'];
-                                    $tStatusLower = strtolower($tStatus);
-                                    
-                                    // Formatting Booking Time (created_at)
-                                    $bookingTimeStr = !empty($tRow['created_at']) ? date('M d, Y h:i A', strtotime($tRow['created_at'])) : 'N/A';
+                                    $tInitials = strtoupper(($tRow['first_name'][0] ?? 'P') . ($tRow['last_name'][0] ?? 'T'));
+                                    $tPhoto = !empty($tRow['profile_photo']) ? '../uploads/patients/' . $tRow['profile_photo'] : '';
+                                    $tDateFormatted = date('l, M j, Y', strtotime($tRow['appointment_date']));
+                                    $tTimeFormatted = date('h:i A', strtotime($tRow['appointment_time']));
                                 ?>
                                     <div class="timeline-item">
-                                        <div class="timeline-marker"></div>
+                                        <div class="timeline-dot"></div>
                                         <div class="timeline-card">
                                             <div class="timeline-card-header">
-                                                <div>
-                                                    <h4 class="patient-info-title"><?php echo htmlspecialchars($tPatName); ?></h4>
-                                                    <div class="booking-time-meta">Booked on: <?php echo htmlspecialchars($bookingTimeStr); ?></div>
+                                                <div class="timeline-patient">
+                                                    <div class="patient-avatar-sm">
+                                                        <?php if ($tPhoto): ?>
+                                                            <img src="<?php echo htmlspecialchars($tPhoto); ?>" alt="Avatar">
+                                                        <?php else: ?>
+                                                            <?php echo $tInitials; ?>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                    <div>
+                                                        <div class="patient-name-sm"><?php echo htmlspecialchars($tPatName); ?></div>
+                                                        <div class="patient-meta-sm">
+                                                            <span><?php echo htmlspecialchars($tRow['gender'] ?? 'N/A'); ?>, <?php echo htmlspecialchars($tRow['age'] ?? 'N/A'); ?> yrs</span>
+                                                            <span>•</span>
+                                                            <span><?php echo htmlspecialchars($tRow['phone_number'] ?? 'N/A'); ?></span>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div class="timeline-badges">
-                                                    <span class="appt-badge <?php echo strtolower($tRow['appointment_type']) === 'online' ? 'online' : 'in-person'; ?>">
-                                                        <?php echo htmlspecialchars($tRow['appointment_type']); ?>
-                                                    </span>
-                                                    <span class="appt-badge status-badge <?php echo $tStatusLower; ?>">
-                                                        <?php echo htmlspecialchars($tStatus); ?>
-                                                    </span>
+                                                <div style="text-align: right;">
+                                                    <div class="timeline-date"><?php echo $tDateFormatted; ?></div>
+                                                    <div class="timeline-time"><?php echo $tTimeFormatted; ?> • <?php echo htmlspecialchars($tRow['appointment_type']); ?></div>
                                                 </div>
                                             </div>
-                                            <div class="timeline-card-body">
-                                                <div class="appt-datetime-detail">
-                                                    <div class="detail-item">
-                                                        <span class="detail-label">Appointment Date</span>
-                                                        <span class="detail-value"><?php echo date('M d, Y', strtotime($tRow['appointment_date'])); ?></span>
-                                                    </div>
-                                                    <div class="detail-item">
-                                                        <span class="detail-label">Appointment Time</span>
-                                                        <span class="detail-value"><?php echo date('h:i A', strtotime($tRow['appointment_time'])); ?></span>
-                                                    </div>
-                                                </div>
 
-                                                <form method="POST" action="" class="medical-records-form" novalidate>
+                                            <div class="timeline-card-body">
+                                                <form method="POST" action="">
                                                     <input type="hidden" name="save_medical_records" value="1">
                                                     <input type="hidden" name="appointment_id" value="<?php echo $tRow['appointment_id']; ?>">
-                                                    
+
                                                     <div class="form-row-grid">
                                                         <div class="timeline-textarea-group">
-                                                            <label for="report_<?php echo $tRow['appointment_id']; ?>">Report *</label>
-                                                            <textarea id="report_<?php echo $tRow['appointment_id']; ?>" name="report" class="timeline-textarea" placeholder="Enter patient diagnosis and medical report details..."></textarea>
+                                                            <label for="report_<?php echo $tRow['appointment_id']; ?>">Consultation / Medical Report</label>
+                                                            <textarea id="report_<?php echo $tRow['appointment_id']; ?>" name="report" class="timeline-textarea" placeholder="Enter patient diagnosis, symptoms, and examination notes..."></textarea>
                                                         </div>
                                                         <div class="timeline-textarea-group">
                                                             <label for="investigation_<?php echo $tRow['appointment_id']; ?>">Investigation</label>
                                                             <textarea id="investigation_<?php echo $tRow['appointment_id']; ?>" name="investigation" class="timeline-textarea" placeholder="Enter requested lab tests or diagnostic investigations..."></textarea>
                                                         </div>
                                                         <div class="timeline-textarea-group" style="grid-column: span 2;">
-                                                            <label for="medications_<?php echo $tRow['appointment_id']; ?>">💊 Prescription / Medications</label>
+                                                            <label for="medications_<?php echo $tRow['appointment_id']; ?>"><i class="fi fi-rr-medicine"></i> Prescription / Medications</label>
                                                             <textarea id="medications_<?php echo $tRow['appointment_id']; ?>" name="medications" class="timeline-textarea" placeholder="e.g. Paracetamol 500mg - 1 tablet 3x daily after meals x 5 days&#10;Amoxicillin 250mg - 1 capsule 2x daily x 7 days"></textarea>
                                                         </div>
                                                         <div class="timeline-textarea-group">
@@ -497,7 +495,7 @@ if (!empty($_SESSION['appt_success'])) {
 
                                                     <div style="display: flex; justify-content: flex-end;">
                                                         <button type="submit" class="btn-timeline-save">
-                                                            💾 Save Medical Records & Complete
+                                                            <i class="fi fi-rr-disk"></i> Save Medical Records & Complete
                                                         </button>
                                                     </div>
                                                 </form>

@@ -196,10 +196,10 @@ $department = $doctor['department'] ?? 'General';
                         <div class="profile-hero-name">Dr. <?php echo htmlspecialchars($doctorName); ?></div>
                         <div class="profile-hero-dept"><?php echo htmlspecialchars($doctor['specialization'] ?? 'Specialist'); ?> — <?php echo htmlspecialchars($department); ?></div>
                         <div class="profile-hero-meta">
-                            <div class="profile-meta-item"><span>📧</span> <?php echo htmlspecialchars($doctor['email'] ?? '—'); ?></div>
-                            <div class="profile-meta-item"><span>📱</span> <?php echo htmlspecialchars($doctor['phone_number'] ?? '—'); ?></div>
-                            <div class="profile-meta-item"><span>🎓</span> <?php echo htmlspecialchars($doctor['years_experience'] ?? '0'); ?> yrs exp.</div>
-                            <div class="profile-meta-item"><span>🆔</span> ID: <?php echo htmlspecialchars($doctor['doctor_id'] ?? $doctorId); ?></div>
+                            <div class="profile-meta-item"><span><i class="fi fi-rr-envelope"></i></span> <?php echo htmlspecialchars($doctor['email'] ?? '—'); ?></div>
+                            <div class="profile-meta-item"><span><i class="fi fi-rr-phone-call"></i></span> <?php echo htmlspecialchars($doctor['phone_number'] ?? '—'); ?></div>
+                            <div class="profile-meta-item"><span><i class="fi fi-rr-graduation-cap"></i></span> <?php echo htmlspecialchars($doctor['years_experience'] ?? '0'); ?> yrs exp.</div>
+                            <div class="profile-meta-item"><span><i class="fi fi-rr-id-badge"></i></span> ID: <?php echo htmlspecialchars($doctor['doctor_id'] ?? $doctorId); ?></div>
                         </div>
                     </div>
                     <?php
@@ -217,7 +217,7 @@ $department = $doctor['department'] ?? 'General';
                     <!-- Section 1: Personal Info -->
                     <div class="profile-section">
                         <div class="profile-section-header">
-                            <div class="profile-section-icon purple">👤</div>
+                            <div class="profile-section-icon purple"><i class="fi fi-rr-user"></i></div>
                             <div>
                                 <div class="profile-section-title">Personal Information</div>
                                 <div class="profile-section-subtitle">Your basic identity and contact details</div>
@@ -236,7 +236,7 @@ $department = $doctor['department'] ?? 'General';
                             <div class="photo-upload-info">
                                 <p>JPG, PNG, WebP or GIF. Max 2MB.</p>
                                 <label class="photo-upload-btn">
-                                    📷 Change Photo
+                                    <i class="fi fi-rr-camera"></i> Change Photo
                                     <input type="file" name="profile_photo" accept="image/*" id="photoInput">
                                 </label>
                             </div>
@@ -284,7 +284,7 @@ $department = $doctor['department'] ?? 'General';
                     <!-- Section 2: Contact Info -->
                     <div class="profile-section">
                         <div class="profile-section-header">
-                            <div class="profile-section-icon teal">📞</div>
+                            <div class="profile-section-icon teal"><i class="fi fi-rr-phone-call"></i></div>
                             <div>
                                 <div class="profile-section-title">Contact & Address</div>
                                 <div class="profile-section-subtitle">How patients and staff can reach you</div>
@@ -392,7 +392,7 @@ $department = $doctor['department'] ?? 'General';
                     <div class="profile-save-bar">
                         <a href="dashboard.php" class="btn-profile-cancel">Cancel</a>
                         <button type="submit" name="save_profile" value="1" class="btn-profile-save">
-                            💾 Save Changes
+                            <i class="fi fi-rr-disk"></i> Save Changes
                         </button>
                     </div>
                 </form>
@@ -403,7 +403,7 @@ $department = $doctor['department'] ?? 'General';
     <!-- Toast Popup -->
     <?php if (!empty($message)): ?>
     <div class="toast-popup show" id="profileToast" style="<?php echo $messageType === 'error' ? 'background: linear-gradient(135deg, #FF6B6B, #FF8FA3);' : ''; ?>">
-        <div class="toast-icon"><?php echo $messageType === 'success' ? '✅' : '❌'; ?></div>
+        <div class="toast-icon"><?php echo $messageType === 'success' ? '<i class="fi fi-rr-check-circle"></i>' : '<i class="fi fi-rr-cross-circle"></i>'; ?></div>
         <p><?php echo htmlspecialchars($message); ?></p>
     </div>
     <script>

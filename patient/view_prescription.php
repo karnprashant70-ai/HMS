@@ -48,6 +48,7 @@ $patientName = trim($rx['pat_fname'] . ' ' . $rx['pat_mname'] . ' ' . $rx['pat_l
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digital Prescription - <?php echo htmlspecialchars($patientName); ?></title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn-uicons.flaticon.com/2.6.0/uicons-regular-rounded/css/uicons-regular-rounded.css">
     <style>
         :root {
             --primary: #00b894;
@@ -79,43 +80,74 @@ $patientName = trim($rx['pat_fname'] . ' ' . $rx['pat_mname'] . ' ' . $rx['pat_l
         .hospital-brand h1 { color: var(--primary); font-size: 1.6rem; font-weight: 800; display: flex; align-items: center; gap: 8px; }
         .hospital-brand p { color: var(--text-muted); font-size: 0.85rem; margin-top: 4px; }
         .doctor-meta { text-align: right; }
-        .doctor-meta h3 { font-size: 1.1rem; font-weight: 700; }
-        .doctor-meta p { font-size: 0.85rem; color: var(--text-muted); }
-
+        .doctor-meta h3 { font-size: 1.1rem; color: var(--text-dark); }
+        .doctor-meta p { font-size: 0.82rem; color: var(--text-muted); }
+        
         .patient-bar {
             background: #f8fafc;
-            border: 1px solid var(--border);
             border-radius: 8px;
             padding: 16px 20px;
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 16px;
             margin-bottom: 30px;
-            font-size: 0.9rem;
+            border: 1px solid #e2e8f0;
         }
-        .patient-bar label { font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; display: block; margin-bottom: 2px; }
-        .patient-bar span { font-weight: 600; }
-
-        .rx-symbol { font-size: 2.2rem; font-weight: 800; color: var(--primary); font-style: italic; margin-bottom: 12px; }
-
-        .section-box { margin-bottom: 28px; }
-        .section-title { font-size: 0.95rem; font-weight: 700; color: var(--text-dark); text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--border); padding-bottom: 6px; margin-bottom: 12px; }
-        .section-content { font-size: 0.95rem; line-height: 1.6; white-space: pre-line; background: #fafafa; padding: 14px 18px; border-radius: 6px; border-left: 4px solid var(--primary); }
-
+        .patient-bar label { display: block; font-size: 0.72rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px; }
+        .patient-bar span { font-size: 0.92rem; font-weight: 600; color: var(--text-dark); display: block; margin-top: 2px; }
+        
+        .rx-symbol {
+            font-size: 2.2rem;
+            font-weight: 900;
+            font-family: serif;
+            color: var(--primary);
+            margin-bottom: 16px;
+        }
+        
+        .section-box {
+            margin-bottom: 24px;
+        }
+        .section-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .section-content {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #475569;
+            background: #fafafa;
+            padding: 12px 16px;
+            border-radius: 6px;
+            border-left: 3px solid var(--primary);
+        }
+        
         .rx-footer {
-            margin-top: 50px;
+            margin-top: 40px;
             padding-top: 20px;
             border-top: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
         }
-        .signature-box { text-align: center; width: 200px; }
-        .signature-line { border-bottom: 1px solid var(--text-dark); margin-bottom: 6px; height: 40px; }
-
+        .signature-box {
+            text-align: center;
+        }
+        .signature-line {
+            width: 160px;
+            border-bottom: 1px solid #000;
+            margin-bottom: 6px;
+        }
+        
         .action-bar {
             max-width: 800px;
-            margin: 20px auto 0;
+            margin: 24px auto 0;
             display: flex;
             justify-content: space-between;
         }
@@ -123,6 +155,7 @@ $patientName = trim($rx['pat_fname'] . ' ' . $rx['pat_mname'] . ' ' . $rx['pat_l
             padding: 10px 20px;
             border-radius: 8px;
             font-weight: 600;
+            font-size: 0.9rem;
             cursor: pointer;
             text-decoration: none;
             display: inline-flex;
@@ -130,12 +163,13 @@ $patientName = trim($rx['pat_fname'] . ' ' . $rx['pat_mname'] . ' ' . $rx['pat_l
             gap: 8px;
             border: none;
         }
-        .btn-secondary { background: #e2e8f0; color: #475569; }
         .btn-primary { background: var(--primary); color: #fff; }
+        .btn-secondary { background: #e2e8f0; color: #475569; }
+        .btn:hover { opacity: 0.9; }
 
         @media print {
             body { background: #fff; padding: 0; }
-            .prescription-card { box-shadow: none; border: none; padding: 0; }
+            .prescription-card { box-shadow: none; border: none; padding: 0; width: 100%; max-width: 100%; }
             .action-bar { display: none; }
         }
     </style>
@@ -146,7 +180,7 @@ $patientName = trim($rx['pat_fname'] . ' ' . $rx['pat_mname'] . ' ' . $rx['pat_l
         <!-- Hospital & Doctor Header -->
         <div class="rx-header">
             <div class="hospital-brand">
-                <h1>🏥 Medi-Care Hospital</h1>
+                <h1><i class="fi fi-rr-hospital"></i> Medi-Care Hospital</h1>
                 <p>Advanced Health Management System</p>
                 <p style="font-size:0.8rem; color:#94a3b8;">Email: support@medicare.com | Helpline: +977-1-4000000</p>
             </div>
@@ -182,21 +216,21 @@ $patientName = trim($rx['pat_fname'] . ' ' . $rx['pat_mname'] . ' ' . $rx['pat_l
         <!-- Diagnosis / Medical Report -->
         <?php if (!empty($rx['report'])): ?>
         <div class="section-box">
-            <div class="section-title">📋 Clinical Diagnosis & Diagnosis Report</div>
+            <div class="section-title"><i class="fi fi-rr-document-medical"></i> Clinical Diagnosis & Diagnosis Report</div>
             <div class="section-content"><?php echo htmlspecialchars($rx['report']); ?></div>
         </div>
         <?php endif; ?>
 
         <!-- Medications List -->
         <div class="section-box">
-            <div class="section-title">💊 Prescribed Medications</div>
+            <div class="section-title"><i class="fi fi-rr-medicine"></i> Prescribed Medications</div>
             <div class="section-content" style="font-weight: 600; color: #1e293b; font-size: 1rem;"><?php echo htmlspecialchars($rx['medications']); ?></div>
         </div>
 
         <!-- Advice & Instructions -->
         <?php if (!empty($rx['instructions'])): ?>
         <div class="section-box">
-            <div class="section-title">💡 Special Advice & Instructions</div>
+            <div class="section-title"><i class="fi fi-rr-bulb"></i> Special Advice & Instructions</div>
             <div class="section-content"><?php echo htmlspecialchars($rx['instructions']); ?></div>
         </div>
         <?php endif; ?>
@@ -217,8 +251,8 @@ $patientName = trim($rx['pat_fname'] . ' ' . $rx['pat_mname'] . ' ' . $rx['pat_l
 
     <!-- Action Bar -->
     <div class="action-bar">
-        <a href="appointments.php" class="btn btn-secondary">⬅️ Back to Appointments</a>
-        <button onclick="window.print()" class="btn btn-primary">🖨️ Print Prescription</button>
+        <a href="appointments.php" class="btn btn-secondary"><i class="fi fi-rr-arrow-left"></i> Back to Appointments</a>
+        <button onclick="window.print()" class="btn btn-primary"><i class="fi fi-rr-print"></i> Print Prescription</button>
     </div>
 
 </body>

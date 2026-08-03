@@ -92,11 +92,11 @@ $patStmt->close();
                 </div>
                 <div class="top-header-right">
                     <button class="header-icon-btn" title="Notifications">
-                        🔔
+                        <i class="fi fi-rr-bell"></i>
                         <span class="notification-dot"></span>
                     </button>
                     <button class="header-icon-btn" title="Messages">
-                        ✉️
+                        <i class="fi fi-rr-envelope"></i>
                     </button>
                     <a href="profile.php" class="header-profile">
                         <div class="header-profile-avatar">
@@ -118,7 +118,7 @@ $patStmt->close();
                 <div class="stats-grid">
                     <div class="stat-card purple">
                         <div class="stat-card-header">
-                            <div class="stat-card-icon purple">📅</div>
+                            <div class="stat-card-icon purple"><i class="fi fi-rr-calendar"></i></div>
                             <span class="stat-card-trend up">Today</span>
                         </div>
                         <div class="stat-card-value"><?php echo $todayCount; ?></div>
@@ -126,7 +126,7 @@ $patStmt->close();
                     </div>
                     <div class="stat-card teal">
                         <div class="stat-card-header">
-                            <div class="stat-card-icon teal">🧑</div>
+                            <div class="stat-card-icon teal"><i class="fi fi-rr-users-alt"></i></div>
                             <span class="stat-card-trend up">Active</span>
                         </div>
                         <div class="stat-card-value"><?php echo $totalPatientsCount; ?></div>
@@ -134,7 +134,7 @@ $patStmt->close();
                     </div>
                     <div class="stat-card orange">
                         <div class="stat-card-header">
-                            <div class="stat-card-icon orange">💊</div>
+                            <div class="stat-card-icon orange"><i class="fi fi-rr-medicine"></i></div>
                             <span class="stat-card-trend down">-3%</span>
                         </div>
                         <div class="stat-card-value">18</div>
@@ -142,7 +142,7 @@ $patStmt->close();
                     </div>
                     <div class="stat-card pink">
                         <div class="stat-card-header">
-                            <div class="stat-card-icon pink">⭐</div>
+                            <div class="stat-card-icon pink"><i class="fi fi-rr-star"></i></div>
                             <span class="stat-card-trend up">+2%</span>
                         </div>
                         <div class="stat-card-value">4.8</div>

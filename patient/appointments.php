@@ -288,16 +288,16 @@ foreach ($depts as $d) {
                                                             data-date="<?php echo htmlspecialchars($row['appointment_date']); ?>"
                                                             data-time="<?php echo htmlspecialchars($row['appointment_time']); ?>"
                                                             data-type="<?php echo htmlspecialchars($row['appointment_type']); ?>"
-                                                            onclick="openEditModal(this)">📅 Reschedule</button>
+                                                            onclick="openEditModal(this)"><i class="fi fi-rr-calendar-clock"></i> Reschedule</button>
                                                     <form method="POST" action="" onsubmit="return confirm('Are you sure you want to cancel this appointment?');">
                                                         <input type="hidden" name="appointment_id" value="<?php echo $row['appointment_id']; ?>">
-                                                        <button type="submit" name="delete_appointment" value="1" class="dropdown-action-item item-cancel">✕ Cancel</button>
+                                                        <button type="submit" name="delete_appointment" value="1" class="dropdown-action-item item-cancel"><i class="fi fi-rr-cross-small"></i> Cancel</button>
                                                     </form>
                                                 </div>
                                             </div>
                                         <?php elseif ($status === 'Completed'): ?>
                                             <a href="view_prescription.php?appointment_id=<?php echo (int)$row['appointment_id']; ?>" class="btn-auth btn-auth-secondary" style="padding: 4px 10px; font-size: 0.78rem; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
-                                                💊 View Rx
+                                                <i class="fi fi-rr-medicine"></i> View Rx
                                             </a>
                                         <?php else: ?>
                                             <span style="color: var(--text-muted); font-size: 0.82rem;">—</span>
@@ -323,7 +323,7 @@ foreach ($depts as $d) {
     <div class="modal" id="editModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>📅 Reschedule Appointment</h3>
+                <h3><i class="fi fi-rr-calendar-clock"></i> Reschedule Appointment</h3>
                 <button class="modal-close" onclick="closeEditModal()">&times;</button>
             </div>
             <form method="POST" action="">
@@ -365,7 +365,7 @@ foreach ($depts as $d) {
                 </div>
 
                 <div class="form-group" id="edit_schedule_info" style="display:none; background:rgba(0,0,0,0.02); padding:10px 14px; border-radius:6px; border:1px solid var(--border-glass); margin-bottom:15px; font-size:0.82rem; color:var(--text-secondary);">
-                    📅 Doctor Schedule: <span id="edit_schedule_text" style="color:var(--accent); font-weight:600;"></span>
+                    <i class="fi fi-rr-calendar"></i> Doctor Schedule: <span id="edit_schedule_text" style="color:var(--accent); font-weight:600;"></span>
                 </div>
 
                 <div class="form-grid" style="grid-template-columns: 1fr 1fr; gap:16px;">

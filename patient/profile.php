@@ -184,10 +184,10 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
                         <div class="profile-hero-name"><?php echo htmlspecialchars($patientName); ?></div>
                         <div class="profile-hero-role"><?php echo htmlspecialchars(!empty($patient['occupation']) ? $patient['occupation'] : 'Patient'); ?></div>
                         <div class="profile-hero-meta">
-                            <div class="profile-meta-item"><span>📧</span> <?php echo htmlspecialchars(!empty($patient['email']) ? $patient['email'] : '—'); ?></div>
-                            <div class="profile-meta-item"><span>📱</span> <?php echo htmlspecialchars(!empty($patient['phone_number']) ? $patient['phone_number'] : '—'); ?></div>
-                            <div class="profile-meta-item"><span>📅</span> Member since <?php echo $memberSince; ?></div>
-                            <div class="profile-meta-item"><span>🆔</span> ID: PT-<?php echo str_pad($patientId, 5, '0', STR_PAD_LEFT); ?></div>
+                            <div class="profile-meta-item"><span><i class="fi fi-rr-envelope"></i></span> <?php echo htmlspecialchars(!empty($patient['email']) ? $patient['email'] : '—'); ?></div>
+                            <div class="profile-meta-item"><span><i class="fi fi-rr-phone-call"></i></span> <?php echo htmlspecialchars(!empty($patient['phone_number']) ? $patient['phone_number'] : '—'); ?></div>
+                            <div class="profile-meta-item"><span><i class="fi fi-rr-calendar"></i></span> Member since <?php echo $memberSince; ?></div>
+                            <div class="profile-meta-item"><span><i class="fi fi-rr-id-badge"></i></span> ID: PT-<?php echo str_pad($patientId, 5, '0', STR_PAD_LEFT); ?></div>
                         </div>
                     </div>
                     <div class="profile-status-badge available">● Active</div>
@@ -199,7 +199,7 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
                     <!-- Section 1: Personal Information -->
                     <div class="profile-section">
                         <div class="profile-section-header">
-                            <div class="profile-section-icon teal">👤</div>
+                            <div class="profile-section-icon teal"><i class="fi fi-rr-user"></i></div>
                             <div>
                                 <div class="profile-section-title">Personal Information</div>
                                 <div class="profile-section-subtitle">Your basic identity details</div>
@@ -216,7 +216,7 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
                             <div class="photo-upload-info">
                                 <p>Upload a profile photo. JPG, PNG or WebP (max 2MB)</p>
                                 <label class="photo-upload-btn">
-                                    📷 Choose Photo
+                                    <i class="fi fi-rr-camera"></i> Choose Photo
                                     <input type="file" name="profile_photo" id="profilePhotoInput" accept="image/jpeg,image/png,image/webp,image/gif">
                                 </label>
                             </div>
@@ -272,7 +272,7 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
                     <!-- Section 2: Contact Information -->
                     <div class="profile-section">
                         <div class="profile-section-header">
-                            <div class="profile-section-icon purple">📞</div>
+                            <div class="profile-section-icon purple"><i class="fi fi-rr-phone-call"></i></div>
                             <div>
                                 <div class="profile-section-title">Contact Information</div>
                                 <div class="profile-section-subtitle">How we can reach you</div>
@@ -302,7 +302,7 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
                     <!-- Save Actions -->
                     <div class="profile-save-bar">
                         <a href="dashboard.php" class="btn-profile-cancel">Cancel</a>
-                        <button type="submit" name="save_profile" value="1" class="btn-profile-save">💾 Save Changes</button>
+                        <button type="submit" name="save_profile" value="1" class="btn-profile-save"><i class="fi fi-rr-disk"></i> Save Changes</button>
                     </div>
 
                 </form>
@@ -314,7 +314,7 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
     <!-- Toast Notification -->
     <?php if (!empty($message)): ?>
     <div class="toast-popup <?php echo $messageType; ?> show" id="profileToast">
-        <div class="toast-icon"><?php echo $messageType === 'success' ? '✅' : '❌'; ?></div>
+        <div class="toast-icon"><?php echo $messageType === 'success' ? '<i class="fi fi-rr-check-circle"></i>' : '<i class="fi fi-rr-cross-circle"></i>'; ?></div>
         <p><?php echo htmlspecialchars($message); ?></p>
     </div>
     <script>

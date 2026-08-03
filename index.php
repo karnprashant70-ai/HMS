@@ -38,14 +38,14 @@
                 <div class="dropdown-menu" role="menu">
                     <div class="dropdown-label">Login as</div>
                     <a href="doctor/login.php" class="dropdown-item" role="menuitem">
-                        <div class="dropdown-item-icon doctor">🩺</div>
+                        <div class="dropdown-item-icon doctor"><i class="fi fi-rr-stethoscope"></i></div>
                         <div class="dropdown-item-info">
                             <h4>Doctor</h4>
                             <p>Access your dashboard</p>
                         </div>
                     </a>
                     <a href="patient/login.php" class="dropdown-item" role="menuitem">
-                        <div class="dropdown-item-icon patient">🧑</div>
+                        <div class="dropdown-item-icon patient"><i class="fi fi-rr-user"></i></div>
                         <div class="dropdown-item-info">
                             <h4>Patient</h4>
                             <p>View appointments & records</p>
@@ -65,14 +65,14 @@
                 <div class="dropdown-menu" role="menu">
                     <div class="dropdown-label">Register as</div>
                     <a href="doctor/register.php" class="dropdown-item" role="menuitem">
-                        <div class="dropdown-item-icon doctor">🩺</div>
+                        <div class="dropdown-item-icon doctor"><i class="fi fi-rr-stethoscope"></i></div>
                         <div class="dropdown-item-info">
                             <h4>Doctor</h4>
                             <p>Join our medical network</p>
                         </div>
                     </a>
                     <a href="patient/register.php" class="dropdown-item" role="menuitem">
-                        <div class="dropdown-item-icon patient">🧑</div>
+                        <div class="dropdown-item-icon patient"><i class="fi fi-rr-user"></i></div>
                         <div class="dropdown-item-info">
                             <h4>Patient</h4>
                             <p>Create your health profile</p>
@@ -121,17 +121,17 @@
     <section class="features" id="features">
         <div class="features-grid">
             <div class="feature-card">
-                <div class="feature-icon purple">📋</div>
+                <div class="feature-icon purple"><i class="fi fi-rr-calendar"></i></div>
                 <h3>Appointment Scheduling</h3>
                 <p>Book, reschedule, and manage appointments effortlessly with our smart scheduling system.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon teal">🔒</div>
+                <div class="feature-icon teal"><i class="fi fi-rr-shield-check"></i></div>
                 <h3>Secure Health Records</h3>
                 <p>Your medical data is encrypted and accessible only to authorized healthcare providers.</p>
             </div>
             <div class="feature-card">
-                <div class="feature-icon orange">📊</div>
+                <div class="feature-icon orange"><i class="fi fi-rr-stats"></i></div>
                 <h3>Real-time Analytics</h3>
                 <p>Doctors and administrators get actionable insights and reports from patient data.</p>
             </div>

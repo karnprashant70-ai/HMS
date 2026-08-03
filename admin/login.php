@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="auth-card">
             <!-- Header -->
             <div class="auth-header">
-                <div class="auth-logo">🛡️</div>
+                <div class="auth-logo"><i class="fi fi-rr-shield"></i></div>
                 <h1>Admin Portal</h1>
                 <p>Sign in to access the administration dashboard</p>
             </div>
@@ -104,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <label class="form-label" for="email">Email Address</label>
                     <?php if (isset($errors['email'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['email']); ?></div><?php endif; ?>
                     <div class="input-icon-wrapper">
-                        <span class="input-icon">✉️</span>
+                        <span class="input-icon"><i class="fi fi-rr-envelope"></i></span>
                         <input
                             type="text"
                             class="form-input has-icon <?php echo (!empty($errors) && !empty($email)) ? 'input-error' : ''; ?>"
@@ -121,7 +121,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <label class="form-label" for="password">Password</label>
                     <?php if (isset($errors['password'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['password']); ?></div><?php endif; ?>
                     <div class="input-icon-wrapper">
-                        <span class="input-icon">🔒</span>
+                        <span class="input-icon"><i class="fi fi-rr-lock"></i></span>
                         <input
                             type="password"
                             class="form-input has-icon <?php echo (!empty($errors) && empty($email) === false) ? 'input-error' : ''; ?>"
@@ -131,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             autocomplete="current-password"
                         >
                         <button type="button" class="toggle-password" id="togglePassword" aria-label="Toggle password visibility">
-                            <span class="eye-icon" id="eyeIcon">👁️</span>
+                            <span class="eye-icon" id="eyeIcon"><i class="fi fi-rr-eye"></i></span>
                         </button>
                     </div>
                 </div>
@@ -168,7 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         toggleBtn.addEventListener('click', () => {
             const isPassword = passwordInput.type === 'password';
             passwordInput.type = isPassword ? 'text' : 'password';
-            eyeIcon.textContent = isPassword ? '🙈' : '👁️';
+            eyeIcon.innerHTML = isPassword ? '<i class="fi fi-rr-eye-crossed"></i>' : '<i class="fi fi-rr-eye"></i>';
         });
 
         // Button loading state on submit
