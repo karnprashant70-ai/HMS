@@ -86,7 +86,7 @@ $patStmt->close();
                 <div class="top-header-left">
                     <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">☰</button>
                     <div>
-                        <h1>Welcome back, Dr. <?php echo htmlspecialchars(explode(' ', $doctorName)[0]); ?> 👋</h1>
+                        <h1>Welcome back, Dr. <?php echo htmlspecialchars(explode(' ', $doctorName)[0]); ?></h1>
                         <p><?php echo date('l, F j, Y'); ?></p>
                     </div>
                 </div>

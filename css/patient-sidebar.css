@@ -74,9 +74,13 @@
 }
 
 .sidebar.collapsed .sidebar-header {
-    justify-content: center;
-    padding: 20px 0;
+    justify-content: flex-start;
+    padding: 18px 10px;
     gap: 0;
+}
+
+.sidebar.collapsed .sidebar-brand-icon {
+    margin-left: 8px;
 }
 
 /* Collapse Toggle Button */
@@ -212,9 +216,13 @@
 }
 
 .sidebar.collapsed .sidebar-link {
-    justify-content: center;
-    padding: 11px 0;
+    justify-content: flex-start;
+    padding: 11px 10px;
     gap: 0;
+}
+
+.sidebar.collapsed .sidebar-link-icon {
+    margin-left: 16px;
 }
 
 /* Tooltip for collapsed sidebar */
@@ -323,9 +331,13 @@
 }
 
 .sidebar.collapsed .sidebar-footer {
-    justify-content: center;
-    padding: 16px 0;
+    justify-content: flex-start;
+    padding: 16px 10px;
     gap: 0;
+}
+
+.sidebar.collapsed .sidebar-avatar {
+    margin-left: 8px;
 }
 
 .sidebar-user-name {
