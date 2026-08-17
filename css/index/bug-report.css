@@ -42,23 +42,15 @@
 
 .field-error {
     color: #DC2626;
-    font-size: 0.8rem;
-    font-weight: 600;
-    margin-top: 5px;
-    margin-bottom: 3px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-
-.field-error::before {
-    content: "⚠️";
     font-size: 0.82rem;
+    font-weight: 500;
+    margin-top: 4px;
+    margin-bottom: 2px;
 }
 
 .form-input.input-error {
     border-color: #EF4444 !important;
-    background-color: rgba(239, 68, 68, 0.03) !important;
+    background-color: rgba(239, 68, 68, 0.02) !important;
 }
 
 /* Severity Selector Buttons */

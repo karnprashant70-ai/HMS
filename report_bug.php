@@ -402,9 +402,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_bug'])) {
             <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;">
                 <i class="fi fi-rr-search-alt" style="color: var(--primary); margin-right: 6px;"></i> Track an Existing Bug Report
             </h3>
-            <p style="font-size: 0.85rem; color: var(--text-secondary);">
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">
                 Enter your ticket code (e.g. <code>TKT-9F3A1B</code>) to check the current resolution status.
             </p>
+
+            <!-- Error message shown ABOVE the input without any crossing icon -->
+            <div id="trackTicketError" style="display: none; color: #dc2626; font-size: 0.84rem; font-weight: 600; margin-bottom: 10px;"></div>
 
             <form class="track-ticket-form" novalidate onsubmit="trackTicket(event)">
                 <input type="text" id="trackTicketInput" class="form-input" placeholder="Enter Ticket Code (e.g. TKT-...)">
@@ -486,11 +489,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_bug'])) {
             e.preventDefault();
             const input = document.getElementById('trackTicketInput');
             const code = input.value.trim().toUpperCase();
+            const errorBox = document.getElementById('trackTicketError');
             const resultBox = document.getElementById('ticketResultBox');
 
+            // Reset error & result
+            errorBox.style.display = 'none';
+            errorBox.textContent = '';
+            input.classList.remove('input-error');
+            resultBox.style.display = 'none';
+
             if (!code) {
-                resultBox.style.display = 'block';
-                resultBox.innerHTML = '<span style="color: #dc2626; font-size: 0.88rem; display: flex; align-items: center; gap: 6px;"><i class="fi fi-rr-cross-circle"></i> Please enter a ticket code to track your issue.</span>';
+                errorBox.textContent = 'Please enter a ticket code to track your issue.';
+                errorBox.style.display = 'block';
+                input.classList.add('input-error');
+                input.focus();
                 return;
             }
 
@@ -501,7 +513,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_bug'])) {
                 .then(res => res.json())
                 .then(data => {
                     if (!data.success) {
-                        resultBox.innerHTML = `<span style="color: #dc2626; font-size: 0.88rem;"><i class="fi fi-rr-cross-circle"></i> ${data.message}</span>`;
+                        resultBox.style.display = 'none';
+                        errorBox.textContent = data.message || 'No bug report found with this ticket code.';
+                        errorBox.style.display = 'block';
+                        input.classList.add('input-error');
                         return;
                     }
 
@@ -527,7 +542,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_bug'])) {
                     `;
                 })
                 .catch(() => {
-                    resultBox.innerHTML = '<span style="color: #dc2626; font-size: 0.88rem;">Failed to fetch ticket info. Please try again.</span>';
+                    resultBox.style.display = 'none';
+                    errorBox.textContent = 'Failed to fetch ticket info. Please try again.';
+                    errorBox.style.display = 'block';
                 });
         }
 
