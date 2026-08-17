@@ -1,4 +1,10 @@
 /* ===== Profile Card & Premium Form Styles ===== */
+.admin-form-container {
+    max-width: 520px !important;
+    margin: 30px auto !important;
+    width: 100% !important;
+}
+
 .profile-card {
     background: var(--bg-card);
     backdrop-filter: blur(20px);
