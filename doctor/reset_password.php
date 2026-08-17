@@ -43,60 +43,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_profile'])) {
 
     $hasError = false;
 
-    // Password (optional)
-    if (!empty($_POST['password'])) {
-        if (empty($_POST['current_password'])) {
-            $errors['current_password'] = 'Please enter your current password to reset.';
-            $hasError = true;
-        } else if (!password_verify($_POST['current_password'], $doctor['password'])) {
-            $errors['current_password'] = 'Current password is incorrect.';
-            $hasError = true;
-        } else if (empty($_POST['confirm_password']) || $_POST['password'] !== $_POST['confirm_password']) {
-            $errors['confirm_password'] = 'Passwords do not match.';
-            $hasError = true;
-        } else {
-            $hashed = password_hash($_POST['password'], PASSWORD_DEFAULT);
-            $updates[] = "password = ?";
-            $types .= 's';
-            $values[] = $hashed;
-        }
+    $currentPassword = $_POST['current_password'] ?? '';
+    $newPassword = $_POST['password'] ?? '';
+    $confirmPassword = $_POST['confirm_password'] ?? '';
+
+    if (empty($currentPassword)) {
+        $errors['current_password'] = 'Current password is required.';
+        $hasError = true;
+    } else if (!password_verify($currentPassword, $doctor['password'])) {
+        $errors['current_password'] = 'Current password is incorrect.';
+        $hasError = true;
     }
 
-    if (!empty($updates) && !$hasError) {
-        $types .= 'i';
-        $values[] = $doctorId;
-        $sql = "UPDATE tbl_doctor SET " . implode(', ', $updates) . " WHERE doctor_id = ?";
-        $stmt = $conn->prepare($sql);
-        if ($stmt) {
-            $bind_names = [$types];
-            for ($i = 0; $i < count($values); $i++) {
-                $bind_names[] = &$values[$i];
-            }
-            call_user_func_array([$stmt, 'bind_param'], $bind_names);
-            if ($stmt->execute()) {
-                $message = 'Profile updated successfully!';
-                $messageType = 'success';
-                // Refresh doctor data
-                $stmt->close();
-                $stmt = $conn->prepare('SELECT * FROM tbl_doctor WHERE doctor_id = ? LIMIT 1');
-                $stmt->bind_param('i', $doctorId);
-                $stmt->execute();
-                $doctor = $stmt->get_result()->fetch_assoc() ?: $doctor;
-                $stmt->close();
-                // Update session name
-                $_SESSION['doctor_name'] = trim($doctor['first_name'] . ' ' . ($doctor['middle_name'] ?? '') . ' ' . $doctor['last_name']);
-                $doctorName = $_SESSION['doctor_name'];
-            } else {
-                $message = 'Error updating profile: ' . $stmt->error;
-                $messageType = 'error';
-            }
+    if (empty($newPassword)) {
+        $errors['password'] = 'New password is required.';
+        $hasError = true;
+    } else if (strlen($newPassword) < 6) {
+        $errors['password'] = 'New password must be at least 6 characters.';
+        $hasError = true;
+    }
+
+    if (empty($confirmPassword)) {
+        $errors['confirm_password'] = 'Please confirm your new password.';
+        $hasError = true;
+    } else if ($newPassword !== $confirmPassword) {
+        $errors['confirm_password'] = 'Passwords do not match.';
+        $hasError = true;
+    }
+
+    if (!$hasError) {
+        $hashed = password_hash($newPassword, PASSWORD_DEFAULT);
+        $stmt = $conn->prepare("UPDATE tbl_doctor SET password = ? WHERE doctor_id = ?");
+        $stmt->bind_param("si", $hashed, $doctorId);
+        if ($stmt->execute()) {
+            $message = 'Password updated successfully!';
+            $messageType = 'success';
+            $stmt->close();
+            // Refresh doctor data
+            $stmt = $conn->prepare('SELECT * FROM tbl_doctor WHERE doctor_id = ? LIMIT 1');
+            $stmt->bind_param('i', $doctorId);
+            $stmt->execute();
+            $doctor = $stmt->get_result()->fetch_assoc() ?: $doctor;
+            $stmt->close();
+            $_SESSION['doctor_name'] = trim($doctor['first_name'] . ' ' . ($doctor['middle_name'] ?? '') . ' ' . $doctor['last_name']);
+            $doctorName = $_SESSION['doctor_name'];
         } else {
-            $message = 'Database error: ' . $conn->error;
+            $message = 'Error updating password: ' . $conn->error;
             $messageType = 'error';
         }
-    } else if (!$hasError) {
-        $message = 'No changes submitted.';
-        $messageType = 'error';
     }
 }
 
@@ -142,8 +136,8 @@ $department = $doctor['department'] ?? 'General';
                 <div class="top-header-left">
                     <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">☰</button>
                     <div>
+                        <?php include __DIR__ . '/../includes/breadcrumb.php'; ?>
                         <h1>Reset Password</h1>
-                        <p>Update your account password</p>
                     </div>
                 </div>
                 <div class="top-header-right">
@@ -168,7 +162,7 @@ $department = $doctor['department'] ?? 'General';
             <div class="dashboard-content">
 
                 <!-- Profile Edit Form -->
-                <form method="POST" action="" enctype="multipart/form-data">
+                <form method="POST" action="" enctype="multipart/form-data" novalidate id="resetPasswordForm">
 
                     <!-- Section 4: Security -->
                     <div class="profile-section" id="security-section">
@@ -183,17 +177,32 @@ $department = $doctor['department'] ?? 'General';
                             <div class="profile-form-group full-width">
                                 <label class="profile-form-label" for="current_password">Current Password</label>
                                 <?php if (isset($errors['current_password'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['current_password']); ?></div><?php endif; ?>
-                                <input type="password" id="current_password" name="current_password" class="profile-form-input" placeholder="••••••••">
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="current_password" name="current_password" class="profile-form-input" placeholder="••••••••">
+                                    <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('current_password', this)" title="Show / Hide Password" aria-label="Show or hide current password">
+                                        <i class="fi fi-rr-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="profile-form-group">
                                 <label class="profile-form-label" for="password">New Password</label>
                                 <?php if (isset($errors['password'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['password']); ?></div><?php endif; ?>
-                                <input type="password" id="password" name="password" class="profile-form-input" placeholder="••••••••" autocomplete="new-password">
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="password" name="password" class="profile-form-input" placeholder="••••••••" autocomplete="new-password">
+                                    <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('password', this)" title="Show / Hide Password" aria-label="Show or hide new password">
+                                        <i class="fi fi-rr-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="profile-form-group">
                                 <label class="profile-form-label" for="confirm_password">Confirm Password</label>
                                 <?php if (isset($errors['confirm_password'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['confirm_password']); ?></div><?php endif; ?>
-                                <input type="password" id="confirm_password" name="confirm_password" class="profile-form-input" placeholder="••••••••" autocomplete="new-password">
+                                <div class="password-input-wrapper">
+                                    <input type="password" id="confirm_password" name="confirm_password" class="profile-form-input" placeholder="••••••••" autocomplete="new-password">
+                                    <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('confirm_password', this)" title="Show / Hide Password" aria-label="Show or hide confirm password">
+                                        <i class="fi fi-rr-eye"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -202,7 +211,7 @@ $department = $doctor['department'] ?? 'General';
                     <div class="profile-save-bar">
                         <a href="dashboard.php" class="btn-profile-cancel">Cancel</a>
                         <button type="submit" name="save_profile" value="1" class="btn-profile-save">
-                            💾 Update Password
+                            <i class="fi fi-rr-key"></i> Update Password
                         </button>
                     </div>
                 </form>
@@ -226,30 +235,60 @@ $department = $doctor['department'] ?? 'General';
     <!-- ===== JavaScript ===== -->
     <script>
 
+        // --- Toggle Password Visibility ---
+        function togglePasswordVisibility(inputId, btn) {
+            const input = (typeof inputId === 'string') ? document.getElementById(inputId) : inputId;
+            if (!input) return;
+            const icon = btn.querySelector('i');
+            if (icon) {
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.className = 'fi fi-rr-eye-crossed';
+                } else {
+                    input.type = 'password';
+                    icon.className = 'fi fi-rr-eye';
+                }
+            } else {
+                const svgEye = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+                const svgEyeOff = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    btn.innerHTML = svgEyeOff;
+                } else {
+                    input.type = 'password';
+                    btn.innerHTML = svgEye;
+                }
+            }
+        }
 
         // --- Photo Preview ---
-        document.getElementById('photoInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(ev) {
-                    const preview = document.getElementById('photoPreview');
-                    preview.innerHTML = '<img src="' + ev.target.result + '" alt="Preview" id="previewImg">';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
+        const photoInput = document.getElementById('photoInput');
+        if (photoInput) {
+            photoInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(ev) {
+                        const preview = document.getElementById('photoPreview');
+                        if (preview) preview.innerHTML = '<img src="' + ev.target.result + '" alt="Preview" id="previewImg">';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
 
         // --- Password Match Check ---
         const form = document.querySelector('form');
-        form.addEventListener('submit', function(e) {
-            const pwd = document.querySelector('input[name="password"]').value;
-            const confirm = document.getElementById('confirmPassword').value;
-            if (pwd && confirm && pwd !== confirm) {
-                e.preventDefault();
-                alert('Passwords do not match!');
-            }
-        });
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                const pwd = document.querySelector('input[name="password"]')?.value;
+                const confirm = document.getElementById('confirm_password')?.value || document.getElementById('confirmPassword')?.value;
+                if (pwd && confirm && pwd !== confirm) {
+                    e.preventDefault();
+                    alert('Passwords do not match!');
+                }
+            });
+        }
     </script>
 </body>
 </html>
