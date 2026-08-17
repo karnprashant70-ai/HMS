@@ -338,7 +338,7 @@ $blogCheck = $conn->query("SELECT COUNT(*) AS count FROM tbl_blog");
 if ($blogCheck && $blogCheck->fetch_assoc()['count'] == 0) {
     $sampleBlogs = [
         [
-            'title'        => '10 Essential Habits for a Healthy Heart: Cardiologist Guidelines',
+            'title'        => '4 Essential Habits for a Healthy Heart: Cardiologist Guidelines',
             'slug'         => 'essential-habits-healthy-heart',
             'category'     => 'Cardiology',
             'excerpt'      => 'Cardiovascular diseases remain the leading global cause of mortality. Learn key dietary changes, exercise protocols, and daily habits recommended by heart specialists.',
