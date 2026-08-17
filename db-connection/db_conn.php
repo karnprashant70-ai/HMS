@@ -312,4 +312,93 @@ $bugTableSql = "CREATE TABLE IF NOT EXISTS tbl_bug_report (
 if ($conn->query($bugTableSql) !== TRUE) {
     die("Error creating tbl_bug_report table: " . $conn->error);
 }
+
+// Create tbl_blog table if not exists
+$blogTableSql = "CREATE TABLE IF NOT EXISTS tbl_blog (
+    blog_id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) NOT NULL UNIQUE,
+    category VARCHAR(100) NOT NULL,
+    excerpt TEXT NOT NULL,
+    content LONGTEXT NOT NULL,
+    author_name VARCHAR(100) DEFAULT 'Dr. Ram Sharma',
+    author_role VARCHAR(100) DEFAULT 'Chief Neurologist & Medical Advisor',
+    cover_image VARCHAR(255) DEFAULT NULL,
+    read_time VARCHAR(20) DEFAULT '5 min read',
+    is_featured TINYINT(1) DEFAULT 0,
+    views_count INT DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+)";
+if ($conn->query($blogTableSql) !== TRUE) {
+    die("Error creating tbl_blog table: " . $conn->error);
+}
+
+// Seed initial blog posts if empty
+$blogCheck = $conn->query("SELECT COUNT(*) AS count FROM tbl_blog");
+if ($blogCheck && $blogCheck->fetch_assoc()['count'] == 0) {
+    $sampleBlogs = [
+        [
+            'title'        => '10 Essential Habits for a Healthy Heart: Cardiologist Guidelines',
+            'slug'         => 'essential-habits-healthy-heart',
+            'category'     => 'Cardiology',
+            'excerpt'      => 'Cardiovascular diseases remain the leading global cause of mortality. Learn key dietary changes, exercise protocols, and daily habits recommended by heart specialists.',
+            'content'      => '<p>Maintaining optimal cardiovascular health is one of the most vital investments you can make for longevity and quality of life. Cardiovascular conditions can often be prevented through proactive lifestyle habits.</p><h3>1. Prioritize Aerobic Activity</h3><p>Engage in at least 150 minutes of moderate aerobic exercise (such as brisk walking, cycling, or swimming) every week. Regular activity improves circulation and strengthens heart muscle efficiency.</p><h3>2. Adopt a Mediterranean-Style Diet</h3><p>Focus on leafy greens, antioxidant-rich berries, olive oil, nuts, and lean proteins while reducing excessive saturated fats and processed sodium intake.</p><h3>3. Monitor Blood Pressure & Cholesterol Regularly</h3><p>Hypertension is often called a silent condition. Regular check-ups with your cardiologist help detect arterial stiffness early before symptoms arise.</p><h3>4. Manage Chronic Stress</h3><p>High cortisol levels over extended periods contribute to increased vascular inflammation. Practice mindfulness, proper sleep hygiene (7-8 hours nightly), and breathing exercises.</p>',
+            'author_name'  => 'Dr. Makunda Timalsina',
+            'author_role'  => 'Senior Physician & Cardiologist',
+            'read_time'    => '4 min read',
+            'is_featured'  => 1
+        ],
+        [
+            'title'        => 'Understanding Migraines vs. Tension Headaches: Causes and Relief',
+            'slug'         => 'understanding-migraines-vs-tension-headaches',
+            'category'     => 'Neurology',
+            'excerpt'      => 'Frequent headaches can significantly impair daily productivity. Discover the neurological distinctions between migraines, cluster headaches, and tension aches.',
+            'content'      => '<p>Headaches affect millions of people worldwide, yet many individuals struggle to differentiate between standard tension headaches and debilitating neurological migraines.</p><h3>What Is a Tension Headache?</h3><p>Tension headaches typically present as a dull, aching band of pressure around the forehead and temples. They are most commonly triggered by postural strain, screen fatigue, and dehydration.</p><h3>The Anatomy of a Migraine</h3><p>Migraines are complex neurological events characterized by throbbing unilateral pain, nausea, sensitivity to light (photophobia), and visual auras. They involve rapid neurotransmitter shifts affecting the trigeminal nerve.</p><h3>When to Consult a Neurologist</h3><p>If your headaches occur more than twice weekly, resist over-the-counter pain relievers, or are accompanied by numbness or speech difficulties, schedule a clinical neurological evaluation immediately.</p>',
+            'author_name'  => 'Dr. Ram Sharma',
+            'author_role'  => 'Chief Neurologist & Medical Advisor',
+            'read_time'    => '6 min read',
+            'is_featured'  => 0
+        ],
+        [
+            'title'        => 'Pediatric Health: Essential Vaccines & Developmental Milestones',
+            'slug'         => 'pediatric-health-essential-vaccines',
+            'category'     => 'Pediatrics',
+            'excerpt'      => 'A comprehensive guide for parents on childhood immunization schedules, nutritional requirements for toddlers, and cognitive milestones.',
+            'content'      => '<p>Every parent wants their child to grow up strong, happy, and resilient. Understanding childhood immunization timelines and developmental benchmarks empowers families to safeguard their little ones.</p><h3>The Power of Timely Immunization</h3><p>Childhood vaccines protect against severe communicable diseases including measles, mumps, rubella, polio, and hepatitis. Adhering strictly to national vaccination calendars ensures herd immunity and long-term protection.</p><h3>Tracking Key Developmental Milestones</h3><p>From motor skills (rolling, crawling, unassisted walking) to verbal fluency, tracking milestones allows pediatricians to detect sensory or speech delays early when intervention is most effective.</p><h3>Balanced Nutrition for Growing Bodies</h3><p>Ensure a rich intake of calcium, Vitamin D, iron, and zinc during key growth spurts. Limit processed sugars and sweetened fruit juices.</p>',
+            'author_name'  => 'Dr. Jane Doe',
+            'author_role'  => 'Pediatric Specialist',
+            'read_time'    => '5 min read',
+            'is_featured'  => 0
+        ],
+        [
+            'title'        => 'Modern Dental Hygiene: Preventing Gum Disease and Enamel Wear',
+            'slug'         => 'modern-dental-hygiene-preventing-gum-disease',
+            'category'     => 'Dentistry',
+            'excerpt'      => 'Oral health directly impacts systemic wellness. Learn proper brushing techniques, flossing strategies, and the science behind enamel remineralization.',
+            'content'      => '<p>Your mouth is the gateway to your overall health. Emerging medical research consistently connects periodontal inflammation with cardiovascular conditions and metabolic disorders.</p><h3>The Two-Minute Rule</h3><p>Brush twice daily with a soft-bristled brush and fluoride toothpaste. Avoid brushing immediately after consuming acidic foods to prevent enamel abrasion.</p><h3>Interdental Cleaning is Non-Negotiable</h3><p>Brushing reaches only 60% of tooth surfaces. Daily flossing or water picking removes plaque colonies before they calcify into tartar.</p><h3>Bi-Annual Professional Cleanings</h3><p>Routine dental scaling every 6 months removes deep calculus and allows early diagnosis of cavities before root canal treatments become necessary.</p>',
+            'author_name'  => 'Dr. RIYAN Khan',
+            'author_role'  => 'Lead Dental Surgeon & Orthodontist',
+            'read_time'    => '4 min read',
+            'is_featured'  => 0
+        ],
+        [
+            'title'        => 'How Artificial Intelligence & Smart Records Are Transforming Healthcare',
+            'slug'         => 'ai-smart-records-transforming-healthcare',
+            'category'     => 'Healthcare Tech',
+            'excerpt'      => 'Explore how modern hospital management platforms, digital appointments, and AI-assisted diagnostics are enhancing patient care outcomes.',
+            'content'      => '<p>Digital health technology is revolutionizing modern clinical delivery, transitioning hospital administration from siloed paper files into real-time, encrypted health platforms.</p><h3>Instant Diagnostic Timelines</h3><p>With centralized electronic health records (EHR), attending physicians can instantly review past prescriptions, lab tests, and allergy warnings across departments in seconds.</p><h3>Reducing Patient Wait Times</h3><p>Smart scheduling algorithms dynamically balance physician shift loads, eliminating clinic congestion and allowing patients to book and reschedule visits effortlessly.</p><h3>The Future: Predictive Care</h3><p>Integrated analytics allow hospital teams to detect epidemiological trends and optimize medication inventories proactively.</p>',
+            'author_name'  => 'Medi-Care Engineering Team',
+            'author_role'  => 'Health Informatics Group',
+            'read_time'    => '5 min read',
+            'is_featured'  => 0
+        ]
+    ];
+
+    foreach ($sampleBlogs as $b) {
+        $bStmt = $conn->prepare("INSERT INTO tbl_blog (title, slug, category, excerpt, content, author_name, author_role, read_time, is_featured) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $bStmt->bind_param("ssssssssi", $b['title'], $b['slug'], $b['category'], $b['excerpt'], $b['content'], $b['author_name'], $b['author_role'], $b['read_time'], $b['is_featured']);
+        $bStmt->execute();
+        $bStmt->close();
+    }
+}
 ?>

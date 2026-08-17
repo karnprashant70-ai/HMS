@@ -43,6 +43,7 @@ $topDoctors = $conn->query($topDoctorsQuery);
         <ul class="nav-links" id="navLinks">
             <li><a href="index.php" class="nav-link active">Home</a></li>
             <li><a href="doctors.php" class="nav-link">Doctors</a></li>
+            <li><a href="blog.php" class="nav-link">Blog</a></li>
             <li><a href="#features" class="nav-link">Features</a></li>
             <li><a href="faq.php" class="nav-link">FAQ</a></li>
             <li><a href="privacy_policy.php" class="nav-link">Privacy</a></li>
@@ -254,6 +255,7 @@ $topDoctors = $conn->query($topDoctorsQuery);
         <div class="footer-nav-links">
             <a href="index.php">Home</a>
             <a href="doctors.php">Doctors Directory</a>
+            <a href="blog.php">Blog</a>
             <a href="#features">Features</a>
             <a href="faq.php">FAQ</a>
             <a href="privacy_policy.php">Privacy & Policy</a>

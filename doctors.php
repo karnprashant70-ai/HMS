@@ -81,6 +81,7 @@ if ($reviewsResult) {
         <ul class="nav-links" id="navLinks">
             <li><a href="index.php" class="nav-link">Home</a></li>
             <li><a href="doctors.php" class="nav-link active" style="color: var(--primary); font-weight: 700;">Doctors</a></li>
+            <li><a href="blog.php" class="nav-link">Blog</a></li>
             <li><a href="index.php#features" class="nav-link">Features</a></li>
             <li><a href="faq.php" class="nav-link">FAQ</a></li>
             <li><a href="privacy_policy.php" class="nav-link">Privacy</a></li>
@@ -309,6 +310,7 @@ if ($reviewsResult) {
         <div class="footer-nav-links">
             <a href="index.php">Home</a>
             <a href="doctors.php">Doctors Directory</a>
+            <a href="blog.php">Blog</a>
             <a href="index.php#features">Features</a>
             <a href="faq.php">FAQ</a>
             <a href="privacy_policy.php">Privacy & Policy</a>
