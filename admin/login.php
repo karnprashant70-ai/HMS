@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['isAdmin'] = $admin['isAdmin'];
                 $_SESSION['isStaff'] = $admin['isStaff'];
 
-                header("Location: profile.php");
+                header("Location: dashboard.php");
                 exit;
             } else {
                 $errors['password'] = 'Incorrect password. Please try again.';
@@ -91,15 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <!-- Login Form — novalidate disables HTML5 validation -->
             <form method="POST" action="" novalidate id="adminLoginForm">
-                <?php if (!empty($errors)): ?>
-                    <div class="hms-error-box">
-                        <ul>
-                            <?php foreach ($errors as $error): ?>
-                                <li><?php echo htmlspecialchars($error); ?></li>
-                            <?php endforeach; ?>
-                        </ul>
-                    </div>
-                <?php endif; ?>
+
                 <div class="form-group">
                     <label class="form-label" for="email">Email Address</label>
                     <?php if (isset($errors['email'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['email']); ?></div><?php endif; ?>

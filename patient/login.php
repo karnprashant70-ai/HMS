@@ -149,15 +149,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                 </div>
 
                 <form id="loginForm" method="POST" action="" novalidate>
-                    <?php if (!empty($errors)): ?>
-                        <div class="hms-error-box">
-                            <ul>
-                                <?php foreach ($errors as $error): ?>
-                                    <li><?php echo htmlspecialchars($error); ?></li>
-                                <?php endforeach; ?>
-                            </ul>
-                        </div>
-                    <?php endif; ?>
+
                     <div class="form-group">
                         <label class="form-label" for="email">Email Address</label>
                         <?php if (isset($errors['email'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['email']); ?></div><?php endif; ?>
