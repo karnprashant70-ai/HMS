@@ -1,4 +1,6 @@
 <?php
+ini_set("mysqli.default_socket", "/Applications/XAMPP/xamppfiles/var/mysql/mysql.sock");
+
 $servername = "localhost";
 $username = "root";
 $password = "";
@@ -72,17 +74,20 @@ if ($conn->query($adminTableSql) !== TRUE) {
     die("Error creating admin table: " . $conn->error);
 }
 
-// Insert default admin account if none exists
-$checkAdmin = $conn->query("SELECT admin_id FROM tbl_admin LIMIT 1");
-if ($checkAdmin->num_rows === 0) {
+// Insert default admin account if not exists
+$checkAdmin = $conn->prepare("SELECT admin_id FROM tbl_admin WHERE email = ?");
+$defaultEmail = "admin@medicare.com";
+$checkAdmin->bind_param("s", $defaultEmail);
+$checkAdmin->execute();
+if ($checkAdmin->get_result()->num_rows === 0) {
     $defaultName = "Super Admin";
-    $defaultEmail = "admin@medicare.com";
     $defaultPassword = password_hash("admin123", PASSWORD_DEFAULT);
     $insertAdmin = $conn->prepare("INSERT INTO tbl_admin (name, email, password, isAdmin, isStaff) VALUES (?, ?, ?, 1, 1)");
     $insertAdmin->bind_param("sss", $defaultName, $defaultEmail, $defaultPassword);
     $insertAdmin->execute();
     $insertAdmin->close();
 }
+$checkAdmin->close();
 
 // Create tbl_department table if not exists
 $deptTableSql = "CREATE TABLE IF NOT EXISTS tbl_department (
@@ -194,6 +199,15 @@ if ($followUpCheck && $followUpCheck->num_rows === 0) {
     $alterFollowUpSql = "ALTER TABLE tbl_appointment ADD COLUMN follow_up TEXT DEFAULT NULL AFTER investigation";
     if ($conn->query($alterFollowUpSql) !== TRUE) {
         die("Error adding follow_up column to tbl_appointment: " . $conn->error);
+    }
+}
+
+// Ensure tbl_appointment has created_at column
+$apptCreatedAtCheck = $conn->query("SHOW COLUMNS FROM tbl_appointment LIKE 'created_at'");
+if ($apptCreatedAtCheck && $apptCreatedAtCheck->num_rows === 0) {
+    $alterApptCreatedAt = "ALTER TABLE tbl_appointment ADD COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP";
+    if ($conn->query($alterApptCreatedAt) !== TRUE) {
+        die("Error adding created_at column to tbl_appointment: " . $conn->error);
     }
 }
 
