@@ -168,10 +168,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
 
     if ($formData['experience'] === '') {
         $errors['experience'] = 'Years of experience is required.';
-    } elseif (!is_numeric($formData['experience']) || intval($formData['experience']) < 0) {
-        $errors['experience'] = 'Experience must be a valid non-negative number.';
-    } elseif (intval($formData['experience']) > 70) {
-        $errors['experience'] = 'Please enter a realistic number of years.';
+    } else {
+        $validRanges = ['0-3', '3-6', '6-9', '9-12', '12-15', '15-18', '18-21', '21-24', '24-27', '27-30', '30+'];
+        if (!in_array($formData['experience'], $validRanges)) {
+            $errors['experience'] = 'Please select a valid experience range.';
+        }
     }
 
     // ===== STEP 4: SECURITY VALIDATION =====
@@ -268,16 +269,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
             $b_password = $hashedPassword;
 
             if (empty($errors)) {
-                // Prevent duplicate licence numbers or emails before executing the insert.
-                $dupCheckStmt = $conn->prepare('SELECT doctor_id, email, licence_number FROM tbl_doctor WHERE email = ? OR licence_number = ? LIMIT 1');
+                // Prevent duplicate phone numbers, licence numbers or emails before executing the insert.
+                $dupCheckStmt = $conn->prepare('SELECT doctor_id, email, phone_number, licence_number FROM tbl_doctor WHERE email = ? OR phone_number = ? OR licence_number = ? LIMIT 1');
                 if ($dupCheckStmt) {
-                    $dupCheckStmt->bind_param('ss', $b_email, $b_licenceNumber);
+                    $dupCheckStmt->bind_param('sss', $b_email, $b_phoneNumber, $b_licenceNumber);
                     $dupCheckStmt->execute();
                     $dupRes = $dupCheckStmt->get_result()->fetch_assoc();
                     $dupCheckStmt->close();
                     if ($dupRes) {
                         if ($dupRes['email'] === $b_email) {
                             $errors['email'] = 'This email address is already registered.';
+                        }
+                        if ($dupRes['phone_number'] === $b_phoneNumber) {
+                            $errors['phoneNumber'] = 'This phone number is already registered.';
                         }
                         if ($dupRes['licence_number'] === $b_licenceNumber) {
                             $errors['licenceNumber'] = 'This NMC registration number is already in use.';
@@ -653,9 +657,12 @@ function errClass($errors, $field) {
                             <?php echo showError($errors, 'experience'); ?>
                             <select id="experience" name="experience" class="form-input<?php echo errClass($errors, 'experience'); ?>">
                                 <option value="">Select years</option>
-                                <?php for ($i = 0; $i <= 70; $i++): ?>
-                                    <option value="<?php echo $i; ?>" <?php echo ((string)($formData['experience'] ?? '') === (string)$i) ? 'selected' : ''; ?>><?php echo $i; ?><?php echo $i === 1 ? ' year' : ' years'; ?></option>
-                                <?php endfor; ?>
+                                <?php
+                                $expRanges = ['0-3', '3-6', '6-9', '9-12', '12-15', '15-18', '18-21', '21-24', '24-27', '27-30', '30+'];
+                                foreach ($expRanges as $range):
+                                ?>
+                                    <option value="<?php echo $range; ?>" <?php echo (($formData['experience'] ?? '') === $range) ? 'selected' : ''; ?>><?php echo $range; ?> years</option>
+                                <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
@@ -676,13 +683,29 @@ function errClass($errors, $field) {
                         <div class="form-group">
                             <label class="form-label" for="password">Password *</label>
                             <?php echo showError($errors, 'password'); ?>
-                            <input type="password" id="password" name="password" class="form-input<?php echo errClass($errors, 'password'); ?>" placeholder="••••••••">
+                            <div class="password-input-wrapper">
+                                <input type="password" id="password" name="password" class="form-input<?php echo errClass($errors, 'password'); ?>" placeholder="••••••••">
+                                <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('password', this)" title="Show / Hide Password">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="form-group">
                             <label class="form-label" for="confirmPassword">Confirm Password *</label>
                             <?php echo showError($errors, 'confirmPassword'); ?>
-                            <input type="password" id="confirmPassword" name="confirmPassword" class="form-input<?php echo errClass($errors, 'confirmPassword'); ?>" placeholder="••••••••">
+                            <div class="password-input-wrapper">
+                                <input type="password" id="confirmPassword" name="confirmPassword" class="form-input<?php echo errClass($errors, 'confirmPassword'); ?>" placeholder="••••••••">
+                                <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('confirmPassword', this)" title="Show / Hide Password">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </button>
+                            </div>
                         </div>
 
                         <!-- Info Fields -->
@@ -838,6 +861,7 @@ function errClass($errors, $field) {
             if (!field) return;
 
             field.classList.remove('input-error');
+            clearFieldSuccess(fieldName);
             const container = field.closest('.form-group') || field.parentElement;
             if (!container) return;
 
@@ -845,10 +869,45 @@ function errClass($errors, $field) {
             if (existing) existing.remove();
         }
 
+        function clearFieldSuccess(fieldName) {
+            const field = document.querySelector(`[name="${fieldName}"]`) || document.getElementById(fieldName);
+            if (!field) return;
+
+            field.classList.remove('input-success');
+            const container = field.closest('.form-group') || field.parentElement;
+            if (!container) return;
+
+            const existing = container.querySelector(`[data-success-for="${fieldName}"]`);
+            if (existing) existing.remove();
+        }
+
+        function showFieldSuccess(fieldName, message) {
+            const field = document.querySelector(`[name="${fieldName}"]`) || document.getElementById(fieldName);
+            if (!field) return;
+
+            field.classList.remove('input-error');
+            const container = field.closest('.form-group') || field.parentElement;
+            if (!container) return;
+
+            const existingError = container.querySelector(`[data-error-for="${fieldName}"]`);
+            if (existingError) existingError.remove();
+
+            field.classList.add('input-success');
+            let successEl = container.querySelector(`[data-success-for="${fieldName}"]`);
+            if (!successEl) {
+                successEl = document.createElement('span');
+                successEl.className = 'form-success';
+                successEl.setAttribute('data-success-for', fieldName);
+                container.appendChild(successEl);
+            }
+            successEl.innerHTML = '<i class="fi fi-rr-check-circle"></i> ' + message;
+        }
+
         function showFieldError(fieldName, message) {
             const field = document.querySelector(`[name="${fieldName}"]`) || document.getElementById(fieldName);
             if (!field) return;
 
+            clearFieldSuccess(fieldName);
             field.classList.add('input-error');
             const container = field.closest('.form-group') || field.parentElement;
             if (!container) return;
@@ -871,6 +930,129 @@ function errClass($errors, $field) {
             }
             errorEl.textContent = message;
         }
+
+        // AJAX State Tracking for Email and Phone Number
+        const ajaxState = {
+            email: { valid: null, message: '', lastValue: '' },
+            phone: { valid: null, message: '', lastValue: '' }
+        };
+
+        function checkEmailAvailability(emailVal) {
+            emailVal = (emailVal || '').trim();
+            if (!emailVal || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)) {
+                clearFieldSuccess('email');
+                ajaxState.email = { valid: null, message: '', lastValue: emailVal };
+                return Promise.resolve(null);
+            }
+
+            if (ajaxState.email.lastValue === emailVal && ajaxState.email.valid !== null) {
+                if (ajaxState.email.valid === true) {
+                    showFieldSuccess('email', ajaxState.email.message);
+                } else {
+                    showFieldError('email', ajaxState.email.message);
+                }
+                return Promise.resolve(ajaxState.email.valid);
+            }
+
+            return fetch(`check_availability.php?type=email&value=${encodeURIComponent(emailVal)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.exists) {
+                            ajaxState.email = { valid: false, message: data.message, lastValue: emailVal };
+                            clearFieldSuccess('email');
+                            showFieldError('email', data.message);
+                            return false;
+                        } else {
+                            ajaxState.email = { valid: true, message: data.message, lastValue: emailVal };
+                            clearFieldError('email');
+                            showFieldSuccess('email', data.message);
+                            return true;
+                        }
+                    }
+                    return null;
+                })
+                .catch(err => {
+                    console.error('Email availability check failed:', err);
+                    return null;
+                });
+        }
+
+        function checkPhoneAvailability(phoneVal) {
+            phoneVal = (phoneVal || '').trim();
+            if (!phoneVal || !/^(97|98)\d{8}$/.test(phoneVal)) {
+                clearFieldSuccess('phoneNumber');
+                ajaxState.phone = { valid: null, message: '', lastValue: phoneVal };
+                return Promise.resolve(null);
+            }
+
+            if (ajaxState.phone.lastValue === phoneVal && ajaxState.phone.valid !== null) {
+                if (ajaxState.phone.valid === true) {
+                    showFieldSuccess('phoneNumber', ajaxState.phone.message);
+                } else {
+                    showFieldError('phoneNumber', ajaxState.phone.message);
+                }
+                return Promise.resolve(ajaxState.phone.valid);
+            }
+
+            return fetch(`check_availability.php?type=phone&value=${encodeURIComponent(phoneVal)}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.exists) {
+                            ajaxState.phone = { valid: false, message: data.message, lastValue: phoneVal };
+                            clearFieldSuccess('phoneNumber');
+                            showFieldError('phoneNumber', data.message);
+                            return false;
+                        } else {
+                            ajaxState.phone = { valid: true, message: data.message, lastValue: phoneVal };
+                            clearFieldError('phoneNumber');
+                            showFieldSuccess('phoneNumber', data.message);
+                            return true;
+                        }
+                    }
+                    return null;
+                })
+                .catch(err => {
+                    console.error('Phone availability check failed:', err);
+                    return null;
+                });
+        }
+
+        let emailTimer = null;
+        let phoneTimer = null;
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const emailInput = document.querySelector('[name="email"]');
+            if (emailInput) {
+                emailInput.addEventListener('input', function () {
+                    clearTimeout(emailTimer);
+                    clearFieldSuccess('email');
+                    emailTimer = setTimeout(() => {
+                        checkEmailAvailability(emailInput.value);
+                    }, 400);
+                });
+                emailInput.addEventListener('blur', function () {
+                    clearTimeout(emailTimer);
+                    checkEmailAvailability(emailInput.value);
+                });
+            }
+
+            const phoneInput = document.querySelector('[name="phoneNumber"]');
+            if (phoneInput) {
+                phoneInput.addEventListener('input', function () {
+                    clearTimeout(phoneTimer);
+                    clearFieldSuccess('phoneNumber');
+                    phoneTimer = setTimeout(() => {
+                        checkPhoneAvailability(phoneInput.value);
+                    }, 400);
+                });
+                phoneInput.addEventListener('blur', function () {
+                    clearTimeout(phoneTimer);
+                    checkPhoneAvailability(phoneInput.value);
+                });
+            }
+        });
 
         function clearStepErrors(step) {
             const fields = step === 1
@@ -928,25 +1110,29 @@ function errClass($errors, $field) {
                     errors.push({ field: 'phoneNumber', message: 'Phone number is required.' });
                 } else if (!/^(97|98)\d{8}$/.test(phoneNumber)) {
                     errors.push({ field: 'phoneNumber', message: 'Enter a valid 10-digit Nepali phone number.' });
+                } else if (ajaxState.phone.valid === false) {
+                    errors.push({ field: 'phoneNumber', message: ajaxState.phone.message });
                 }
 
                 if (!email) {
                     errors.push({ field: 'email', message: 'Email address is required.' });
                 } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                     errors.push({ field: 'email', message: 'Please enter a valid email address.' });
+                } else if (ajaxState.email.valid === false) {
+                    errors.push({ field: 'email', message: ajaxState.email.message });
                 }
 
-                            if (!tempAddress) {
-                                errors.push({ field: 'tempAddress', message: 'Temporary address is required.' });
-                            } else if (!/^[A-Za-z]/.test(tempAddress)) {
-                                errors.push({ field: 'tempAddress', message: 'Temporary address must start with a letter.' });
-                            }
+                if (!tempAddress) {
+                    errors.push({ field: 'tempAddress', message: 'Temporary address is required.' });
+                } else if (!/^[A-Za-z]/.test(tempAddress)) {
+                    errors.push({ field: 'tempAddress', message: 'Temporary address must start with a letter.' });
+                }
 
-                            if (!permAddress) {
-                                errors.push({ field: 'permAddress', message: 'Permanent address is required.' });
-                            } else if (!/^[A-Za-z]/.test(permAddress)) {
-                                errors.push({ field: 'permAddress', message: 'Permanent address must start with a letter.' });
-                            }
+                if (!permAddress) {
+                    errors.push({ field: 'permAddress', message: 'Permanent address is required.' });
+                } else if (!/^[A-Za-z]/.test(permAddress)) {
+                    errors.push({ field: 'permAddress', message: 'Permanent address must start with a letter.' });
+                }
             }
 
             if (step === 3) {
@@ -977,7 +1163,6 @@ function errClass($errors, $field) {
                 if (!experience) {
                     errors.push({ field: 'experience', message: 'Years of experience is required.' });
                 }
-                // availableTime removed by design; no client-side requirement
             }
 
             if (step === 4) {
@@ -1014,9 +1199,20 @@ function errClass($errors, $field) {
         // Initialize progress on page load
         updateProgress();
 
-        function nextStep(step) {
-            if (step > currentStep && !validateStep(currentStep)) {
-                return;
+        async function nextStep(step) {
+            if (step > currentStep) {
+                if (!validateStep(currentStep)) {
+                    return;
+                }
+                if (currentStep === 2) {
+                    const emailVal = document.querySelector('[name="email"]').value.trim();
+                    const phoneVal = document.querySelector('[name="phoneNumber"]').value.trim();
+                    const emailOk = await checkEmailAvailability(emailVal);
+                    const phoneOk = await checkPhoneAvailability(phoneVal);
+                    if (emailOk === false || phoneOk === false) {
+                        return;
+                    }
+                }
             }
 
             document.getElementById(`step${currentStep}`).classList.remove('active');
@@ -1108,6 +1304,21 @@ function errClass($errors, $field) {
         const otpStep = document.getElementById('otpStep');
         if (otpInputs.length > 0 && otpStep && otpStep.classList.contains('active')) {
             setTimeout(() => { if (otpInputs[0]) otpInputs[0].focus(); }, 200);
+        }
+
+        // Password Visibility Toggle
+        function togglePasswordVisibility(inputId, btn) {
+            const input = (typeof inputId === 'string') ? document.getElementById(inputId) : inputId;
+            if (!input) return;
+            const svgEye = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+            const svgEyeOff = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px;"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+            if (input.type === 'password') {
+                input.type = 'text';
+                btn.innerHTML = svgEyeOff;
+            } else {
+                input.type = 'password';
+                btn.innerHTML = svgEye;
+            }
         }
     </script>
 </body>

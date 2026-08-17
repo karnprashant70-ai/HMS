@@ -16,12 +16,21 @@
     animation: fadeInError 0.3s ease;
 }
 
-.input-error {
-    border-color: rgba(255, 107, 107, 0.6) !important;
-    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1) !important;
+.form-success {
+    color: #10B981;
+    font-size: 0.78rem;
+    margin-top: 5px;
+    display: block;
+    font-weight: 500;
+    animation: fadeInSuccess 0.3s ease;
 }
 
-@keyframes fadeInError {
+.input-success {
+    border-color: rgba(16, 185, 129, 0.6) !important;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+}
+
+@keyframes fadeInSuccess {
     from { opacity: 0; transform: translateY(-4px); }
     to { opacity: 1; transform: translateY(0); }
 }

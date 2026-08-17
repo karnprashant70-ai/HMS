@@ -385,3 +385,40 @@ textarea.profile-form-input {
         align-self: center;
     }
 }
+
+/* ===== Password Eye Icon Toggle Wrapper ===== */
+.password-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.password-input-wrapper .form-input,
+.password-input-wrapper .profile-form-input {
+    padding-right: 44px !important;
+    width: 100%;
+}
+
+.password-input-wrapper .toggle-password-btn {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted, #94A3B8);
+    font-size: 1.05rem;
+    cursor: pointer;
+    padding: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s ease;
+    z-index: 5;
+}
+
+.password-input-wrapper .toggle-password-btn:hover {
+    color: var(--primary, #5B54E0);
+}
+

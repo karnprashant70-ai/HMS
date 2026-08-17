@@ -40,16 +40,21 @@ $tableSql = "CREATE TABLE IF NOT EXISTS tbl_doctor (
     specialization VARCHAR(100) NOT NULL,
     qualification VARCHAR(150) NOT NULL,
     licence_number VARCHAR(50) NOT NULL,
-    years_experience INT(11) NOT NULL,
+    years_experience VARCHAR(10) NOT NULL DEFAULT '0-3',
     consultation_fee DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     available_time VARCHAR(100) NOT NULL DEFAULT '',
     status ENUM('Available','Unavailable','On Leave') NOT NULL DEFAULT 'Available',
+    verification_status ENUM('Unverified','Verified') NOT NULL DEFAULT 'Unverified',
+    is_archived TINYINT(1) NOT NULL DEFAULT 0,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 )";
 
 if ($conn->query($tableSql) !== TRUE) {
     die("Error creating table: " . $conn->error);
 }
+
+// Migrate years_experience column from INT to VARCHAR(10) for range values
+$conn->query("ALTER TABLE tbl_doctor MODIFY years_experience VARCHAR(10) NOT NULL DEFAULT '0-3'");
 
 // Create tbl_admin table if not exists
 $adminTableSql = "CREATE TABLE IF NOT EXISTS tbl_admin (
@@ -224,6 +229,18 @@ $slotDurationCheck = $conn->query("SHOW COLUMNS FROM tbl_doctor LIKE 'slot_durat
 if ($slotDurationCheck && $slotDurationCheck->num_rows === 0) {
     $conn->query("ALTER TABLE tbl_doctor ADD COLUMN slot_duration INT DEFAULT 30");
 }
+$verStatusCheck = $conn->query("SHOW COLUMNS FROM tbl_doctor LIKE 'verification_status'");
+if ($verStatusCheck && $verStatusCheck->num_rows === 0) {
+    $conn->query("ALTER TABLE tbl_doctor ADD COLUMN verification_status ENUM('Unverified', 'Verified') NOT NULL DEFAULT 'Unverified'");
+}
+$isArchivedCheck = $conn->query("SHOW COLUMNS FROM tbl_doctor LIKE 'is_archived'");
+if ($isArchivedCheck && $isArchivedCheck->num_rows === 0) {
+    $conn->query("ALTER TABLE tbl_doctor ADD COLUMN is_archived TINYINT(1) NOT NULL DEFAULT 0");
+}
+$ratingCheck = $conn->query("SHOW COLUMNS FROM tbl_doctor LIKE 'rating'");
+if ($ratingCheck && $ratingCheck->num_rows === 0) {
+    $conn->query("ALTER TABLE tbl_doctor ADD COLUMN rating DECIMAL(3,2) NOT NULL DEFAULT 0.00");
+}
 
 // Create tbl_prescription table if not exists
 $prescriptionTableSql = "CREATE TABLE IF NOT EXISTS tbl_prescription (
@@ -240,5 +257,22 @@ $prescriptionTableSql = "CREATE TABLE IF NOT EXISTS tbl_prescription (
 )";
 if ($conn->query($prescriptionTableSql) !== TRUE) {
     die("Error creating tbl_prescription table: " . $conn->error);
+}
+
+// Create tbl_rating table if not exists
+$ratingTableSql = "CREATE TABLE IF NOT EXISTS tbl_rating (
+    rating_id INT AUTO_INCREMENT PRIMARY KEY,
+    appointment_id INT(11) NOT NULL UNIQUE,
+    patient_id INT(11) NOT NULL,
+    doctor_id INT(11) NOT NULL,
+    rating_stars TINYINT(1) NOT NULL,
+    comment TEXT DEFAULT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (appointment_id) REFERENCES tbl_appointment(appointment_id) ON DELETE CASCADE,
+    FOREIGN KEY (patient_id) REFERENCES tbl_patient(patient_id) ON DELETE CASCADE,
+    FOREIGN KEY (doctor_id) REFERENCES tbl_doctor(doctor_id) ON DELETE CASCADE
+)";
+if ($conn->query($ratingTableSql) !== TRUE) {
+    die("Error creating tbl_rating table: " . $conn->error);
 }
 ?>

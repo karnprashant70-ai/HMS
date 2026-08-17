@@ -77,10 +77,6 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <span class="sidebar-link-icon"><i class="fi fi-rr-refresh"></i></span>
             <span class="sidebar-link-text">Follow Ups</span>
         </a>
-        <a href="schedule.php" class="sidebar-link <?php echo $currentPage === 'schedule.php' ? 'active' : ''; ?>" data-tooltip="Schedule">
-            <span class="sidebar-link-icon"><i class="fi fi-rr-clock"></i></span>
-            <span class="sidebar-link-text">Schedule</span>
-        </a>
 
         <div class="sidebar-nav-label">Management</div>
         <a href="#" class="sidebar-link" data-tooltip="Prescriptions">
