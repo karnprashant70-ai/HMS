@@ -118,8 +118,8 @@ $stmtCompleted->close();
                 <div class="top-header-left">
                     <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">☰</button>
                     <div>
+                        <?php include __DIR__ . '/../includes/breadcrumb.php'; ?>
                         <h1>Patient Follow Ups</h1>
-                        <p>Manage pending, upcoming, and completed follow-up sessions</p>
                     </div>
                 </div>
             </header>
@@ -167,7 +167,7 @@ $stmtCompleted->close();
                         <table class="admin-table" style="margin-top: 0;">
                             <thead>
                                 <tr>
-                                    <th>F/U ID</th>
+                                    <th>S.N.</th>
                                     <th>Patient Name</th>
                                     <th>Original Appt Date</th>
                                     <th>Original Appt Time</th>
@@ -179,13 +179,14 @@ $stmtCompleted->close();
                             </thead>
                             <tbody>
                                 <?php if ($pendingCount > 0): 
+                                    $snPending = 1;
                                     while ($row = $pendingResult->fetch_assoc()):
                                         $patName = trim($row['first_name'] . ' ' . $row['middle_name'] . ' ' . $row['last_name']);
                                         $status = $row['status'];
                                         $statusLower = strtolower($status);
                                 ?>
                                     <tr>
-                                        <td>#<?php echo $row['follow_up_id']; ?></td>
+                                        <td><?php echo $snPending++; ?></td>
                                         <td><strong><?php echo htmlspecialchars($patName); ?></strong></td>
                                         <td><?php echo date('M d, Y', strtotime($row['appointment_date'])); ?></td>
                                         <td><?php echo date('h:i A', strtotime($row['appointment_time'])); ?></td>
@@ -229,7 +230,7 @@ $stmtCompleted->close();
                         <table class="admin-table" style="margin-top: 0;">
                             <thead>
                                 <tr>
-                                    <th>F/U ID</th>
+                                    <th>S.N.</th>
                                     <th>Patient Name</th>
                                     <th>Original Appt Date</th>
                                     <th>Original Appt Time</th>
@@ -240,13 +241,14 @@ $stmtCompleted->close();
                             </thead>
                             <tbody>
                                 <?php if ($completedCount > 0): 
+                                    $snCompleted = 1;
                                     while ($row = $completedResult->fetch_assoc()):
                                         $patName = trim($row['first_name'] . ' ' . $row['middle_name'] . ' ' . $row['last_name']);
                                         $status = $row['status'];
                                         $statusLower = strtolower($status);
                                 ?>
                                     <tr>
-                                        <td>#<?php echo $row['follow_up_id']; ?></td>
+                                        <td><?php echo $snCompleted++; ?></td>
                                         <td><strong><?php echo htmlspecialchars($patName); ?></strong></td>
                                         <td><?php echo date('M d, Y', strtotime($row['appointment_date'])); ?></td>
                                         <td><?php echo date('h:i A', strtotime($row['appointment_time'])); ?></td>

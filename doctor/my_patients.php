@@ -93,8 +93,8 @@ if (!empty($_SESSION['appt_success'])) {
                 <div class="top-header-left">
                     <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">☰</button>
                     <div>
+                        <?php include __DIR__ . '/../includes/breadcrumb.php'; ?>
                         <h1>Pending Approvals</h1>
-                        <p>Review and confirm new patient appointments</p>
                     </div>
                 </div>
             </header>
@@ -126,7 +126,7 @@ if (!empty($_SESSION['appt_success'])) {
                     <table class="admin-table" style="margin-top: 0;">
                         <thead>
                             <tr>
-                                <th>Appt ID</th>
+                                <th>S.N.</th>
                                 <th>Patient Name</th>
                                 <th>Date</th>
                                 <th>Time</th>
@@ -148,11 +148,12 @@ if (!empty($_SESSION['appt_success'])) {
                             $apptRes = $stmt->get_result();
 
                             if ($apptRes && $apptRes->num_rows > 0):
+                                $sn = 1;
                                 while ($row = $apptRes->fetch_assoc()):
                                     $patName = trim($row['first_name'] . ' ' . $row['middle_name'] . ' ' . $row['last_name']);
                             ?>
                                     <tr>
-                                        <td>#<?php echo $row['appointment_id']; ?></td>
+                                        <td><?php echo $sn++; ?></td>
                                         <td><strong><?php echo htmlspecialchars($patName); ?></strong></td>
                                         <td><?php echo date('M d, Y', strtotime($row['appointment_date'])); ?></td>
                                         <td><?php echo date('h:i A', strtotime($row['appointment_time'])); ?></td>

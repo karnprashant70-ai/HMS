@@ -146,8 +146,8 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
                 <div class="top-header-left">
                     <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">☰</button>
                     <div>
+                        <?php include __DIR__ . '/includes/breadcrumb.php'; ?>
                         <h1>My Profile</h1>
-                        <p>Manage your personal information</p>
                     </div>
                 </div>
                 <div class="top-header-right">
@@ -187,7 +187,6 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
                             <div class="profile-meta-item"><span><i class="fi fi-rr-envelope"></i></span> <?php echo htmlspecialchars(!empty($patient['email']) ? $patient['email'] : '—'); ?></div>
                             <div class="profile-meta-item"><span><i class="fi fi-rr-phone-call"></i></span> <?php echo htmlspecialchars(!empty($patient['phone_number']) ? $patient['phone_number'] : '—'); ?></div>
                             <div class="profile-meta-item"><span><i class="fi fi-rr-calendar"></i></span> Member since <?php echo $memberSince; ?></div>
-                            <div class="profile-meta-item"><span><i class="fi fi-rr-id-badge"></i></span> ID: PT-<?php echo str_pad($patientId, 5, '0', STR_PAD_LEFT); ?></div>
                         </div>
                     </div>
                     <div class="profile-status-badge available">● Active</div>
@@ -261,10 +260,6 @@ $memberSince = !empty($patient['created_at']) ? date('F j, Y', strtotime($patien
                                     <option value="Divorced" <?php echo (($patient['marital_status'] ?? '') === 'Divorced') ? 'selected' : ''; ?>>Divorced</option>
                                     <option value="Widowed" <?php echo (($patient['marital_status'] ?? '') === 'Widowed') ? 'selected' : ''; ?>>Widowed</option>
                                 </select>
-                            </div>
-                            <div class="profile-form-group">
-                                <label class="profile-form-label">Patient ID</label>
-                                <input type="text" class="profile-form-input" value="PT-<?php echo str_pad($patientId, 5, '0', STR_PAD_LEFT); ?>" disabled>
                             </div>
                         </div>
                     </div>

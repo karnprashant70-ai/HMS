@@ -177,6 +177,9 @@ $patientName = trim($rx['pat_fname'] . ' ' . $rx['pat_mname'] . ' ' . $rx['pat_l
 <body>
 
     <div class="prescription-card">
+        <div class="action-bar" style="margin-bottom: 16px;">
+            <?php include __DIR__ . '/includes/breadcrumb.php'; ?>
+        </div>
         <!-- Hospital & Doctor Header -->
         <div class="rx-header">
             <div class="hospital-brand">

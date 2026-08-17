@@ -135,6 +135,7 @@ if (!empty($_SESSION['login_success'])) {
                 <div class="top-header-left">
                     <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">☰</button>
                     <div>
+                        <?php include __DIR__ . '/includes/breadcrumb.php'; ?>
                         <h1>Welcome back, <?php echo htmlspecialchars(explode(' ', $patientName)[0]); ?> 👋</h1>
                         <p><?php echo date('l, F j, Y'); ?></p>
                     </div>

@@ -157,8 +157,8 @@ $department = $doctor['department'] ?? 'General';
                 <div class="top-header-left">
                     <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">☰</button>
                     <div>
+                        <?php include __DIR__ . '/../includes/breadcrumb.php'; ?>
                         <h1>My Profile</h1>
-                        <p>Manage your personal and professional details</p>
                     </div>
                 </div>
                 <div class="top-header-right">
@@ -206,9 +206,32 @@ $department = $doctor['department'] ?? 'General';
                     $statusText = $doctor['status'] ?? 'Available';
                     if ($statusText === 'Unavailable') $statusClass = 'unavailable';
                     if ($statusText === 'On Leave') $statusClass = 'on-leave';
+                    $verStatus = $doctor['verification_status'] ?? 'Unverified';
+                    $isDoctorVerified = ($verStatus === 'Verified');
                     ?>
-                    <div class="profile-status-badge <?php echo $statusClass; ?>">● <?php echo htmlspecialchars($statusText); ?></div>
+                    <div class="profile-status-container">
+                        <div class="profile-status-badge <?php echo $statusClass; ?>">● <?php echo htmlspecialchars($statusText); ?></div>
+                        <?php if ($isDoctorVerified): ?>
+                            <div class="profile-status-badge" style="background: rgba(16, 185, 129, 0.15); color: #10B981; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: 600;">
+                                <i class="fi fi-rr-check-circle"></i> Verified Doctor
+                            </div>
+                        <?php else: ?>
+                            <div class="profile-status-badge" style="background: rgba(245, 158, 11, 0.15); color: #D97706; border: 1px solid rgba(245, 158, 11, 0.3); font-weight: 600;">
+                                <i class="fi fi-rr-exclamation"></i> Unverified Profile
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
+
+                <?php if (!$isDoctorVerified): ?>
+                    <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; display: flex; align-items: center; gap: 14px; color: #B45309;">
+                        <div style="font-size: 1.5rem;"><i class="fi fi-rr-clock"></i></div>
+                        <div>
+                            <strong style="display: block; font-size: 0.95rem; margin-bottom: 2px;">Account Status: Unverified (Pending Admin Approval)</strong>
+                            <span style="font-size: 0.85rem; opacity: 0.9;">Your doctor profile has been submitted and is currently pending verification by the hospital administration. Once approved, your profile badge will update to Verified.</span>
+                        </div>
+                    </div>
+                <?php endif; ?>
 
                 <!-- Profile Edit Form -->
                 <form method="POST" action="" enctype="multipart/form-data">
@@ -348,7 +371,16 @@ $department = $doctor['department'] ?? 'General';
                             </div>
                             <div class="profile-form-group">
                                 <label class="profile-form-label">Years of Experience</label>
-                                <input class="profile-form-input" type="number" name="years_experience" value="<?php echo htmlspecialchars($doctor['years_experience'] ?? ''); ?>">
+                                <?php $currentExp = $doctor['years_experience'] ?? ''; ?>
+                                <select class="profile-form-input" name="years_experience">
+                                    <option value="">Select years</option>
+                                    <?php
+                                    $expRanges = ['0-3', '3-6', '6-9', '9-12', '12-15', '15-18', '18-21', '21-24', '24-27', '27-30', '30+'];
+                                    foreach ($expRanges as $range):
+                                    ?>
+                                        <option value="<?php echo $range; ?>" <?php echo ($currentExp === $range) ? 'selected' : ''; ?>><?php echo $range; ?> years</option>
+                                    <?php endforeach; ?>
+                                </select>
                             </div>
                             <div class="profile-form-group">
                                 <label class="profile-form-label">Consultation Fee (Rs.)</label>

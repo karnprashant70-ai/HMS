@@ -154,8 +154,8 @@ if ($shiftStartSec < $shiftEndSec) {
                 <div class="top-header-left">
                     <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">☰</button>
                     <div>
+                        <?php include __DIR__ . '/../includes/breadcrumb.php'; ?>
                         <h1>My Schedule & Working Hours</h1>
-                        <p>Configure your shift hours, slot durations, and view your daily appointment agenda</p>
                     </div>
                 </div>
                 <div class="top-header-right">

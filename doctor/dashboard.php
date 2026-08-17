@@ -28,7 +28,7 @@ $profilePhoto = !empty($doctor['profile_photo']) ? '../uploads/doctors/' . $doct
 $department = $doctor['department'] ?? 'General';
 $specialization = $doctor['specialization'] ?? '';
 $status = $doctor['status'] ?? 'Available';
-$experience = $doctor['years_experience'] ?? 0;
+$experience = $doctor['years_experience'] ?? '0-3';
 
 // Check for login success toast
 $loginSuccess = '';
@@ -51,6 +51,23 @@ $patStmt->execute();
 $patRes = $patStmt->get_result()->fetch_assoc();
 $totalPatientsCount = $patRes ? intval($patRes['count']) : 0;
 $patStmt->close();
+
+$totalApptStmt = $conn->prepare('SELECT COUNT(*) as count FROM tbl_appointment WHERE doctor_id = ?');
+$totalApptStmt->bind_param('i', $doctorId);
+$totalApptStmt->execute();
+$totalApptRes = $totalApptStmt->get_result()->fetch_assoc();
+$totalAppointmentsCount = $totalApptRes ? intval($totalApptRes['count']) : 0;
+$totalApptStmt->close();
+
+$ratingStmt = $conn->prepare('SELECT AVG(rating_stars) as avg_rating, COUNT(*) as total_reviews FROM tbl_rating WHERE doctor_id = ?');
+$ratingStmt->bind_param('i', $doctorId);
+$ratingStmt->execute();
+$ratingRes = $ratingStmt->get_result()->fetch_assoc();
+$doctorRatingVal = $ratingRes && $ratingRes['avg_rating'] !== null ? floatval($ratingRes['avg_rating']) : floatval($doctor['rating'] ?? 0);
+$totalReviewsCount = $ratingRes ? intval($ratingRes['total_reviews']) : 0;
+$doctorRatingFormatted = $doctorRatingVal > 0 ? number_format($doctorRatingVal, 1) : '0';
+$ratingStmt->close();
+
 
 ?>
 <!DOCTYPE html>
@@ -86,6 +103,7 @@ $patStmt->close();
                 <div class="top-header-left">
                     <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">☰</button>
                     <div>
+                        <?php include __DIR__ . '/../includes/breadcrumb.php'; ?>
                         <h1>Welcome back, Dr. <?php echo htmlspecialchars(explode(' ', $doctorName)[0]); ?></h1>
                         <p><?php echo date('l, F j, Y'); ?></p>
                     </div>
@@ -114,6 +132,22 @@ $patStmt->close();
             <!-- Dashboard Content -->
             <div class="dashboard-content">
 
+                <?php 
+                $isDocVerified = (($doctor['verification_status'] ?? 'Unverified') === 'Verified');
+                if (!$isDocVerified): 
+                ?>
+                    <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; color: #B45309;">
+                        <div style="display: flex; align-items: center; gap: 14px;">
+                            <div style="font-size: 1.5rem;"><i class="fi fi-rr-clock"></i></div>
+                            <div>
+                                <strong style="display: block; font-size: 0.95rem; margin-bottom: 2px;">Profile Verification Pending</strong>
+                                <span style="font-size: 0.85rem; opacity: 0.9;">Your doctor registration has been submitted and is currently pending administrator verification.</span>
+                            </div>
+                        </div>
+                        <a href="profile.php" style="padding: 6px 14px; background: #D97706; color: #FFFFFF; font-size: 0.82rem; font-weight: 600; border-radius: 6px; text-decoration: none; white-space: nowrap;">View Status</a>
+                    </div>
+                <?php endif; ?>
+
                 <!-- Stats Cards -->
                 <div class="stats-grid">
                     <div class="stat-card purple">
@@ -134,61 +168,24 @@ $patStmt->close();
                     </div>
                     <div class="stat-card orange">
                         <div class="stat-card-header">
-                            <div class="stat-card-icon orange"><i class="fi fi-rr-medicine"></i></div>
-                            <span class="stat-card-trend down">-3%</span>
+                            <div class="stat-card-icon orange"><i class="fi fi-rr-calendar"></i></div>
+                            <span class="stat-card-trend up">Total</span>
                         </div>
-                        <div class="stat-card-value">18</div>
-                        <div class="stat-card-label">Prescriptions Today</div>
+                        <div class="stat-card-value"><?php echo $totalAppointmentsCount; ?></div>
+                        <div class="stat-card-label">Total Appointments</div>
                     </div>
                     <div class="stat-card pink">
                         <div class="stat-card-header">
                             <div class="stat-card-icon pink"><i class="fi fi-rr-star"></i></div>
-                            <span class="stat-card-trend up">+2%</span>
+                            <span class="stat-card-trend up"><?php echo $totalReviewsCount > 0 ? $totalReviewsCount . ($totalReviewsCount === 1 ? ' review' : ' reviews') : 'Rating'; ?></span>
                         </div>
-                        <div class="stat-card-value">4.8</div>
+                        <div class="stat-card-value"><?php echo $doctorRatingFormatted; ?></div>
                         <div class="stat-card-label">Patient Rating</div>
                     </div>
                 </div>
 
-                <!-- Content Grid: Chart + Upcoming Appointments -->
+                <!-- Content Grid: Upcoming Appointments -->
                 <div class="content-grid">
-                    <!-- Weekly Overview Chart -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">Weekly Overview</h3>
-                            <span class="card-badge">This Week</span>
-                        </div>
-                        <div class="chart-bars">
-                            <div class="chart-bar-wrapper">
-                                <div class="chart-bar purple" style="height: 80px;"></div>
-                                <span class="chart-day">Mon</span>
-                            </div>
-                            <div class="chart-bar-wrapper">
-                                <div class="chart-bar teal" style="height: 120px;"></div>
-                                <span class="chart-day">Tue</span>
-                            </div>
-                            <div class="chart-bar-wrapper">
-                                <div class="chart-bar purple" style="height: 60px;"></div>
-                                <span class="chart-day">Wed</span>
-                            </div>
-                            <div class="chart-bar-wrapper">
-                                <div class="chart-bar teal" style="height: 140px;"></div>
-                                <span class="chart-day">Thu</span>
-                            </div>
-                            <div class="chart-bar-wrapper">
-                                <div class="chart-bar purple" style="height: 100px;"></div>
-                                <span class="chart-day">Fri</span>
-                            </div>
-                            <div class="chart-bar-wrapper">
-                                <div class="chart-bar teal" style="height: 50px;"></div>
-                                <span class="chart-day">Sat</span>
-                            </div>
-                            <div class="chart-bar-wrapper">
-                                <div class="chart-bar purple" style="height: 30px;"></div>
-                                <span class="chart-day">Sun</span>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Upcoming Appointments -->
                     <?php
@@ -237,43 +234,7 @@ $patStmt->close();
                     </div>
                 </div>
 
-                <!-- Recent Activity -->
-                <div class="card">
-                    <div class="card-header">
-                        <h3 class="card-title">Recent Activity</h3>
-                        <span class="card-badge">Last 24h</span>
-                    </div>
-                    <div class="activity-list">
-                        <div class="activity-item">
-                            <div class="activity-dot teal"></div>
-                            <div>
-                                <div class="activity-text"><strong>Prescription issued</strong> for patient Ramesh Kumar — Amoxicillin 500mg</div>
-                                <div class="activity-time">2 hours ago</div>
-                            </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-dot purple"></div>
-                            <div>
-                                <div class="activity-text"><strong>Appointment completed</strong> with Sita Poudel — Follow-up consultation</div>
-                                <div class="activity-time">4 hours ago</div>
-                            </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-dot orange"></div>
-                            <div>
-                                <div class="activity-text"><strong>Lab report reviewed</strong> for Ankit Thapa — Blood test results normal</div>
-                                <div class="activity-time">6 hours ago</div>
-                            </div>
-                        </div>
-                        <div class="activity-item">
-                            <div class="activity-dot pink"></div>
-                            <div>
-                                <div class="activity-text"><strong>New patient registered</strong> — Maya Gurung added to your patient list</div>
-                                <div class="activity-time">Yesterday</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+
 
             </div>
         </main>
@@ -295,22 +256,12 @@ $patStmt->close();
     <!-- ===== JavaScript ===== -->
     <script>
 
-        // --- Animate chart bars on load ---
-        document.addEventListener('DOMContentLoaded', () => {
-            const bars = document.querySelectorAll('.chart-bar');
-            bars.forEach((bar, i) => {
-                const targetHeight = bar.style.height;
-                bar.style.height = '0px';
-                setTimeout(() => {
-                    bar.style.height = targetHeight;
-                }, 100 + i * 80);
-            });
-        });
 
         // --- Stat cards counter animation ---
         document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.stat-card-value').forEach(el => {
                 const target = parseFloat(el.textContent);
+                if (isNaN(target) || target <= 0) return;
                 const isDecimal = el.textContent.includes('.');
                 let current = 0;
                 const increment = target / 40;

@@ -130,8 +130,8 @@ foreach ($depts as $d) {
                 <div class="top-header-left">
                     <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">☰</button>
                     <div>
+                        <?php include __DIR__ . '/includes/breadcrumb.php'; ?>
                         <h1>Book New Appointment</h1>
-                        <p>Fill out the form below to schedule a visit with a doctor</p>
                     </div>
                 </div>
             </header>
@@ -163,7 +163,7 @@ foreach ($depts as $d) {
                             <div class="form-group">
                                 <label class="form-label" for="book_dept">Select Department *</label>
                                 <?php if (isset($errors['department_id'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['department_id']); ?></div><?php endif; ?>
-                                <select id="book_dept" name="department_id" class="form-input" onchange="filterDoctors('book')" required>
+                                <select id="book_dept" name="department_id" class="form-input" onchange="filterDoctors('book')">
                                     <option value="" disabled selected>Choose Department</option>
                                     <?php foreach ($depts as $d): ?>
                                         <option value="<?php echo $d['department_id']; ?>"><?php echo htmlspecialchars($d['department_name']); ?></option>
@@ -174,7 +174,7 @@ foreach ($depts as $d) {
                             <div class="form-group">
                                 <label class="form-label" for="book_doc">Select Doctor *</label>
                                 <?php if (isset($errors['doctor_id'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['doctor_id']); ?></div><?php endif; ?>
-                                <select id="book_doc" name="doctor_id" class="form-input" onchange="updateFee('book')" required disabled>
+                                <select id="book_doc" name="doctor_id" class="form-input" onchange="updateFee('book')" disabled>
                                     <option value="" disabled selected>Choose Doctor</option>
                                 </select>
                             </div>
@@ -187,13 +187,13 @@ foreach ($depts as $d) {
                                 <div class="form-group">
                                     <label class="form-label" for="book_date">Date *</label>
                                     <?php if (isset($errors['appointment_date'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['appointment_date']); ?></div><?php endif; ?>
-                                    <input type="date" id="book_date" name="appointment_date" class="form-input" min="<?php echo date('Y-m-d'); ?>" onchange="loadSlots()" required>
+                                    <input type="date" id="book_date" name="appointment_date" class="form-input" min="<?php echo date('Y-m-d'); ?>" onchange="loadSlots()">
                                 </div>
                                 <div class="form-group">
                                     <label class="form-label">Selected Time *</label>
                                     <?php if (isset($errors['appointment_time'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['appointment_time']); ?></div><?php endif; ?>
-                                    <input type="text" id="book_time_display" class="form-input" placeholder="Click a slot below" readonly required>
-                                    <input type="hidden" id="book_time" name="appointment_time" required>
+                                    <input type="text" id="book_time_display" class="form-input" placeholder="Click a slot below" readonly>
+                                    <input type="hidden" id="book_time" name="appointment_time">
                                 </div>
                             </div>
 
@@ -207,7 +207,7 @@ foreach ($depts as $d) {
                             <div class="form-group">
                                 <label class="form-label">Appointment Type *</label>
                                 <?php if (isset($errors['appointment_type'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['appointment_type']); ?></div><?php endif; ?>
-                                <select name="appointment_type" class="form-input" required>
+                                <select name="appointment_type" class="form-input">
                                     <option value="Physical">Physical (In-Person)</option>
                                     <option value="Online">Online Consultation</option>
                                 </select>

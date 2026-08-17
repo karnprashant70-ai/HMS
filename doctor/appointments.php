@@ -126,33 +126,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 // Handle save medical records (Report, Investigation, Follow Up) for Timeline Appointments
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_medical_records'])) {
     $appointment_id = intval($_POST['appointment_id'] ?? 0);
+    $submittedApptId = $appointment_id;
     $report = trim($_POST['report'] ?? '');
     $investigation = trim($_POST['investigation'] ?? '');
     $follow_up_required = $_POST['follow_up_required'] ?? 'no';
     $follow_up_date = $_POST['follow_up_date'] ?? '';
     $follow_up_reason = trim($_POST['follow_up_reason'] ?? '');
 
+    $fieldErrors = [];
+
     // Validation
     if ($appointment_id <= 0) {
         $errors[] = 'Invalid appointment.';
     }
     if (empty($report)) {
-        $errors[] = 'Report details are required.';
+        $reportError = 'Report details are required.';
+        $fieldErrors[] = $reportError;
+    }
+    if (empty($investigation)) {
+        $investigationError = 'Investigation details are required.';
+        $fieldErrors[] = $investigationError;
     }
     if ($follow_up_required === 'yes') {
         $min_fup_date = date('Y-m-d', strtotime('+1 day'));
         if (empty($follow_up_date) || $follow_up_date < $min_fup_date) {
-            $errors[] = 'Please select a valid date.';
+            $fupDateError = 'Please select a valid date.';
+            $fieldErrors[] = $fupDateError;
         }
         if (empty($follow_up_reason)) {
-            $errors[] = 'Follow-up reason is required.';
+            $fupReasonError = 'Follow-up reason is required.';
+            $fieldErrors[] = $fupReasonError;
         }
     }
 
-    $medications = trim($_POST['medications'] ?? '');
-    $instructions = trim($_POST['instructions'] ?? '');
-
-    if (empty($errors)) {
+    if (empty($fieldErrors) && empty($errors)) {
         // Verify this appointment belongs to this doctor and get patient_id
         $checkStmt = $conn->prepare('SELECT doctor_id, patient_id FROM tbl_appointment WHERE appointment_id = ? LIMIT 1');
         $checkStmt->bind_param('i', $appointment_id);
@@ -238,8 +245,8 @@ if (!empty($_SESSION['appt_success'])) {
                 <div class="top-header-left">
                     <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">☰</button>
                     <div>
+                        <?php include __DIR__ . '/../includes/breadcrumb.php'; ?>
                         <h1>Patient Appointments</h1>
-                        <p>View patient schedules and reschedule if needed</p>
                     </div>
                 </div>
             </header>
@@ -271,7 +278,7 @@ if (!empty($_SESSION['appt_success'])) {
                     $todayDate = date('Y-m-d');
 
                     // Fetch Normal Appointments (Everything EXCEPT today's confirmed/completed appointments)
-                    $stmt = $conn->prepare("SELECT a.*, p.first_name, p.middle_name, p.last_name 
+                    $stmt = $conn->prepare("SELECT a.*, p.first_name, p.middle_name, p.last_name, p.date_of_birth, p.gender, p.phone_number, p.profile_photo 
                                             FROM tbl_appointment a
                                             JOIN tbl_patient p ON a.patient_id = p.patient_id
                                             WHERE a.doctor_id = ?
@@ -284,7 +291,7 @@ if (!empty($_SESSION['appt_success'])) {
                     $stmt->close();
 
                     // Fetch Timeline Appointments (Confirmed/Completed AND appointment date is exactly today)
-                    $stmtTimeline = $conn->prepare("SELECT a.*, p.first_name, p.middle_name, p.last_name 
+                    $stmtTimeline = $conn->prepare("SELECT a.*, p.first_name, p.middle_name, p.last_name, p.date_of_birth, p.gender, p.phone_number, p.profile_photo 
                                                     FROM tbl_appointment a
                                                     JOIN tbl_patient p ON a.patient_id = p.patient_id
                                                     WHERE a.doctor_id = ?
@@ -318,7 +325,7 @@ if (!empty($_SESSION['appt_success'])) {
                         <table class="admin-table" style="margin-top: 0;">
                             <thead>
                                 <tr>
-                                    <th>Appt ID</th>
+                                    <th>S.N.</th>
                                     <th>Patient Name</th>
                                     <th>Date</th>
                                     <th>Time</th>
@@ -364,31 +371,33 @@ if (!empty($_SESSION['appt_success'])) {
                                             <?php endif; ?>
                                         </td>
                                         <td style="text-align: center;">
-                                            <div class="dropdown-action-wrapper">
-                                                <button type="button" class="dropdown-action-trigger" onclick="toggleDropdown(this)">
-                                                    Actions <span class="arrow-icon">▼</span>
-                                                </button>
-                                                <div class="dropdown-action-menu">
-                                                    <?php if ($status === 'Pending'): ?>
-                                                        <form method="POST" action="">
-                                                            <input type="hidden" name="action" value="confirm">
-                                                            <input type="hidden" name="appointment_id" value="<?php echo $row['appointment_id']; ?>">
-                                                            <button type="submit" class="dropdown-action-item item-confirm"><i class="fi fi-rr-check"></i> Confirm</button>
-                                                        </form>
-                                                        <form method="POST" action="">
-                                                            <input type="hidden" name="action" value="cancel">
-                                                            <input type="hidden" name="appointment_id" value="<?php echo $row['appointment_id']; ?>">
-                                                            <button type="submit" class="dropdown-action-item item-decline"><i class="fi fi-rr-cross"></i> Decline</button>
-                                                        </form>
-                                                        <div class="dropdown-divider"></div>
-                                                    <?php endif; ?>
-                                                    <?php if ($status === 'Pending' || $status === 'Confirmed'): ?>
+                                            <?php if ($status === 'Pending' || $status === 'Confirmed'): ?>
+                                                <div class="dropdown-action-wrapper">
+                                                    <button type="button" class="dropdown-action-trigger" onclick="toggleDropdown(this)">
+                                                        Actions <span class="arrow-icon">▼</span>
+                                                    </button>
+                                                    <div class="dropdown-action-menu">
+                                                        <?php if ($status === 'Pending'): ?>
+                                                            <form method="POST" action="">
+                                                                <input type="hidden" name="action" value="confirm">
+                                                                <input type="hidden" name="appointment_id" value="<?php echo $row['appointment_id']; ?>">
+                                                                <button type="submit" class="dropdown-action-item item-confirm"><i class="fi fi-rr-check"></i> Confirm</button>
+                                                            </form>
+                                                            <form method="POST" action="">
+                                                                <input type="hidden" name="action" value="cancel">
+                                                                <input type="hidden" name="appointment_id" value="<?php echo $row['appointment_id']; ?>">
+                                                                <button type="submit" class="dropdown-action-item item-decline"><i class="fi fi-rr-cross"></i> Decline</button>
+                                                            </form>
+                                                            <div class="dropdown-divider"></div>
+                                                        <?php endif; ?>
                                                         <button type="button" class="dropdown-action-item item-reschedule" onclick='openRescheduleModal(<?php echo json_encode($row); ?>, "<?php echo htmlspecialchars($patName); ?>")'>
                                                             <i class="fi fi-rr-clock"></i> Reschedule
                                                         </button>
-                                                    <?php endif; ?>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            <?php else: ?>
+                                                <span style="color: var(--text-muted); font-size: 0.82rem;">—</span>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                 <?php 
@@ -422,6 +431,10 @@ if (!empty($_SESSION['appt_success'])) {
                                     $tPhoto = !empty($tRow['profile_photo']) ? '../uploads/patients/' . $tRow['profile_photo'] : '';
                                     $tDateFormatted = date('l, M j, Y', strtotime($tRow['appointment_date']));
                                     $tTimeFormatted = date('h:i A', strtotime($tRow['appointment_time']));
+
+                                    $tGender = !empty($tRow['gender']) ? $tRow['gender'] : '';
+                                    $tPhone = !empty($tRow['phone_number']) ? $tRow['phone_number'] : '';
+                                    $tAge = !empty($tRow['date_of_birth']) ? date_diff(date_create($tRow['date_of_birth']), date_create('today'))->y : null;
                                 ?>
                                     <div class="timeline-item">
                                         <div class="timeline-dot"></div>
@@ -438,9 +451,26 @@ if (!empty($_SESSION['appt_success'])) {
                                                     <div>
                                                         <div class="patient-name-sm"><?php echo htmlspecialchars($tPatName); ?></div>
                                                         <div class="patient-meta-sm">
-                                                            <span><?php echo htmlspecialchars($tRow['gender'] ?? 'N/A'); ?>, <?php echo htmlspecialchars($tRow['age'] ?? 'N/A'); ?> yrs</span>
-                                                            <span>•</span>
-                                                            <span><?php echo htmlspecialchars($tRow['phone_number'] ?? 'N/A'); ?></span>
+                                                            <?php 
+                                                            $tMetaParts = [];
+                                                            if (!empty($tGender)) {
+                                                                $tMetaParts[] = htmlspecialchars($tGender);
+                                                            }
+                                                            if ($tAge !== null && $tAge >= 0) {
+                                                                $tMetaParts[] = $tAge . ' yrs';
+                                                            }
+                                                            $tMetaStr = implode(', ', $tMetaParts);
+                                                            if (!empty($tMetaStr)) {
+                                                                echo '<span>' . $tMetaStr . '</span>';
+                                                            }
+                                                            if (!empty($tPhone)) {
+                                                                if (!empty($tMetaStr)) echo ' <span>•</span> ';
+                                                                echo '<span>' . htmlspecialchars($tPhone) . '</span>';
+                                                            }
+                                                            if (empty($tMetaStr) && empty($tPhone)) {
+                                                                echo '<span>Patient</span>';
+                                                            }
+                                                            ?>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -451,28 +481,26 @@ if (!empty($_SESSION['appt_success'])) {
                                             </div>
 
                                             <div class="timeline-card-body">
-                                                <form method="POST" action="">
+                                                <form method="POST" action="" novalidate>
                                                     <input type="hidden" name="save_medical_records" value="1">
                                                     <input type="hidden" name="appointment_id" value="<?php echo $tRow['appointment_id']; ?>">
 
                                                     <div class="form-row-grid">
                                                         <div class="timeline-textarea-group">
-                                                            <label for="report_<?php echo $tRow['appointment_id']; ?>">Consultation / Medical Report</label>
+                                                            <label for="report_<?php echo $tRow['appointment_id']; ?>">Consultation / Medical Report <span style="color: #ef4444;">*</span></label>
+                                                            <?php if (!empty($reportError) && $submittedApptId === (int)$tRow['appointment_id']): ?>
+                                                                <div style="color: #ef4444; font-size: 0.8rem; font-weight: 600; margin-top: 2px; margin-bottom: 2px;">• <?php echo htmlspecialchars($reportError); ?></div>
+                                                            <?php endif; ?>
                                                             <textarea id="report_<?php echo $tRow['appointment_id']; ?>" name="report" class="timeline-textarea" placeholder="Enter patient diagnosis, symptoms, and examination notes..."></textarea>
                                                         </div>
                                                         <div class="timeline-textarea-group">
-                                                            <label for="investigation_<?php echo $tRow['appointment_id']; ?>">Investigation</label>
+                                                            <label for="investigation_<?php echo $tRow['appointment_id']; ?>">Investigation <span style="color: #ef4444;">*</span></label>
+                                                            <?php if (!empty($investigationError) && $submittedApptId === (int)$tRow['appointment_id']): ?>
+                                                                <div style="color: #ef4444; font-size: 0.8rem; font-weight: 600; margin-top: 2px; margin-bottom: 2px;">• <?php echo htmlspecialchars($investigationError); ?></div>
+                                                            <?php endif; ?>
                                                             <textarea id="investigation_<?php echo $tRow['appointment_id']; ?>" name="investigation" class="timeline-textarea" placeholder="Enter requested lab tests or diagnostic investigations..."></textarea>
                                                         </div>
                                                         <div class="timeline-textarea-group" style="grid-column: span 2;">
-                                                            <label for="medications_<?php echo $tRow['appointment_id']; ?>"><i class="fi fi-rr-medicine"></i> Prescription / Medications</label>
-                                                            <textarea id="medications_<?php echo $tRow['appointment_id']; ?>" name="medications" class="timeline-textarea" placeholder="e.g. Paracetamol 500mg - 1 tablet 3x daily after meals x 5 days&#10;Amoxicillin 250mg - 1 capsule 2x daily x 7 days"></textarea>
-                                                        </div>
-                                                        <div class="timeline-textarea-group">
-                                                            <label for="instructions_<?php echo $tRow['appointment_id']; ?>">Advice / Special Instructions</label>
-                                                            <textarea id="instructions_<?php echo $tRow['appointment_id']; ?>" name="instructions" class="timeline-textarea" placeholder="e.g. Drink plenty of water, rest for 3 days..."></textarea>
-                                                        </div>
-                                                        <div class="timeline-textarea-group">
                                                             <label for="follow_up_required_<?php echo $tRow['appointment_id']; ?>">Follow Up Required?</label>
                                                             <select id="follow_up_required_<?php echo $tRow['appointment_id']; ?>" name="follow_up_required" class="timeline-textarea" style="padding: 10px 12px; height: auto;" onchange="toggleFollowUpFields(<?php echo $tRow['appointment_id']; ?>)">
                                                                 <option value="no">No</option>
@@ -483,11 +511,17 @@ if (!empty($_SESSION['appt_success'])) {
 
                                                     <div id="follow_up_details_<?php echo $tRow['appointment_id']; ?>" class="form-row-grid" style="display: none; margin-top: 16px; border-top: 1px dashed var(--border-glass); padding-top: 16px;">
                                                         <div class="timeline-textarea-group">
-                                                            <label for="follow_up_date_<?php echo $tRow['appointment_id']; ?>">Follow-up Date *</label>
+                                                            <label for="follow_up_date_<?php echo $tRow['appointment_id']; ?>">Follow-up Date <span style="color: #ef4444;">*</span></label>
+                                                            <?php if (!empty($fupDateError) && $submittedApptId === (int)$tRow['appointment_id']): ?>
+                                                                <div style="color: #ef4444; font-size: 0.78rem; font-weight: 600; margin-top: 2px; margin-bottom: 2px;">• <?php echo htmlspecialchars($fupDateError); ?></div>
+                                                            <?php endif; ?>
                                                             <input type="date" id="follow_up_date_<?php echo $tRow['appointment_id']; ?>" name="follow_up_date" class="timeline-textarea" style="padding: 10px 12px;">
                                                         </div>
                                                         <div class="timeline-textarea-group" style="grid-column: span 2;">
-                                                            <label for="follow_up_reason_<?php echo $tRow['appointment_id']; ?>">Follow-up Reason *</label>
+                                                            <label for="follow_up_reason_<?php echo $tRow['appointment_id']; ?>">Follow-up Reason <span style="color: #ef4444;">*</span></label>
+                                                            <?php if (!empty($fupReasonError) && $submittedApptId === (int)$tRow['appointment_id']): ?>
+                                                                <div style="color: #ef4444; font-size: 0.78rem; font-weight: 600; margin-top: 2px; margin-bottom: 2px;">• <?php echo htmlspecialchars($fupReasonError); ?></div>
+                                                            <?php endif; ?>
                                                             <textarea id="follow_up_reason_<?php echo $tRow['appointment_id']; ?>" name="follow_up_reason" class="timeline-textarea" placeholder="Enter follow-up reason and medical instructions..."></textarea>
                                                         </div>
                                                     </div>
@@ -521,7 +555,7 @@ if (!empty($_SESSION['appt_success'])) {
                 <h3>🕒 Change Appointment Time</h3>
                 <button class="modal-close" onclick="closeRescheduleModal()">&times;</button>
             </div>
-            <form method="POST" action="">
+            <form method="POST" action="" novalidate>
                 <input type="hidden" name="reschedule_appointment" value="1">
                 <input type="hidden" id="edit_appt_id" name="appointment_id">
                 
@@ -532,12 +566,12 @@ if (!empty($_SESSION['appt_success'])) {
 
                 <div class="form-group">
                     <label class="form-label" for="edit_date">New Date *</label>
-                    <input type="date" id="edit_date" name="appointment_date" class="form-input" min="<?php echo date('Y-m-d'); ?>" required>
+                    <input type="date" id="edit_date" name="appointment_date" class="form-input" min="<?php echo date('Y-m-d'); ?>">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="edit_time">New Time *</label>
-                    <input type="time" id="edit_time" name="appointment_time" class="form-input" required>
+                    <input type="time" id="edit_time" name="appointment_time" class="form-input">
                 </div>
 
                 <div style="display:flex; gap:12px; margin-top:24px;">
