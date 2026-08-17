@@ -82,7 +82,7 @@ if ($reviewsResult) {
             <li><a href="index.php" class="nav-link">Home</a></li>
             <li><a href="doctors.php" class="nav-link active" style="color: var(--primary); font-weight: 700;">Doctors</a></li>
             <li><a href="index.php#features" class="nav-link">Features</a></li>
-            <li><a href="#" class="nav-link">About</a></li>
+            <li><a href="privacy_policy.php" class="nav-link">Privacy</a></li>
 
             <!-- Login Dropdown -->
             <li class="nav-dropdown btn-nav-login" id="loginDropdown">
@@ -305,6 +305,14 @@ if ($reviewsResult) {
 
     <!-- ===== FOOTER ===== -->
     <footer class="footer">
+        <div class="footer-nav-links">
+            <a href="index.php">Home</a>
+            <a href="doctors.php">Doctors Directory</a>
+            <a href="index.php#features">Features</a>
+            <a href="privacy_policy.php">Privacy & Policy</a>
+            <a href="patient/login.php">Patient Login</a>
+            <a href="doctor/login.php">Doctor Login</a>
+        </div>
         <p>&copy; <?php echo date('Y'); ?> Medi-Care Hospital Management System. All rights reserved.</p>
     </footer>
 
