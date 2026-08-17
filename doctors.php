@@ -261,7 +261,7 @@ if ($reviewsResult) {
                             <?php if ($fee > 0): ?>
                                 <div class="doctor-detail-item">
                                     <i class="fi fi-rr-receipt"></i>
-                                    <span><strong>Consultation Fee:</strong> $<?php echo number_format($fee, 2); ?></span>
+                                    <span><strong>Consultation Fee:</strong> Rs. <?php echo number_format($fee, 2); ?></span>
                                 </div>
                             <?php endif; ?>
                             <?php if (!empty($doc['available_time'])): ?>
