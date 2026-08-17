@@ -257,23 +257,6 @@
 
         </div>
 
-        <!-- Help Banner Card -->
-        <div class="faq-help-card">
-            <i class="fi fi-rr-messages" style="font-size: 2.2rem; color: var(--primary); margin-bottom: 10px; display: inline-block;"></i>
-            <h3>Still Have Questions?</h3>
-            <p>
-                Cannot find the answer you are looking for? Our hospital helpdesk and support engineering team are here to assist you.
-            </p>
-            <div class="faq-help-actions">
-                <a href="report_bug.php" class="btn btn-primary" style="padding: 10px 22px; font-weight: 700; border-radius: 50px;">
-                    <i class="fi fi-rr-bug" style="margin-right: 6px;"></i> Submit a Ticket
-                </a>
-                <a href="privacy_policy.php" class="btn btn-outline" style="padding: 10px 22px; font-weight: 700; border-radius: 50px;">
-                    <i class="fi fi-rr-shield-check" style="margin-right: 6px;"></i> Privacy &amp; Policy
-                </a>
-            </div>
-        </div>
-
     </main>
 
     <!-- ===== FOOTER ===== -->
