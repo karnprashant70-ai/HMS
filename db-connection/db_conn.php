@@ -289,4 +289,27 @@ $ratingTableSql = "CREATE TABLE IF NOT EXISTS tbl_rating (
 if ($conn->query($ratingTableSql) !== TRUE) {
     die("Error creating tbl_rating table: " . $conn->error);
 }
+
+// Create tbl_bug_report table if not exists
+$bugTableSql = "CREATE TABLE IF NOT EXISTS tbl_bug_report (
+    report_id INT AUTO_INCREMENT PRIMARY KEY,
+    ticket_code VARCHAR(20) NOT NULL UNIQUE,
+    reporter_name VARCHAR(100) NOT NULL,
+    reporter_email VARCHAR(150) NOT NULL,
+    user_role ENUM('Patient', 'Doctor', 'Visitor', 'Administrator') DEFAULT 'Visitor',
+    bug_title VARCHAR(255) NOT NULL,
+    bug_category VARCHAR(100) NOT NULL,
+    severity ENUM('Low', 'Medium', 'High', 'Critical') DEFAULT 'Medium',
+    steps_to_reproduce TEXT NOT NULL,
+    expected_behavior TEXT DEFAULT NULL,
+    actual_behavior TEXT DEFAULT NULL,
+    browser_os VARCHAR(255) DEFAULT NULL,
+    screenshot_path VARCHAR(255) DEFAULT NULL,
+    status ENUM('Open', 'Under Review', 'In Progress', 'Resolved', 'Closed') DEFAULT 'Open',
+    admin_notes TEXT DEFAULT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+)";
+if ($conn->query($bugTableSql) !== TRUE) {
+    die("Error creating tbl_bug_report table: " . $conn->error);
+}
 ?>

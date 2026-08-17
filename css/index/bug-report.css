@@ -1,0 +1,229 @@
+/* ===== Bug & Issue Reporting Page Styles ===== */
+
+.bug-page-header {
+    text-align: center;
+    padding: clamp(100px, 14vh, 130px) var(--container-padding) clamp(30px, 5vh, 40px);
+    position: relative;
+    z-index: 1;
+}
+
+.bug-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    background: rgba(245, 158, 11, 0.1);
+    color: #d97706;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.bug-container {
+    max-width: 860px;
+    margin: 0 auto 80px;
+    padding: 0 var(--container-padding);
+    position: relative;
+    z-index: 1;
+}
+
+.bug-card {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-xl);
+    padding: clamp(24px, 4vw, 44px);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.05);
+    margin-bottom: 30px;
+}
+
+/* Severity Selector Buttons */
+.severity-selector-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 6px;
+}
+
+@media (max-width: 600px) {
+    .severity-selector-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.severity-pill-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 8px;
+    border: 1.5px solid var(--border-glass);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: var(--transition);
+    text-align: center;
+    gap: 4px;
+}
+
+.severity-pill-label input[type="radio"] {
+    display: none;
+}
+
+.severity-pill-label:hover {
+    border-color: var(--primary);
+    background: rgba(91, 84, 224, 0.04);
+}
+
+.severity-pill-label.active-low {
+    border-color: #10B981;
+    background: rgba(16, 185, 129, 0.1);
+    color: #059669;
+}
+
+.severity-pill-label.active-medium {
+    border-color: #3B82F6;
+    background: rgba(59, 130, 246, 0.1);
+    color: #2563EB;
+}
+
+.severity-pill-label.active-high {
+    border-color: #F59E0B;
+    background: rgba(245, 158, 11, 0.12);
+    color: #D97706;
+}
+
+.severity-pill-label.active-critical {
+    border-color: #EF4444;
+    background: rgba(239, 68, 68, 0.12);
+    color: #DC2626;
+}
+
+/* File Upload Box */
+.file-upload-box {
+    border: 2px dashed rgba(91, 84, 224, 0.25);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    text-align: center;
+    background: rgba(91, 84, 224, 0.02);
+    cursor: pointer;
+    transition: var(--transition);
+    position: relative;
+}
+
+.file-upload-box:hover {
+    border-color: var(--primary);
+    background: rgba(91, 84, 224, 0.05);
+}
+
+.file-upload-box input[type="file"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.file-upload-icon {
+    font-size: 2rem;
+    color: var(--primary);
+    margin-bottom: 8px;
+}
+
+.file-upload-text {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.file-upload-hint {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.file-chosen-name {
+    margin-top: 10px;
+    font-size: 0.82rem;
+    color: var(--primary);
+    font-weight: 600;
+    display: none;
+}
+
+/* Success Ticket Box */
+.ticket-success-box {
+    background: rgba(0, 184, 148, 0.08);
+    border: 1.5px solid rgba(0, 184, 148, 0.25);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    text-align: center;
+    margin-bottom: 28px;
+    animation: fadeIn 0.4s ease;
+}
+
+.ticket-code-display {
+    display: inline-block;
+    padding: 8px 18px;
+    background: white;
+    border: 1px dashed #00b894;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #008f72;
+    margin: 12px 0;
+    letter-spacing: 1px;
+}
+
+/* Ticket Tracker Box */
+.track-ticket-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-xl);
+    padding: 24px clamp(20px, 3vw, 36px);
+    margin-top: 30px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.03);
+}
+
+.track-ticket-form {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+}
+
+.track-ticket-form input {
+    flex: 1;
+    min-width: 200px;
+}
+
+.ticket-status-result {
+    margin-top: 18px;
+    padding: 16px;
+    border-radius: var(--radius-md);
+    background: rgba(0, 0, 0, 0.02);
+    border: 1px solid var(--border-glass);
+    display: none;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 700;
+}
+
+.status-badge.open { background: rgba(59, 130, 246, 0.12); color: #2563EB; }
+.status-badge.under-review { background: rgba(245, 158, 11, 0.12); color: #D97706; }
+.status-badge.in-progress { background: rgba(139, 92, 246, 0.12); color: #7C3AED; }
+.status-badge.resolved { background: rgba(16, 185, 129, 0.12); color: #059669; }
+.status-badge.closed { background: rgba(107, 114, 128, 0.12); color: #4B5563; }

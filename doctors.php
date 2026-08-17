@@ -311,6 +311,7 @@ if ($reviewsResult) {
             <a href="index.php#features">Features</a>
             <a href="privacy_policy.php">Privacy & Policy</a>
             <a href="cookie_policy.php">Cookie Policy</a>
+            <a href="report_bug.php">Report a Bug</a>
             <a href="patient/login.php">Patient Login</a>
             <a href="doctor/login.php">Doctor Login</a>
         </div>
