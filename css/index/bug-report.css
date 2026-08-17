@@ -40,6 +40,27 @@
     margin-bottom: 30px;
 }
 
+.field-error {
+    color: #DC2626;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-top: 5px;
+    margin-bottom: 3px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.field-error::before {
+    content: "⚠️";
+    font-size: 0.82rem;
+}
+
+.form-input.input-error {
+    border-color: #EF4444 !important;
+    background-color: rgba(239, 68, 68, 0.03) !important;
+}
+
 /* Severity Selector Buttons */
 .severity-selector-grid {
     display: grid;

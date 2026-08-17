@@ -1234,12 +1234,12 @@ if ($todayRes && $tRow = $todayRes->fetch_assoc()) {
                                     <span><?php echo htmlspecialchars($success); ?></span>
                                 </div>
                             <?php endif; ?>
-                            <form method="POST" action="">
+                            <form method="POST" action="" novalidate>
                                 <input type="hidden" name="action" value="add_department">
                                 <div class="form-group-row">
                                     <div class="form-group">
                                         <label class="form-label" for="department_name">Department Name</label>
-                                        <input type="text" class="form-input" id="department_name" name="department_name" placeholder="e.g. Cardiology, Neurology, Pediatrics" required>
+                                        <input type="text" class="form-input" id="department_name" name="department_name" placeholder="e.g. Cardiology, Neurology, Pediatrics">
                                     </div>
                                     <button type="submit" class="btn-auth btn-auth-primary" style="white-space: nowrap;">
                                         Add Department
@@ -1381,17 +1381,17 @@ if ($todayRes && $tRow = $todayRes->fetch_assoc()) {
                                         <span><?php echo htmlspecialchars($success); ?></span>
                                     </div>
                                 <?php endif; ?>
-                                <form method="POST" action="">
+                                <form method="POST" action="" novalidate>
                                     <input type="hidden" name="action" value="update_profile">
 
                                     <div class="form-group">
                                         <label class="form-label" for="admin_name">Administrator Name</label>
-                                        <input type="text" class="form-input" id="admin_name" name="name" value="<?php echo htmlspecialchars($admin['name']); ?>" required>
+                                        <input type="text" class="form-input" id="admin_name" name="name" value="<?php echo htmlspecialchars($admin['name']); ?>">
                                     </div>
 
                                     <div class="form-group">
                                         <label class="form-label" for="admin_email">Email Address</label>
-                                        <input type="email" class="form-input" id="admin_email" name="email" value="<?php echo htmlspecialchars($admin['email']); ?>" required>
+                                        <input type="email" class="form-input" id="admin_email" name="email" value="<?php echo htmlspecialchars($admin['email']); ?>">
                                     </div>
 
                                     <div style="margin-top: 24px;">
@@ -1490,7 +1490,7 @@ if ($todayRes && $tRow = $todayRes->fetch_assoc()) {
                     
                     <div class="form-group">
                         <label class="form-label" for="update_dept_name">Department Name</label>
-                        <input type="text" class="form-input" id="update_dept_name" name="department_name" required>
+                        <input type="text" class="form-input" id="update_dept_name" name="department_name">
                     </div>
                     
                     <div class="form-actions" style="margin-top: 20px;">
@@ -1522,14 +1522,14 @@ if ($todayRes && $tRow = $todayRes->fetch_assoc()) {
                 <button type="button" class="modal-close" onclick="closeEditDoctorModal()">&times;</button>
             </div>
             <div class="modal-body">
-                <form method="POST" action="" id="editDoctorForm">
+                <form method="POST" action="" id="editDoctorForm" novalidate>
                     <input type="hidden" name="action" value="edit_doctor_admin">
                     <input type="hidden" name="doctor_id" id="edit_doc_id">
 
                     <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px;">
                         <div class="form-group">
                             <label class="form-label">First Name</label>
-                            <input type="text" class="form-input" name="first_name" id="edit_doc_first_name" required>
+                            <input type="text" class="form-input" name="first_name" id="edit_doc_first_name">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Middle Name</label>
@@ -1537,19 +1537,19 @@ if ($todayRes && $tRow = $todayRes->fetch_assoc()) {
                         </div>
                         <div class="form-group">
                             <label class="form-label">Last Name</label>
-                            <input type="text" class="form-input" name="last_name" id="edit_doc_last_name" required>
+                            <input type="text" class="form-input" name="last_name" id="edit_doc_last_name">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Email Address</label>
-                            <input type="email" class="form-input" name="email" id="edit_doc_email" required>
+                            <input type="email" class="form-input" name="email" id="edit_doc_email">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Phone Number</label>
-                            <input type="text" class="form-input" name="phone_number" id="edit_doc_phone" required>
+                            <input type="text" class="form-input" name="phone_number" id="edit_doc_phone">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Department</label>
-                            <select class="form-input" name="department" id="edit_doc_department" required>
+                            <select class="form-input" name="department" id="edit_doc_department">
                                 <?php
                                 $deptsRes = $conn->query("SELECT department_name FROM tbl_department ORDER BY department_name ASC");
                                 if ($deptsRes) {
@@ -1562,19 +1562,19 @@ if ($todayRes && $tRow = $todayRes->fetch_assoc()) {
                         </div>
                         <div class="form-group">
                             <label class="form-label">Specialization</label>
-                            <input type="text" class="form-input" name="specialization" id="edit_doc_specialization" required>
+                            <input type="text" class="form-input" name="specialization" id="edit_doc_specialization">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Qualification</label>
-                            <input type="text" class="form-input" name="qualification" id="edit_doc_qualification" required>
+                            <input type="text" class="form-input" name="qualification" id="edit_doc_qualification">
                         </div>
                         <div class="form-group">
                             <label class="form-label">NMC Licence Number</label>
-                            <input type="text" class="form-input" name="licence_number" id="edit_doc_licence" required>
+                            <input type="text" class="form-input" name="licence_number" id="edit_doc_licence">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Years of Experience</label>
-                            <select class="form-input" name="years_experience" id="edit_doc_experience" required>
+                            <select class="form-input" name="years_experience" id="edit_doc_experience">
                                 <option value="">Select years</option>
                                 <option value="0-3">0-3 years</option>
                                 <option value="3-6">3-6 years</option>
@@ -1591,7 +1591,7 @@ if ($todayRes && $tRow = $todayRes->fetch_assoc()) {
                         </div>
                         <div class="form-group">
                             <label class="form-label">Consultation Fee (Rs.)</label>
-                            <input type="number" class="form-input" name="consultation_fee" id="edit_doc_fee" step="0.01" min="0" required>
+                            <input type="number" class="form-input" name="consultation_fee" id="edit_doc_fee" step="0.01" min="0">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Availability Status</label>

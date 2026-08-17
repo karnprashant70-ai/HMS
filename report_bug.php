@@ -279,13 +279,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_bug'])) {
                     <div class="form-group">
                         <label class="form-label" for="reporter_name">Your Name *</label>
                         <?php if (isset($errors['reporter_name'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['reporter_name']); ?></div><?php endif; ?>
-                        <input type="text" id="reporter_name" name="reporter_name" class="form-input" placeholder="e.g. John Doe" value="<?php echo htmlspecialchars($_POST['reporter_name'] ?? $defaultName); ?>" required>
+                        <input type="text" id="reporter_name" name="reporter_name" class="form-input<?php echo isset($errors['reporter_name']) ? ' input-error' : ''; ?>" placeholder="e.g. John Doe" value="<?php echo htmlspecialchars($_POST['reporter_name'] ?? $defaultName); ?>">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label" for="reporter_email">Email Address *</label>
                         <?php if (isset($errors['reporter_email'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['reporter_email']); ?></div><?php endif; ?>
-                        <input type="email" id="reporter_email" name="reporter_email" class="form-input" placeholder="name@example.com" value="<?php echo htmlspecialchars($_POST['reporter_email'] ?? $defaultEmail); ?>" required>
+                        <input type="email" id="reporter_email" name="reporter_email" class="form-input<?php echo isset($errors['reporter_email']) ? ' input-error' : ''; ?>" placeholder="name@example.com" value="<?php echo htmlspecialchars($_POST['reporter_email'] ?? $defaultEmail); ?>">
                     </div>
 
                     <div class="form-group">
@@ -304,13 +304,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_bug'])) {
                     <div class="form-group">
                         <label class="form-label" for="bug_title">Bug Summary / Title *</label>
                         <?php if (isset($errors['bug_title'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['bug_title']); ?></div><?php endif; ?>
-                        <input type="text" id="bug_title" name="bug_title" class="form-input" placeholder="Brief summary of the glitch (e.g. Cannot select 2:00 PM slot)" value="<?php echo htmlspecialchars($_POST['bug_title'] ?? ''); ?>" required>
+                        <input type="text" id="bug_title" name="bug_title" class="form-input<?php echo isset($errors['bug_title']) ? ' input-error' : ''; ?>" placeholder="Brief summary of the glitch (e.g. Cannot select 2:00 PM slot)" value="<?php echo htmlspecialchars($_POST['bug_title'] ?? ''); ?>">
                     </div>
 
                     <div class="form-group">
                         <label class="form-label" for="bug_category">Category *</label>
                         <?php if (isset($errors['bug_category'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['bug_category']); ?></div><?php endif; ?>
-                        <select id="bug_category" name="bug_category" class="form-input" required>
+                        <select id="bug_category" name="bug_category" class="form-input<?php echo isset($errors['bug_category']) ? ' input-error' : ''; ?>">
                             <option value="" disabled selected>Select Category</option>
                             <option value="Appointment Booking" <?php echo (($_POST['bug_category'] ?? '') === 'Appointment Booking') ? 'selected' : ''; ?>>Appointment Booking</option>
                             <option value="Authentication & Login" <?php echo (($_POST['bug_category'] ?? '') === 'Authentication & Login') ? 'selected' : ''; ?>>Authentication & Login</option>
@@ -354,7 +354,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_bug'])) {
                 <div class="form-group" style="margin-bottom: 20px;">
                     <label class="form-label" for="steps_to_reproduce">Steps to Reproduce *</label>
                     <?php if (isset($errors['steps_to_reproduce'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['steps_to_reproduce']); ?></div><?php endif; ?>
-                    <textarea id="steps_to_reproduce" name="steps_to_reproduce" class="form-input" rows="4" placeholder="1. Go to homepage&#10;2. Click on Doctors&#10;3. Click 'Book Visit' on doctor #1&#10;4. Observe error..." required style="resize: vertical; font-family: inherit;"><?php echo htmlspecialchars($_POST['steps_to_reproduce'] ?? ''); ?></textarea>
+                    <textarea id="steps_to_reproduce" name="steps_to_reproduce" class="form-input<?php echo isset($errors['steps_to_reproduce']) ? ' input-error' : ''; ?>" rows="4" placeholder="1. Go to homepage&#10;2. Click on Doctors&#10;3. Click 'Book Visit' on doctor #1&#10;4. Observe error..." style="resize: vertical; font-family: inherit;"><?php echo htmlspecialchars($_POST['steps_to_reproduce'] ?? ''); ?></textarea>
                 </div>
 
                 <!-- Expected vs Actual Behavior Grid -->
@@ -406,8 +406,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_bug'])) {
                 Enter your ticket code (e.g. <code>TKT-9F3A1B</code>) to check the current resolution status.
             </p>
 
-            <form class="track-ticket-form" onsubmit="trackTicket(event)">
-                <input type="text" id="trackTicketInput" class="form-input" placeholder="Enter Ticket Code (e.g. TKT-...)" required>
+            <form class="track-ticket-form" novalidate onsubmit="trackTicket(event)">
+                <input type="text" id="trackTicketInput" class="form-input" placeholder="Enter Ticket Code (e.g. TKT-...)">
                 <button type="submit" class="btn btn-outline" style="white-space: nowrap; font-weight: 700;">
                     Check Status
                 </button>
@@ -488,7 +488,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_bug'])) {
             const code = input.value.trim().toUpperCase();
             const resultBox = document.getElementById('ticketResultBox');
 
-            if (!code) return;
+            if (!code) {
+                resultBox.style.display = 'block';
+                resultBox.innerHTML = '<span style="color: #dc2626; font-size: 0.88rem; display: flex; align-items: center; gap: 6px;"><i class="fi fi-rr-cross-circle"></i> Please enter a ticket code to track your issue.</span>';
+                return;
+            }
 
             resultBox.style.display = 'block';
             resultBox.innerHTML = '<span style="color: var(--text-muted);"><i class="fi fi-rr-spinner" style="animation: spin 1s infinite linear;"></i> Looking up ticket status...</span>';
