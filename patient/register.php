@@ -1,8 +1,10 @@
-<?php
 $errors = [];
 $formData = [];
 $activeStep = 1;
 $successMessage = '';
+
+$redirect = trim($_GET['redirect'] ?? $_POST['redirect'] ?? '');
+$isBookingRedirect = (strpos($redirect, 'book_appointment.php') !== false);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     $formData['firstName'] = trim($_POST['firstName'] ?? '');
@@ -114,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                 if ($insertStmt->execute()) {
                     session_start();
                     $_SESSION['registration_success'] = 'Registration successful! Please log in with your credentials.';
-                    header('Location: login.php');
+                    header('Location: login.php' . (!empty($redirect) ? '?redirect=' . urlencode($redirect) : ''));
                     exit;
                 } else {
                     $errors['email'] = 'Registration failed. Please try again.';
@@ -164,6 +166,13 @@ function errClass($errors, $field) {
                 <p>Create your account to access appointments and records.</p>
             </div>
 
+            <?php if ($isBookingRedirect): ?>
+                <div style="background: rgba(91, 84, 224, 0.08); border: 1px solid rgba(91, 84, 224, 0.25); color: var(--primary); padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 0.88rem; display: flex; align-items: center; gap: 10px; font-weight: 500;">
+                    <i class="fi fi-rr-user-add" style="font-size: 1.2rem; flex-shrink: 0;"></i>
+                    <span>Create your patient account to book your appointment. Already registered? <a href="login.php<?php echo !empty($redirect) ? '?redirect=' . urlencode($redirect) : ''; ?>" style="color: var(--primary); font-weight: 700; text-decoration: underline;">Sign In</a></span>
+                </div>
+            <?php endif; ?>
+
             <div class="step-progress">
                 <div class="progress-line" id="progressLine"></div>
                 <div class="step-dot <?php echo ($activeStep === 1) ? 'active' : (($activeStep > 1) ? 'completed' : ''); ?>">1</div>
@@ -187,6 +196,9 @@ function errClass($errors, $field) {
             <?php endif; ?>
 
             <form id="registrationForm" method="POST" action="" novalidate>
+                <?php if (!empty($redirect)): ?>
+                    <input type="hidden" name="redirect" value="<?php echo htmlspecialchars($redirect); ?>">
+                <?php endif; ?>
                 <?php if (!empty($errors)): ?>
                     <div class="hms-error-box">
                         <ul>
@@ -272,6 +284,10 @@ function errClass($errors, $field) {
                     </div>
                 </div>
             </form>
+
+            <div class="auth-footer-links" style="text-align: center; margin-top: 20px; font-size: 0.88rem; color: var(--text-secondary);">
+                Already have an account? <a href="login.php<?php echo !empty($redirect) ? '?redirect=' . urlencode($redirect) : ''; ?>" style="color: var(--primary); font-weight: 700;">Sign In</a>
+            </div>
         </div>
     </div>
 

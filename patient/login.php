@@ -7,6 +7,10 @@ if (!empty($_SESSION['registration_success'])) {
     $registrationSuccess = $_SESSION['registration_success'];
     unset($_SESSION['registration_success']);
 }
+
+$redirect = trim($_GET['redirect'] ?? $_POST['redirect'] ?? '');
+$isBookingRedirect = (strpos($redirect, 'book_appointment.php') !== false);
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
     require_once __DIR__ . '/../db-connection/db_conn.php';
     $email = trim($_POST['email'] ?? '');
@@ -30,7 +34,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                 $_SESSION['patient_id'] = $row['patient_id'];
                 $_SESSION['patient_name'] = trim($row['first_name'] . ' ' . ($row['middle_name'] ?? '') . ' ' . $row['last_name']);
                 $_SESSION['login_success'] = 'Login successful! Welcome back, ' . $row['first_name'] . '.';
-                header('Location: dashboard.php');
+                
+                // Secure redirect handling
+                $targetUrl = 'dashboard.php';
+                if (!empty($redirect) && preg_match('/^[a-zA-Z0-9_\-\.\?\=\&]+$/', $redirect) && !str_starts_with($redirect, 'http') && !str_starts_with($redirect, '//')) {
+                    $targetUrl = $redirect;
+                }
+                header('Location: ' . $targetUrl);
                 exit;
             } else {
                 $errors['password'] = 'Invalid Password.';
@@ -148,7 +158,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                     <p>Sign in to access your health dashboard</p>
                 </div>
 
+                <?php if ($isBookingRedirect): ?>
+                    <div style="background: rgba(91, 84, 224, 0.08); border: 1px solid rgba(91, 84, 224, 0.25); color: var(--primary); padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-size: 0.88rem; display: flex; align-items: center; gap: 10px; font-weight: 500;">
+                        <i class="fi fi-rr-calendar-check" style="font-size: 1.2rem; flex-shrink: 0;"></i>
+                        <span>Please sign in or <a href="register.php<?php echo !empty($redirect) ? '?redirect=' . urlencode($redirect) : ''; ?>" style="color: var(--primary); font-weight: 700; text-decoration: underline;">register</a> to complete your appointment booking.</span>
+                    </div>
+                <?php endif; ?>
+
                 <form id="loginForm" method="POST" action="" novalidate>
+                    <?php if (!empty($redirect)): ?>
+                        <input type="hidden" name="redirect" value="<?php echo htmlspecialchars($redirect); ?>">
+                    <?php endif; ?>
 
                     <div class="form-group">
                         <label class="form-label" for="email">Email Address</label>
@@ -183,7 +203,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                 </form>
 
                 <div class="auth-footer-links">
-                    <a href="register.php">Create an Account</a>
+                    <a href="register.php<?php echo !empty($redirect) ? '?redirect=' . urlencode($redirect) : ''; ?>">Create an Account</a>
                     <a href="#">Forgot Password?</a>
                 </div>
             </div>

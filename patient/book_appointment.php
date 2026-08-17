@@ -2,7 +2,9 @@
 ob_start();
 session_start();
 if (empty($_SESSION['patient_id'])) {
-    header('Location: login.php');
+    $currentDoctorId = isset($_GET['doctor_id']) ? intval($_GET['doctor_id']) : 0;
+    $redir = 'book_appointment.php' . ($currentDoctorId ? '?doctor_id=' . $currentDoctorId : '');
+    header('Location: login.php?redirect=' . urlencode($redir));
     exit;
 }
 require_once __DIR__ . '/../db-connection/db_conn.php';
