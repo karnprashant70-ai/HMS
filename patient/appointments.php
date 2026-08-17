@@ -235,7 +235,6 @@ foreach ($depts as $d) {
                     <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">☰</button>
                     <div>
                         <?php include __DIR__ . '/includes/breadcrumb.php'; ?>
-                        <h1>Manage Appointments</h1>
                     </div>
                 </div>
             </header>

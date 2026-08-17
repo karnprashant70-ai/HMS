@@ -112,7 +112,6 @@ $totalHistoryCount = count($timelineRecords);
                     <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">☰</button>
                     <div>
                         <?php include __DIR__ . '/includes/breadcrumb.php'; ?>
-                        <h1><?php echo htmlspecialchars($headerTitle); ?></h1>
                     </div>
                 <div class="top-header-right">
                     <button class="header-icon-btn" title="Notifications">
