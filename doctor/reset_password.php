@@ -117,6 +117,7 @@ $department = $doctor['department'] ?? 'General';
     <link rel="stylesheet" href="../css/sidebar.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/doctor-dashboard.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/auth/auth.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="../css/admin-profile.css?v=<?php echo time(); ?>">
     <link rel="stylesheet" href="../css/doctor-profile.css?v=<?php echo time(); ?>">
 </head>
 <body>
@@ -137,7 +138,6 @@ $department = $doctor['department'] ?? 'General';
                     <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">☰</button>
                     <div>
                         <?php include __DIR__ . '/../includes/breadcrumb.php'; ?>
-                        <h1>Reset Password</h1>
                     </div>
                 </div>
                 <div class="top-header-right">
@@ -160,77 +160,87 @@ $department = $doctor['department'] ?? 'General';
 
             <!-- Profile Content -->
             <div class="dashboard-content">
-
-                <!-- Profile Edit Form -->
-                <form method="POST" action="" enctype="multipart/form-data" novalidate id="resetPasswordForm">
-
-                    <!-- Section 4: Security -->
-                    <div class="profile-section" id="security-section">
-                        <div class="profile-section-header">
-                            <div class="profile-section-icon pink">🔒</div>
-                            <div>
-                                <div class="profile-section-title">Security</div>
-                                <div class="profile-section-subtitle">Update your password (leave blank to keep current)</div>
-                            </div>
+                <div class="admin-form-container" style="max-width: 520px; margin: 30px auto; width: 100%;">
+                    <div class="profile-card">
+                        <div class="profile-card-header">
+                            <h2><i class="fi fi-rr-lock"></i> Change Security Password</h2>
                         </div>
-                        <div class="profile-form-grid">
-                            <div class="profile-form-group full-width">
-                                <label class="profile-form-label" for="current_password">Current Password</label>
-                                <?php if (isset($errors['current_password'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['current_password']); ?></div><?php endif; ?>
-                                <div class="password-input-wrapper">
-                                    <input type="password" id="current_password" name="current_password" class="profile-form-input" placeholder="••••••••">
-                                    <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('current_password', this)" title="Show / Hide Password" aria-label="Show or hide current password">
-                                        <i class="fi fi-rr-eye"></i>
+                        <div class="profile-card-body">
+                            <?php if (!empty($message) && $messageType === 'success'): ?>
+                                <div class="hms-success-alert" id="successAlert" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); color: #10B981; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-weight: 600; display: flex; align-items: center; gap: 8px; font-size: 0.88rem;">
+                                    <i class="fi fi-rr-check-circle" style="font-size: 1.1rem;"></i>
+                                    <span><?php echo htmlspecialchars($message); ?></span>
+                                </div>
+                            <?php endif; ?>
+
+                            <form method="POST" action="" novalidate id="resetPasswordForm">
+                                <input type="hidden" name="save_profile" value="1">
+
+                                <div class="form-group">
+                                    <label class="form-label" for="current_password">Current Password</label>
+                                    <?php if (isset($errors['current_password'])): ?>
+                                        <div class="field-error" style="color: #ef4444; font-size: 0.82rem; font-weight: 500; margin-bottom: 6px;"><?php echo htmlspecialchars($errors['current_password']); ?></div>
+                                    <?php endif; ?>
+                                    <div class="password-input-wrapper">
+                                        <input type="password" class="form-input <?php echo isset($errors['current_password']) ? 'input-error' : ''; ?>" id="current_password" name="current_password" placeholder="••••••••">
+                                        <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('current_password', this)" title="Show / Hide Password">
+                                            <i class="fi fi-rr-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label" for="password">New Password</label>
+                                    <?php if (isset($errors['password'])): ?>
+                                        <div class="field-error" style="color: #ef4444; font-size: 0.82rem; font-weight: 500; margin-bottom: 6px;"><?php echo htmlspecialchars($errors['password']); ?></div>
+                                    <?php endif; ?>
+                                    <div class="password-input-wrapper">
+                                        <input type="password" class="form-input <?php echo isset($errors['password']) ? 'input-error' : ''; ?>" id="password" name="password" placeholder="••••••••" autocomplete="new-password">
+                                        <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('password', this)" title="Show / Hide Password">
+                                            <i class="fi fi-rr-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label" for="confirm_password">Confirm New Password</label>
+                                    <?php if (isset($errors['confirm_password'])): ?>
+                                        <div class="field-error" style="color: #ef4444; font-size: 0.82rem; font-weight: 500; margin-bottom: 6px;"><?php echo htmlspecialchars($errors['confirm_password']); ?></div>
+                                    <?php endif; ?>
+                                    <div class="password-input-wrapper">
+                                        <input type="password" class="form-input <?php echo isset($errors['confirm_password']) ? 'input-error' : ''; ?>" id="confirm_password" name="confirm_password" placeholder="••••••••" autocomplete="new-password">
+                                        <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('confirm_password', this)" title="Show / Hide Password">
+                                            <i class="fi fi-rr-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div style="margin-top: 24px;">
+                                    <button type="submit" name="save_profile" value="1" class="btn-auth btn-auth-primary" style="width: 100%;">
+                                        Update Password
                                     </button>
                                 </div>
-                            </div>
-                            <div class="profile-form-group">
-                                <label class="profile-form-label" for="password">New Password</label>
-                                <?php if (isset($errors['password'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['password']); ?></div><?php endif; ?>
-                                <div class="password-input-wrapper">
-                                    <input type="password" id="password" name="password" class="profile-form-input" placeholder="••••••••" autocomplete="new-password">
-                                    <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('password', this)" title="Show / Hide Password" aria-label="Show or hide new password">
-                                        <i class="fi fi-rr-eye"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="profile-form-group">
-                                <label class="profile-form-label" for="confirm_password">Confirm Password</label>
-                                <?php if (isset($errors['confirm_password'])): ?><div class="field-error"><?php echo htmlspecialchars($errors['confirm_password']); ?></div><?php endif; ?>
-                                <div class="password-input-wrapper">
-                                    <input type="password" id="confirm_password" name="confirm_password" class="profile-form-input" placeholder="••••••••" autocomplete="new-password">
-                                    <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility('confirm_password', this)" title="Show / Hide Password" aria-label="Show or hide confirm password">
-                                        <i class="fi fi-rr-eye"></i>
-                                    </button>
-                                </div>
-                            </div>
+                            </form>
                         </div>
                     </div>
-
-                    <!-- Save Bar -->
-                    <div class="profile-save-bar">
-                        <a href="dashboard.php" class="btn-profile-cancel">Cancel</a>
-                        <button type="submit" name="save_profile" value="1" class="btn-profile-save">
-                            <i class="fi fi-rr-key"></i> Update Password
-                        </button>
-                    </div>
-                </form>
+                </div>
             </div>
         </main>
     </div>
 
-    <!-- Toast Popup -->
-    <?php if (!empty($message)): ?>
-    <div class="toast-popup show" id="profileToast" style="<?php echo $messageType === 'error' ? 'background: linear-gradient(135deg, #FF6B6B, #FF8FA3);' : ''; ?>">
-        <div class="toast-icon"><?php echo $messageType === 'success' ? '✅' : '❌'; ?></div>
-        <p><?php echo htmlspecialchars($message); ?></p>
-    </div>
     <script>
-        setTimeout(function() {
-            document.getElementById('profileToast').classList.remove('show');
-        }, 3000);
+        document.addEventListener('DOMContentLoaded', () => {
+            const alert = document.getElementById('successAlert');
+            if (alert) {
+                setTimeout(() => {
+                    alert.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateY(-6px)';
+                    setTimeout(() => alert.style.display = 'none', 300);
+                }, 4000);
+            }
+        });
     </script>
-    <?php endif; ?>
 
     <!-- ===== JavaScript ===== -->
     <script>
