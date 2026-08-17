@@ -103,7 +103,9 @@ if ($docRes) {
 $deptNameToIdMap = [];
 foreach ($depts as $d) {
     $deptNameToIdMap[$d['department_name']] = $d['department_id'];
+    $deptNameToIdMap[strtolower(trim($d['department_name']))] = $d['department_id'];
 }
+$preselectedDoctorId = isset($_GET['doctor_id']) ? intval($_GET['doctor_id']) : 0;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -250,7 +252,7 @@ foreach ($depts as $d) {
 
             // Find matching doctors
             const filteredDocs = doctorsData.filter(d => {
-                const mapId = parseInt(deptNameToIdMap[d.department]);
+                const mapId = parseInt(deptNameToIdMap[d.department] || deptNameToIdMap[(d.department || '').toLowerCase()]);
                 return mapId === selectedDeptId;
             });
 
@@ -258,7 +260,7 @@ foreach ($depts as $d) {
                 docSelect.innerHTML = '<option value="" disabled>No available doctors in this department</option>';
             } else {
                 filteredDocs.forEach(d => {
-                    const docName = `Dr. ${d.first_name} ${d.middle_name || ''} ${d.last_name}`;
+                    const docName = `Dr. ${d.first_name} ${d.middle_name || ''} ${d.last_name}`.replace(/\s+/g, ' ').trim();
                     docSelect.innerHTML += `<option value="${d.doctor_id}">${docName}</option>`;
                 });
             }
@@ -360,6 +362,25 @@ foreach ($depts as $d) {
                 .catch(err => {
                     container.innerHTML = '<span style="font-size:0.85rem; color:#e74c3c;">Failed to load slots.</span>';
                 });
+        }
+
+        // Auto pre-select doctor if doctor_id passed in URL
+        const preselectedDocId = <?php echo intval($preselectedDoctorId ?? 0); ?>;
+        if (preselectedDocId > 0) {
+            const targetDoc = doctorsData.find(d => parseInt(d.doctor_id) === preselectedDocId);
+            if (targetDoc) {
+                const targetDeptId = deptNameToIdMap[targetDoc.department] || deptNameToIdMap[(targetDoc.department || '').toLowerCase()];
+                const deptSelect = document.getElementById('book_dept');
+                if (targetDeptId && deptSelect) {
+                    deptSelect.value = targetDeptId;
+                    filterDoctors('book');
+                    const docSelect = document.getElementById('book_doc');
+                    if (docSelect) {
+                        docSelect.value = preselectedDocId;
+                        updateFee('book');
+                    }
+                }
+            }
         }
     </script>
 
