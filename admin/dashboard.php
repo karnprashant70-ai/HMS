@@ -1,6 +1,5 @@
 <?php
 session_start();
-ini_set("mysqli.default_socket", "/Applications/XAMPP/xamppfiles/var/mysql/mysql.sock");
 require_once "../db-connection/db_conn.php";
 
 if (!isset($_SESSION['admin_id'])) {
@@ -241,7 +240,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// KPI Statistics
+// KPI Statistics Summary
 $totalDocs = $conn->query("SELECT COUNT(*) AS total FROM tbl_doctor WHERE is_archived = 0")->fetch_assoc()['total'] ?? 0;
 $pendingVerDocs = $conn->query("SELECT COUNT(*) AS total FROM tbl_doctor WHERE verification_status = 'Unverified' AND is_archived = 0")->fetch_assoc()['total'] ?? 0;
 $totalPatients = $conn->query("SELECT COUNT(*) AS total FROM tbl_patient")->fetch_assoc()['total'] ?? 0;
@@ -249,6 +248,168 @@ $totalDepts = $conn->query("SELECT COUNT(*) AS total FROM tbl_department")->fetc
 
 $appRes = $conn->query("SELECT COUNT(*) AS total FROM tbl_appointment");
 $totalAppointments = $appRes ? ($appRes->fetch_assoc()['total'] ?? 0) : 0;
+
+// 1. Fetch Patient Bookings by Department (STRICTLY excluding departments with 0 bookings)
+$deptPatientStats = [];
+$maxUniquePatients = 0;
+$totalUniqueBookedPatients = 0;
+
+$deptStatsSql = "
+    SELECT 
+        d.department_id,
+        d.department_name,
+        COUNT(DISTINCT a.patient_id) AS unique_patients,
+        COUNT(a.appointment_id) AS total_appointments
+    FROM tbl_department d
+    INNER JOIN tbl_appointment a ON d.department_id = a.department_id
+    INNER JOIN tbl_patient p ON a.patient_id = p.patient_id
+    GROUP BY d.department_id, d.department_name
+    HAVING unique_patients > 0
+    ORDER BY unique_patients DESC, d.department_name ASC
+";
+$deptStatsRes = $conn->query($deptStatsSql);
+if ($deptStatsRes) {
+    while ($row = $deptStatsRes->fetch_assoc()) {
+        $row['unique_patients'] = intval($row['unique_patients']);
+        $row['total_appointments'] = intval($row['total_appointments']);
+        if ($row['unique_patients'] > $maxUniquePatients) {
+            $maxUniquePatients = $row['unique_patients'];
+        }
+        $deptPatientStats[] = $row;
+    }
+}
+
+// Calculate total overall unique patients with bookings
+$uniquePatientRes = $conn->query("SELECT COUNT(DISTINCT patient_id) AS total_unique FROM tbl_appointment");
+if ($uniquePatientRes && $uRow = $uniquePatientRes->fetch_assoc()) {
+    $totalUniqueBookedPatients = intval($uRow['total_unique'] ?? 0);
+}
+
+// 2. Deep Analysis Graph: Doctors with Most Appointments
+$topDoctorsList = [];
+$topDocQuery = "
+    SELECT 
+        doc.doctor_id,
+        doc.first_name,
+        doc.middle_name,
+        doc.last_name,
+        doc.department,
+        doc.specialization,
+        COUNT(a.appointment_id) AS total_appts,
+        SUM(CASE WHEN a.status = 'Completed' THEN 1 ELSE 0 END) AS completed_appts,
+        COUNT(DISTINCT a.patient_id) AS unique_patients_seen
+    FROM tbl_doctor doc
+    INNER JOIN tbl_appointment a ON doc.doctor_id = a.doctor_id
+    WHERE doc.is_archived = 0
+    GROUP BY doc.doctor_id
+    ORDER BY total_appts DESC, completed_appts DESC
+    LIMIT 5
+";
+$topDocRes = $conn->query($topDocQuery);
+if ($topDocRes) {
+    while ($tRow = $topDocRes->fetch_assoc()) {
+        $topDoctorsList[] = $tRow;
+    }
+}
+
+// 3. Appointment Status Distribution Graph Data
+$statusDistribution = [
+    'Pending' => 0,
+    'Confirmed' => 0,
+    'Completed' => 0,
+    'Cancelled' => 0
+];
+$statusDistRes = $conn->query("SELECT status, COUNT(*) AS status_count FROM tbl_appointment GROUP BY status");
+if ($statusDistRes) {
+    while ($stRow = $statusDistRes->fetch_assoc()) {
+        $st = $stRow['status'];
+        if (isset($statusDistribution[$st])) {
+            $statusDistribution[$st] = intval($stRow['status_count']);
+        }
+    }
+}
+
+// 4. Appointment Trend: Last 7 days (for sparkline/mini chart)
+$trendData = [];
+for ($i = 6; $i >= 0; $i--) {
+    $date = date('Y-m-d', strtotime("-$i days"));
+    $label = date('D', strtotime("-$i days"));
+    $trendData[$date] = ['label' => $label, 'count' => 0];
+}
+$trendRes = $conn->query("SELECT DATE(appointment_date) AS d, COUNT(*) AS c FROM tbl_appointment WHERE appointment_date >= DATE_SUB(CURDATE(), INTERVAL 6 DAY) GROUP BY d");
+if ($trendRes) {
+    while ($tr = $trendRes->fetch_assoc()) {
+        if (isset($trendData[$tr['d']])) {
+            $trendData[$tr['d']]['count'] = intval($tr['c']);
+        }
+    }
+}
+$maxTrend = max(array_column($trendData, 'count'));
+if ($maxTrend < 1) $maxTrend = 1;
+
+// 5. Revenue Insights
+$revenueRes = $conn->query("SELECT COALESCE(SUM(consultation_fee), 0) AS total_revenue, COALESCE(AVG(consultation_fee), 0) AS avg_fee FROM tbl_appointment WHERE status IN ('Completed', 'Confirmed')");
+$revenueData = $revenueRes ? $revenueRes->fetch_assoc() : ['total_revenue' => 0, 'avg_fee' => 0];
+$totalRevenue = floatval($revenueData['total_revenue']);
+$avgFee = floatval($revenueData['avg_fee']);
+
+// 6. Top rated doctors (from tbl_rating)
+$topRatedDocs = [];
+$ratingQuery = "
+    SELECT doc.first_name, doc.last_name, doc.department, doc.profile_photo,
+           ROUND(AVG(r.rating_stars), 1) AS avg_rating, COUNT(r.rating_id) AS review_count
+    FROM tbl_rating r
+    INNER JOIN tbl_doctor doc ON r.doctor_id = doc.doctor_id
+    WHERE doc.is_archived = 0
+    GROUP BY doc.doctor_id
+    HAVING review_count >= 1
+    ORDER BY avg_rating DESC, review_count DESC
+    LIMIT 3
+";
+$ratingRes = $conn->query($ratingQuery);
+if ($ratingRes) {
+    while ($rr = $ratingRes->fetch_assoc()) {
+        $topRatedDocs[] = $rr;
+    }
+}
+
+// 7. Busiest Day of Week
+$busiestDay = 'N/A';
+$busiestDayCount = 0;
+$dayRes = $conn->query("SELECT DAYNAME(appointment_date) AS day_name, COUNT(*) AS cnt FROM tbl_appointment GROUP BY day_name ORDER BY cnt DESC LIMIT 1");
+if ($dayRes && $dRow = $dayRes->fetch_assoc()) {
+    $busiestDay = $dRow['day_name'];
+    $busiestDayCount = intval($dRow['cnt']);
+}
+
+// 8. Recent Activity Feed (last 5 appointments)
+$recentActivity = [];
+$actRes = $conn->query("
+    SELECT a.appointment_id, a.appointment_date, a.appointment_time, a.status, a.created_at,
+           CONCAT('Dr. ', doc.first_name, ' ', doc.last_name) AS doctor_name,
+           CONCAT(p.first_name, ' ', p.last_name) AS patient_name,
+           doc.department
+    FROM tbl_appointment a
+    INNER JOIN tbl_doctor doc ON a.doctor_id = doc.doctor_id
+    INNER JOIN tbl_patient p ON a.patient_id = p.patient_id
+    ORDER BY a.created_at DESC
+    LIMIT 5
+");
+if ($actRes) {
+    while ($ar = $actRes->fetch_assoc()) {
+        $recentActivity[] = $ar;
+    }
+}
+
+// 9. Completion rate
+$completionRate = ($totalAppointments > 0) ? round(($statusDistribution['Completed'] / $totalAppointments) * 100) : 0;
+
+// 10. Today's appointments
+$todayAppts = 0;
+$todayRes = $conn->query("SELECT COUNT(*) AS cnt FROM tbl_appointment WHERE appointment_date = CURDATE()");
+if ($todayRes && $tRow = $todayRes->fetch_assoc()) {
+    $todayAppts = intval($tRow['cnt']);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -256,10 +417,10 @@ $totalAppointments = $appRes ? ($appRes->fetch_assoc()['total'] ?? 0) : 0;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard — Hospital Management System</title>
-    <link rel="stylesheet" href="../css/index/variables.css">
-    <link rel="stylesheet" href="../css/auth/auth.css">
-    <link rel="stylesheet" href="../css/admin-profile.css">
-    <link rel="stylesheet" href="../css/admin-sidebar.css">
+    <link rel="stylesheet" href="../css/index/variables.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="../css/auth/auth.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="../css/admin-profile.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="../css/admin-sidebar.css?v=<?php echo time(); ?>">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -277,7 +438,7 @@ $totalAppointments = $appRes ? ($appRes->fetch_assoc()['total'] ?? 0) : 0;
                     </button>
                     <div class="admin-header-title">
                         <?php include __DIR__ . '/../includes/breadcrumb.php'; ?>
-                        <h1 id="pageSectionTitle">Dashboard Overview</h1>
+                        <h1 id="dashboardGreeting" style="font-size: clamp(1.1rem, 1rem + 0.5vw, 1.4rem); font-weight: 700; color: var(--text-primary); margin-top: 4px; display: block;">Welcome back, <?php echo htmlspecialchars($admin['name'] ?? 'Admin'); ?> 👋</h1>
                     </div>
                 </div>
 
@@ -291,151 +452,578 @@ $totalAppointments = $appRes ? ($appRes->fetch_assoc()['total'] ?? 0) : 0;
             <!-- Body Content -->
             <div class="admin-body-content">
 
-                <!-- Alert Messages -->
-                <?php if ($success): ?>
-                    <div class="hms-success-alert" id="successAlert" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); color: #10B981; padding: 14px 20px; border-radius: 12px; margin-bottom: 24px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
-                        <i class="fi fi-rr-check-circle" style="font-size: 1.2rem;"></i>
-                        <span><?php echo htmlspecialchars($success); ?></span>
-                    </div>
-                <?php endif; ?>
+
 
                 <!-- ===== SECTION 1: DASHBOARD OVERVIEW ===== -->
                 <section id="sec-overview" class="admin-section active">
-                    <!-- KPI Cards Grid -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 28px;">
-                        <!-- Doctors KPI -->
-                        <div class="profile-card stat-card-clickable" onclick="switchAdminSection('doctors')" title="Click to view Doctor Management" style="padding: 24px; border-left: 4px solid var(--primary);">
-                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                                <span style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Active Doctors</span>
-                                <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(91, 84, 224, 0.12); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
-                                    <i class="fi fi-rr-stethoscope"></i>
+
+                    <style>
+                        /* ===== Premium Dashboard Analytics Styles ===== */
+                        .analytics-grid { display: grid; gap: 24px; margin-bottom: 28px; }
+                        .analytics-grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
+                        .analytics-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+                        .analytics-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+                        .analytics-grid.cols-2-1 { grid-template-columns: 2fr 1fr; }
+                        .analytics-grid.cols-1-1 { grid-template-columns: 1fr 1fr; }
+
+                        /* KPI Hero Cards */
+                        .kpi-card {
+                            position: relative;
+                            background: rgba(255, 255, 255, 0.92);
+                            backdrop-filter: blur(20px);
+                            border: 1px solid rgba(255, 255, 255, 0.5);
+                            border-radius: 20px;
+                            padding: 24px;
+                            overflow: hidden;
+                            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
+                        }
+                        .kpi-card:hover {
+                            transform: translateY(-4px);
+                            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
+                            border-color: rgba(91, 84, 224, 0.2);
+                        }
+                        .kpi-card::before {
+                            content: '';
+                            position: absolute;
+                            top: 0; left: 0; right: 0;
+                            height: 3px;
+                            border-radius: 20px 20px 0 0;
+                        }
+                        .kpi-card.kpi-purple::before { background: linear-gradient(135deg, #6366F1, #8B5CF6); }
+                        .kpi-card.kpi-emerald::before { background: linear-gradient(135deg, #10B981, #059669); }
+                        .kpi-card.kpi-blue::before { background: linear-gradient(135deg, #3B82F6, #2563EB); }
+                        .kpi-card.kpi-amber::before { background: linear-gradient(135deg, #F59E0B, #D97706); }
+                        .kpi-icon {
+                            width: 48px; height: 48px; border-radius: 14px;
+                            display: flex; align-items: center; justify-content: center;
+                            font-size: 1.3rem; color: white;
+                            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                        }
+                        .kpi-icon.icon-purple { background: linear-gradient(135deg, #6366F1, #8B5CF6); }
+                        .kpi-icon.icon-emerald { background: linear-gradient(135deg, #10B981, #059669); }
+                        .kpi-icon.icon-blue { background: linear-gradient(135deg, #3B82F6, #2563EB); }
+                        .kpi-icon.icon-amber { background: linear-gradient(135deg, #F59E0B, #D97706); }
+                        .kpi-value {
+                            font-size: 2rem; font-weight: 800; color: var(--text-primary);
+                            line-height: 1; margin: 12px 0 4px;
+                            font-feature-settings: 'tnum';
+                        }
+                        .kpi-label { font-size: 0.82rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+                        .kpi-sub { font-size: 0.76rem; color: var(--text-muted); margin-top: 8px; display: flex; align-items: center; gap: 4px; }
+                        .kpi-sub .trend-up { color: #10B981; font-weight: 700; }
+                        .kpi-sub .trend-neutral { color: var(--text-muted); font-weight: 600; }
+
+                        /* Sparkline mini bar chart */
+                        .sparkline { display: flex; align-items: flex-end; gap: 3px; height: 32px; }
+                        .sparkline-bar {
+                            flex: 1; border-radius: 3px; min-width: 4px;
+                            transition: height 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+                            opacity: 0.7;
+                        }
+                        .sparkline-bar:last-child { opacity: 1; }
+
+                        /* Analytics Card */
+                        .analytics-card {
+                            background: rgba(255, 255, 255, 0.92);
+                            backdrop-filter: blur(20px);
+                            border: 1px solid rgba(255, 255, 255, 0.5);
+                            border-radius: 20px;
+                            overflow: hidden;
+                            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+                            transition: all 0.3s ease;
+                        }
+                        .analytics-card:hover {
+                            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.07);
+                            border-color: rgba(91, 84, 224, 0.15);
+                        }
+                        .analytics-card-header {
+                            padding: 20px 24px 16px;
+                            display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+                        }
+                        .analytics-card-header h3 {
+                            font-size: 1rem; font-weight: 800; color: var(--text-primary);
+                            display: flex; align-items: center; gap: 10px; margin: 0;
+                        }
+                        .analytics-card-header h3 i { color: var(--primary); font-size: 1.1rem; }
+                        .analytics-card-header .badge {
+                            font-size: 0.72rem; font-weight: 700; padding: 4px 10px; border-radius: 20px;
+                            text-transform: uppercase; letter-spacing: 0.3px;
+                        }
+                        .analytics-card-body { padding: 0 24px 24px; }
+
+                        /* Donut Chart (pure CSS) */
+                        .donut-container { display: flex; align-items: center; gap: 32px; flex-wrap: wrap; justify-content: center; }
+                        .donut-chart {
+                            position: relative; width: 180px; height: 180px; border-radius: 50%;
+                            display: flex; align-items: center; justify-content: center;
+                            flex-shrink: 0;
+                        }
+                        .donut-center {
+                            position: absolute; width: 110px; height: 110px; border-radius: 50%;
+                            background: rgba(255, 255, 255, 0.95);
+                            display: flex; flex-direction: column; align-items: center; justify-content: center;
+                            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+                            z-index: 2;
+                        }
+                        .donut-center .donut-total { font-size: 1.6rem; font-weight: 800; color: var(--text-primary); line-height: 1; }
+                        .donut-center .donut-label { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+                        .donut-legend { display: flex; flex-direction: column; gap: 12px; flex: 1; min-width: 160px; }
+                        .donut-legend-item {
+                            display: flex; align-items: center; justify-content: space-between;
+                            padding: 10px 14px; border-radius: 12px; transition: all 0.2s ease;
+                        }
+                        .donut-legend-item:hover { background: rgba(0, 0, 0, 0.02); }
+                        .donut-legend-item .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+                        .donut-legend-item .legend-name { font-size: 0.84rem; font-weight: 600; color: var(--text-primary); margin-left: 10px; flex: 1; }
+                        .donut-legend-item .legend-value { font-size: 0.84rem; font-weight: 800; color: var(--text-primary); }
+                        .donut-legend-item .legend-pct { font-size: 0.72rem; font-weight: 600; color: var(--text-muted); margin-left: 6px; }
+
+                        /* Ranking bar */
+                        .rank-row {
+                            display: flex; align-items: center; gap: 14px; padding: 14px 0;
+                            border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+                            transition: background 0.2s ease;
+                        }
+                        .rank-row:last-child { border-bottom: none; }
+                        .rank-row:hover { background: rgba(91, 84, 224, 0.02); margin: 0 -24px; padding: 14px 24px; border-radius: 12px; }
+                        .rank-medal {
+                            width: 36px; height: 36px; border-radius: 50%; display: flex;
+                            align-items: center; justify-content: center; font-weight: 900;
+                            font-size: 0.8rem; flex-shrink: 0; color: white;
+                        }
+                        .rank-medal.gold { background: linear-gradient(135deg, #F59E0B, #D97706); box-shadow: 0 3px 8px rgba(245, 158, 11, 0.3); }
+                        .rank-medal.silver { background: linear-gradient(135deg, #94A3B8, #64748B); box-shadow: 0 3px 8px rgba(148, 163, 184, 0.3); }
+                        .rank-medal.bronze { background: linear-gradient(135deg, #B45309, #92400E); box-shadow: 0 3px 8px rgba(180, 83, 9, 0.3); }
+                        .rank-medal.default { background: linear-gradient(135deg, #CBD5E1, #94A3B8); box-shadow: 0 3px 8px rgba(203, 213, 225, 0.3); }
+                        .rank-info { flex: 1; min-width: 0; }
+                        .rank-name { font-size: 0.9rem; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+                        .rank-dept { font-size: 0.76rem; color: var(--text-muted); font-weight: 500; }
+                        .rank-stats { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; min-width: 120px; }
+                        .rank-bar-track { width: 100%; height: 6px; background: rgba(0, 0, 0, 0.05); border-radius: 3px; overflow: hidden; }
+                        .rank-bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+
+                        /* Activity feed */
+                        .activity-item {
+                            display: flex; align-items: flex-start; gap: 14px; padding: 14px 0;
+                            border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+                        }
+                        .activity-item:last-child { border-bottom: none; }
+                        .activity-dot {
+                            width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 5px;
+                            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.04);
+                        }
+                        .activity-dot.dot-completed { background: #10B981; }
+                        .activity-dot.dot-confirmed { background: #3B82F6; }
+                        .activity-dot.dot-pending { background: #F59E0B; }
+                        .activity-dot.dot-cancelled { background: #EF4444; }
+
+                        /* Dept bar styles */
+                        .dept-bar-row {
+                            display: flex; align-items: center; gap: 16px; padding: 8px 0;
+                        }
+                        .dept-bar-label { width: 140px; font-size: 0.84rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; }
+                        .dept-bar-track { flex: 1; height: 20px; background: rgba(0, 0, 0, 0.04); border-radius: 6px; overflow: hidden; }
+                        .dept-bar-fill-inner { height: 100%; border-radius: 6px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; padding-left: 8px; }
+                        .dept-bar-fill-inner span { font-size: 0.72rem; font-weight: 700; color: white; }
+                        .dept-bar-value { width: 70px; text-align: right; font-size: 0.82rem; font-weight: 800; color: var(--text-primary); flex-shrink: 0; }
+
+                        /* Responsive */
+                        @media (max-width: 1200px) {
+                            .analytics-grid.cols-4 { grid-template-columns: repeat(2, 1fr); }
+                            .analytics-grid.cols-2-1, .analytics-grid.cols-1-1, .analytics-grid.cols-3 { grid-template-columns: 1fr; }
+                        }
+                        @media (max-width: 640px) {
+                            .analytics-grid.cols-4 { grid-template-columns: 1fr; }
+                            .donut-container { flex-direction: column; align-items: center; }
+                            .rank-row:hover { margin: 0; padding: 14px 0; }
+                            .dept-bar-label { width: 100px; font-size: 0.78rem; }
+                        }
+                    </style>
+
+                    <!-- ====== ROW 1: KPI Hero Cards ====== -->
+                    <div class="analytics-grid cols-4">
+                        <!-- Active Doctors -->
+                        <div class="kpi-card kpi-purple">
+                            <div style="display: flex; align-items: flex-start; justify-content: space-between;">
+                                <div>
+                                    <div class="kpi-label">Active Doctors</div>
+                                    <div class="kpi-value"><?php echo $totalDocs; ?></div>
+                                    <div class="kpi-sub">
+                                        <span class="trend-neutral"><i class="fi fi-rr-shield-check" style="font-size: 0.7rem;"></i></span>
+                                        <span><?php echo ($totalDocs - $pendingVerDocs); ?> verified</span>
+                                    </div>
                                 </div>
+                                <div class="kpi-icon icon-purple"><i class="fi fi-rr-stethoscope"></i></div>
                             </div>
-                            <h3 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;"><?php echo $totalDocs; ?></h3>
-                            <?php if ($pendingVerDocs > 0): ?>
-                                <span style="font-size: 0.78rem; font-weight: 600; color: #D97706; background: rgba(245, 158, 11, 0.12); padding: 3px 8px; border-radius: 6px;">
-                                    <i class="fi fi-rr-exclamation"></i> <?php echo $pendingVerDocs; ?> pending approval
-                                </span>
-                            <?php else: ?>
-                                <span style="font-size: 0.78rem; font-weight: 600; color: #10B981; background: rgba(16, 185, 129, 0.12); padding: 3px 8px; border-radius: 6px;">
-                                    <i class="fi fi-rr-check-circle"></i> All doctors verified
-                                </span>
-                            <?php endif; ?>
                         </div>
 
-                        <!-- Patients KPI -->
-                        <div class="profile-card stat-card-clickable" onclick="switchAdminSection('patients')" title="Click to view Patient Directory" style="padding: 24px; border-left: 4px solid var(--accent);">
-                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                                <span style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Total Patients</span>
-                                <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(0, 184, 148, 0.12); color: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
-                                    <i class="fi fi-rr-users-alt"></i>
+                        <!-- Registered Patients -->
+                        <div class="kpi-card kpi-emerald">
+                            <div style="display: flex; align-items: flex-start; justify-content: space-between;">
+                                <div>
+                                    <div class="kpi-label">Registered Patients</div>
+                                    <div class="kpi-value"><?php echo $totalPatients; ?></div>
+                                    <div class="kpi-sub">
+                                        <span class="trend-up"><i class="fi fi-rr-users-alt" style="font-size: 0.7rem;"></i></span>
+                                        <span><?php echo $totalUniqueBookedPatients; ?> have booked</span>
+                                    </div>
                                 </div>
+                                <div class="kpi-icon icon-emerald"><i class="fi fi-rr-users-alt"></i></div>
                             </div>
-                            <h3 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;"><?php echo $totalPatients; ?></h3>
-                            <span style="font-size: 0.78rem; font-weight: 500; color: var(--text-muted);">Registered hospital patients</span>
                         </div>
 
-                        <!-- Departments KPI -->
-                        <div class="profile-card stat-card-clickable" onclick="switchAdminSection('departments')" title="Click to view Departments" style="padding: 24px; border-left: 4px solid #3B82F6;">
-                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                                <span style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Departments</span>
-                                <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(59, 130, 246, 0.12); color: #3B82F6; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
-                                    <i class="fi fi-rr-building"></i>
+                        <!-- Total Appointments -->
+                        <div class="kpi-card kpi-blue">
+                            <div style="display: flex; align-items: flex-start; justify-content: space-between;">
+                                <div>
+                                    <div class="kpi-label">Total Appointments</div>
+                                    <div class="kpi-value"><?php echo $totalAppointments; ?></div>
+                                    <div class="kpi-sub">
+                                        <span class="trend-up"><?php echo $todayAppts; ?></span>
+                                        <span>scheduled today</span>
+                                    </div>
                                 </div>
+                                <div class="kpi-icon icon-blue"><i class="fi fi-rr-calendar"></i></div>
                             </div>
-                            <h3 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;"><?php echo $totalDepts; ?></h3>
-                            <span style="font-size: 0.78rem; font-weight: 500; color: var(--text-muted);">Active medical units</span>
+                            <!-- Mini sparkline -->
+                            <div class="sparkline" style="margin-top: 14px;">
+                                <?php foreach ($trendData as $td): 
+                                    $bh = max(4, round(($td['count'] / $maxTrend) * 32));
+                                ?>
+                                    <div class="sparkline-bar" style="height: <?php echo $bh; ?>px; background: linear-gradient(to top, #3B82F6, #60A5FA);" title="<?php echo $td['label']; ?>: <?php echo $td['count']; ?>"></div>
+                                <?php endforeach; ?>
+                            </div>
                         </div>
 
-                        <!-- Appointments KPI -->
-                        <div class="profile-card stat-card-clickable" onclick="switchAdminSection('appointments')" title="Click to view Appointments Master" style="padding: 24px; border-left: 4px solid #8B5CF6;">
-                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                                <span style="font-size: 0.82rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted);">Appointments</span>
-                                <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(139, 92, 246, 0.12); color: #8B5CF6; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
-                                    <i class="fi fi-rr-calendar"></i>
+                        <!-- Revenue -->
+                        <div class="kpi-card kpi-amber">
+                            <div style="display: flex; align-items: flex-start; justify-content: space-between;">
+                                <div>
+                                    <div class="kpi-label">Total Revenue</div>
+                                    <div class="kpi-value" style="font-size: 1.6rem;">Rs. <?php echo number_format($totalRevenue, 0); ?></div>
+                                    <div class="kpi-sub">
+                                        <span class="trend-neutral">Avg</span>
+                                        <span>Rs. <?php echo number_format($avgFee, 0); ?> / consult</span>
+                                    </div>
                                 </div>
+                                <div class="kpi-icon icon-amber"><i class="fi fi-rr-money-bill-wave"></i></div>
                             </div>
-                            <h3 style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin-bottom: 4px;"><?php echo $totalAppointments; ?></h3>
-                            <span style="font-size: 0.78rem; font-weight: 500; color: var(--text-muted);">Total hospital bookings</span>
                         </div>
                     </div>
 
                     <?php if ($pendingVerDocs > 0): ?>
-                        <!-- Pending Verification Alert Banner -->
-                        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 14px; padding: 20px 24px; margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+                        <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(245, 158, 11, 0.03)); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: 16px; padding: 18px 24px; margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;">
                             <div style="display: flex; align-items: center; gap: 14px;">
-                                <div style="width: 46px; height: 46px; border-radius: 12px; background: #D97706; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
-                                    <i class="fi fi-rr-exclamation"></i>
+                                <div style="width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #F59E0B, #D97706); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; box-shadow: 0 3px 8px rgba(245, 158, 11, 0.3);">
+                                    <i class="fi fi-rr-bell-ring"></i>
                                 </div>
                                 <div>
-                                    <h4 style="font-size: 1.05rem; font-weight: 700; color: #B45309; margin-bottom: 2px;"><?php echo $pendingVerDocs; ?> Doctor Profile(s) Awaiting Verification</h4>
-                                    <p style="font-size: 0.85rem; color: #B45309; opacity: 0.9;">Newly registered doctors require administrative review before appearing as verified to patients.</p>
+                                    <strong style="font-size: 0.92rem; color: #92400E;"><?php echo $pendingVerDocs; ?> doctor(s) awaiting verification</strong>
+                                    <p style="font-size: 0.78rem; color: #B45309; margin-top: 1px;">Review and approve new registrations to activate their profiles</p>
                                 </div>
                             </div>
-                            <button type="button" onclick="switchAdminSection('doctors')" style="padding: 8px 18px; background: #D97706; color: white; border: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; white-space: nowrap;">
-                                Review Doctors <i class="fi fi-rr-arrow-right"></i>
+                            <button type="button" onclick="switchAdminSection('doctors')" style="padding: 8px 18px; background: linear-gradient(135deg, #F59E0B, #D97706); color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 0.82rem; cursor: pointer; box-shadow: 0 3px 8px rgba(245, 158, 11, 0.25); transition: all 0.2s ease;">
+                                Review Now <i class="fi fi-rr-arrow-right"></i>
                             </button>
                         </div>
                     <?php endif; ?>
 
-                    <!-- Quick Overview Grid -->
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px;">
-                        <!-- Recent Registered Doctors Card -->
-                        <div class="profile-card">
-                            <div class="profile-card-header" style="display: flex; align-items: center; justify-content: space-between;">
-                                <h2><i class="fi fi-rr-stethoscope"></i> Recent Doctors</h2>
-                                <button type="button" onclick="switchAdminSection('doctors')" style="background: none; border: none; color: var(--primary); font-weight: 600; font-size: 0.82rem; cursor: pointer;">View All</button>
+                    <!-- ====== ROW 2: Status Donut + 7-Day Trend ====== -->
+                    <div class="analytics-grid cols-1-1">
+                        <!-- Appointment Status Donut Chart -->
+                        <div class="analytics-card">
+                            <div class="analytics-card-header">
+                                <h3><i class="fi fi-rr-chart-pie-alt"></i> Appointment Status</h3>
+                                <span class="badge" style="background: rgba(91, 84, 224, 0.1); color: var(--primary);">Distribution</span>
                             </div>
-                            <div class="profile-card-body" style="padding: 16px;">
-                                <?php
-                                $recDocs = $conn->query("SELECT first_name, last_name, department, verification_status, status FROM tbl_doctor WHERE is_archived = 0 ORDER BY doctor_id DESC LIMIT 4");
-                                if ($recDocs && $recDocs->num_rows > 0):
-                                    while ($rd = $recDocs->fetch_assoc()):
-                                        $isV = ($rd['verification_status'] === 'Verified');
+                            <div class="analytics-card-body">
+                                <?php 
+                                $totApptDist = array_sum($statusDistribution);
+                                $pCompleted = ($totApptDist > 0) ? round(($statusDistribution['Completed'] / $totApptDist) * 100) : 0;
+                                $pConfirmed = ($totApptDist > 0) ? round(($statusDistribution['Confirmed'] / $totApptDist) * 100) : 0;
+                                $pPending = ($totApptDist > 0) ? round(($statusDistribution['Pending'] / $totApptDist) * 100) : 0;
+                                $pCancelled = ($totApptDist > 0) ? round(($statusDistribution['Cancelled'] / $totApptDist) * 100) : 0;
+
+                                // Conic gradient angles
+                                $a1 = $pCompleted * 3.6;
+                                $a2 = $a1 + ($pConfirmed * 3.6);
+                                $a3 = $a2 + ($pPending * 3.6);
                                 ?>
-                                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border-glass);">
-                                            <div>
-                                                <strong style="font-size: 0.9rem; color: var(--text-primary);">Dr. <?php echo htmlspecialchars($rd['first_name'] . ' ' . $rd['last_name']); ?></strong>
-                                                <span style="display: block; font-size: 0.76rem; color: var(--text-muted);"><?php echo htmlspecialchars($rd['department']); ?></span>
-                                            </div>
-                                            <span class="status-badge <?php echo $isV ? 'active' : 'inactive'; ?>" style="font-size: 0.72rem;">
-                                                <?php echo $isV ? '✓ Verified' : '⚠ Unverified'; ?>
-                                            </span>
+                                <div class="donut-container">
+                                    <div class="donut-chart" style="background: conic-gradient(
+                                        #10B981 0deg <?php echo $a1; ?>deg, 
+                                        #3B82F6 <?php echo $a1; ?>deg <?php echo $a2; ?>deg, 
+                                        #F59E0B <?php echo $a2; ?>deg <?php echo $a3; ?>deg, 
+                                        #EF4444 <?php echo $a3; ?>deg 360deg
+                                    );">
+                                        <div class="donut-center">
+                                            <div class="donut-total"><?php echo $totApptDist; ?></div>
+                                            <div class="donut-label">Total</div>
                                         </div>
-                                <?php
-                                    endwhile;
-                                else:
-                                    echo '<p style="text-align: center; color: var(--text-muted); padding: 20px;">No doctors registered yet.</p>';
-                                endif;
-                                ?>
+                                    </div>
+                                    <div class="donut-legend">
+                                        <div class="donut-legend-item">
+                                            <div style="display: flex; align-items: center;">
+                                                <span class="legend-dot" style="background: #10B981;"></span>
+                                                <span class="legend-name">Completed</span>
+                                            </div>
+                                            <div>
+                                                <span class="legend-value"><?php echo $statusDistribution['Completed']; ?></span>
+                                                <span class="legend-pct">(<?php echo $pCompleted; ?>%)</span>
+                                            </div>
+                                        </div>
+                                        <div class="donut-legend-item">
+                                            <div style="display: flex; align-items: center;">
+                                                <span class="legend-dot" style="background: #3B82F6;"></span>
+                                                <span class="legend-name">Confirmed</span>
+                                            </div>
+                                            <div>
+                                                <span class="legend-value"><?php echo $statusDistribution['Confirmed']; ?></span>
+                                                <span class="legend-pct">(<?php echo $pConfirmed; ?>%)</span>
+                                            </div>
+                                        </div>
+                                        <div class="donut-legend-item">
+                                            <div style="display: flex; align-items: center;">
+                                                <span class="legend-dot" style="background: #F59E0B;"></span>
+                                                <span class="legend-name">Pending</span>
+                                            </div>
+                                            <div>
+                                                <span class="legend-value"><?php echo $statusDistribution['Pending']; ?></span>
+                                                <span class="legend-pct">(<?php echo $pPending; ?>%)</span>
+                                            </div>
+                                        </div>
+                                        <div class="donut-legend-item">
+                                            <div style="display: flex; align-items: center;">
+                                                <span class="legend-dot" style="background: #EF4444;"></span>
+                                                <span class="legend-name">Cancelled</span>
+                                            </div>
+                                            <div>
+                                                <span class="legend-value"><?php echo $statusDistribution['Cancelled']; ?></span>
+                                                <span class="legend-pct">(<?php echo $pCancelled; ?>%)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- System Departments Overview Card -->
-                        <div class="profile-card">
-                            <div class="profile-card-header" style="display: flex; align-items: center; justify-content: space-between;">
-                                <h2><i class="fi fi-rr-building"></i> Medical Departments</h2>
-                                <button type="button" onclick="switchAdminSection('departments')" style="background: none; border: none; color: var(--primary); font-weight: 600; font-size: 0.82rem; cursor: pointer;">Manage</button>
+                        <!-- 7-Day Appointment Trend -->
+                        <div class="analytics-card">
+                            <div class="analytics-card-header">
+                                <h3><i class="fi fi-rr-chart-line-up"></i> 7-Day Appointment Trend</h3>
+                                <span class="badge" style="background: rgba(59, 130, 246, 0.1); color: #3B82F6;">Last 7 Days</span>
                             </div>
-                            <div class="profile-card-body" style="padding: 16px;">
-                                <?php
-                                $recDepts = $conn->query("SELECT department_name, created_at FROM tbl_department ORDER BY department_name ASC LIMIT 5");
-                                if ($recDepts && $recDepts->num_rows > 0):
-                                    while ($dp = $recDepts->fetch_assoc()):
-                                ?>
-                                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-glass);">
-                                            <span style="font-size: 0.88rem; font-weight: 600; color: var(--text-primary);"><?php echo htmlspecialchars($dp['department_name']); ?></span>
-                                            <span style="font-size: 0.75rem; color: var(--text-muted);"><?php echo date('M d, Y', strtotime($dp['created_at'])); ?></span>
+                            <div class="analytics-card-body">
+                                <!-- Visual bar chart -->
+                                <div style="display: flex; align-items: flex-end; gap: 10px; height: 160px; padding-bottom: 28px; position: relative;">
+                                    <?php foreach ($trendData as $date => $td): 
+                                        $barH = max(8, round(($td['count'] / $maxTrend) * 130));
+                                        $isToday = ($date === date('Y-m-d'));
+                                    ?>
+                                        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px;">
+                                            <span style="font-size: 0.72rem; font-weight: 800; color: <?php echo $isToday ? 'var(--primary)' : 'var(--text-muted)'; ?>;"><?php echo $td['count']; ?></span>
+                                            <div style="width: 100%; max-width: 40px; height: <?php echo $barH; ?>px; border-radius: 8px 8px 4px 4px; background: <?php echo $isToday ? 'linear-gradient(to top, #6366F1, #818CF8)' : 'linear-gradient(to top, rgba(99, 102, 241, 0.25), rgba(99, 102, 241, 0.45))'; ?>; transition: height 0.6s ease;"></div>
+                                            <span style="font-size: 0.7rem; font-weight: <?php echo $isToday ? '800' : '600'; ?>; color: <?php echo $isToday ? 'var(--primary)' : 'var(--text-muted)'; ?>; position: absolute; bottom: 0;"><?php echo $td['label']; ?></span>
                                         </div>
-                                <?php
-                                    endwhile;
-                                else:
-                                    echo '<p style="text-align: center; color: var(--text-muted); padding: 20px;">No departments added yet.</p>';
-                                endif;
-                                ?>
+                                    <?php endforeach; ?>
+                                </div>
+
+                                <!-- Quick stat pills below chart -->
+                                <div style="display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap;">
+                                    <div style="flex: 1; min-width: 120px; background: rgba(99, 102, 241, 0.06); padding: 12px 14px; border-radius: 12px; text-align: center;">
+                                        <div style="font-size: 1.2rem; font-weight: 800; color: var(--primary);"><?php echo $completionRate; ?>%</div>
+                                        <div style="font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px;">Completion Rate</div>
+                                    </div>
+                                    <div style="flex: 1; min-width: 120px; background: rgba(245, 158, 11, 0.06); padding: 12px 14px; border-radius: 12px; text-align: center;">
+                                        <div style="font-size: 1.2rem; font-weight: 800; color: #D97706;"><?php echo $busiestDay; ?></div>
+                                        <div style="font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px;">Busiest Day</div>
+                                    </div>
+                                    <div style="flex: 1; min-width: 120px; background: rgba(16, 185, 129, 0.06); padding: 12px 14px; border-radius: 12px; text-align: center;">
+                                        <div style="font-size: 1.2rem; font-weight: 800; color: #059669;"><?php echo $totalDepts; ?></div>
+                                        <div style="font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.3px;">Departments</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- ====== ROW 3: Top Doctors Ranking + Department Distribution ====== -->
+                    <div class="analytics-grid cols-1-1">
+                        <!-- Top Doctors Leaderboard -->
+                        <div class="analytics-card">
+                            <div class="analytics-card-header">
+                                <h3><i class="fi fi-rr-trophy"></i> Top Doctors Leaderboard</h3>
+                                <span class="badge" style="background: rgba(245, 158, 11, 0.1); color: #D97706;">By Appointments</span>
+                            </div>
+                            <div class="analytics-card-body">
+                                <?php if (!empty($topDoctorsList)):
+                                    $maxDocAppts = max(array_column($topDoctorsList, 'total_appts'));
+                                    $medalClasses = ['gold', 'silver', 'bronze', 'default', 'default'];
+                                ?>
+                                    <?php foreach ($topDoctorsList as $idx => $tDoc): 
+                                        $docName = 'Dr. ' . trim($tDoc['first_name'] . ' ' . ($tDoc['middle_name'] ?? '') . ' ' . $tDoc['last_name']);
+                                        $totalA = intval($tDoc['total_appts']);
+                                        $completedA = intval($tDoc['completed_appts']);
+                                        $uniqueP = intval($tDoc['unique_patients_seen']);
+                                        $compRate = ($totalA > 0) ? round(($completedA / $totalA) * 100) : 0;
+                                        $barW = ($maxDocAppts > 0) ? max(8, round(($totalA / $maxDocAppts) * 100)) : 0;
+                                    ?>
+                                        <div class="rank-row">
+                                            <div class="rank-medal <?php echo $medalClasses[$idx] ?? 'default'; ?>">
+                                                <?php echo $idx + 1; ?>
+                                            </div>
+                                            <div class="rank-info">
+                                                <div class="rank-name"><?php echo htmlspecialchars($docName); ?></div>
+                                                <div class="rank-dept">
+                                                    <?php echo htmlspecialchars($tDoc['department']); ?> · <?php echo $uniqueP; ?> patient<?php echo $uniqueP === 1 ? '' : 's'; ?> · <?php echo $compRate; ?>% completion
+                                                </div>
+                                            </div>
+                                            <div class="rank-stats">
+                                                <div style="font-size: 0.88rem; font-weight: 800; color: var(--text-primary);"><?php echo $totalA; ?> <span style="font-size: 0.72rem; font-weight: 500; color: var(--text-muted);">appts</span></div>
+                                                <div class="rank-bar-track">
+                                                    <div class="rank-bar-fill" style="width: <?php echo $barW; ?>%; background: linear-gradient(135deg, #6366F1, #818CF8);"></div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <p style="text-align: center; color: var(--text-muted); padding: 24px; font-size: 0.88rem;">No appointment data available for doctor ranking.</p>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <!-- Patient Bookings by Department -->
+                        <div class="analytics-card">
+                            <div class="analytics-card-header">
+                                <h3><i class="fi fi-rr-building"></i> Department Distribution</h3>
+                                <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: #059669;"><?php echo $totalUniqueBookedPatients; ?> Patients</span>
+                            </div>
+                            <div class="analytics-card-body">
+                                <?php if (!empty($deptPatientStats)):
+                                    $deptColors = ['#6366F1', '#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EC4899', '#06B6D4', '#F97316'];
+                                    $deptColorCount = count($deptColors);
+                                ?>
+                                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                                        <?php foreach ($deptPatientStats as $idx => $stat): 
+                                            $deptName = htmlspecialchars($stat['department_name']);
+                                            $uCount = intval($stat['unique_patients']);
+                                            if ($uCount <= 0) continue;
+                                            $bP = ($maxUniquePatients > 0) ? max(8, round(($uCount / $maxUniquePatients) * 100)) : 0;
+                                            $dColor = $deptColors[$idx % $deptColorCount];
+                                        ?>
+                                            <div class="dept-bar-row">
+                                                <div class="dept-bar-label" title="<?php echo $deptName; ?>">
+                                                    <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: <?php echo $dColor; ?>; margin-right: 8px; flex-shrink: 0;"></span>
+                                                    <?php echo $deptName; ?>
+                                                </div>
+                                                <div class="dept-bar-track">
+                                                    <div class="dept-bar-fill-inner" style="width: <?php echo $bP; ?>%; background: <?php echo $dColor; ?>;">
+                                                        <?php if ($bP >= 18): ?>
+                                                            <span><?php echo $uCount; ?></span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </div>
+                                                <div class="dept-bar-value"><?php echo $uCount; ?> <span style="font-weight: 500; font-size: 0.72rem; color: var(--text-muted);">pts</span></div>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <p style="text-align: center; color: var(--text-muted); padding: 24px; font-size: 0.88rem;">No department booking data yet.</p>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ====== ROW 4: Recent Activity Feed + Top Rated Doctors ====== -->
+                    <div class="analytics-grid cols-2-1">
+                        <!-- Recent Activity Feed -->
+                        <div class="analytics-card">
+                            <div class="analytics-card-header">
+                                <h3><i class="fi fi-rr-time-past"></i> Recent Activity</h3>
+                                <span class="badge" style="background: rgba(99, 102, 241, 0.1); color: #6366F1;">Live Feed</span>
+                            </div>
+                            <div class="analytics-card-body">
+                                <?php if (!empty($recentActivity)): ?>
+                                    <?php foreach ($recentActivity as $act): 
+                                        $statusLC = strtolower($act['status']);
+                                        $dotClass = 'dot-' . $statusLC;
+                                        $statusColors = ['completed' => '#10B981', 'confirmed' => '#3B82F6', 'pending' => '#F59E0B', 'cancelled' => '#EF4444'];
+                                        $sColor = $statusColors[$statusLC] ?? '#94A3B8';
+                                        $timeAgo = '';
+                                        $diff = time() - strtotime($act['created_at']);
+                                        if ($diff < 3600) $timeAgo = round($diff / 60) . 'm ago';
+                                        elseif ($diff < 86400) $timeAgo = round($diff / 3600) . 'h ago';
+                                        else $timeAgo = round($diff / 86400) . 'd ago';
+                                    ?>
+                                        <div class="activity-item">
+                                            <div class="activity-dot <?php echo $dotClass; ?>"></div>
+                                            <div style="flex: 1; min-width: 0;">
+                                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+                                                    <div>
+                                                        <strong style="font-size: 0.86rem; color: var(--text-primary);"><?php echo htmlspecialchars($act['patient_name']); ?></strong>
+                                                        <span style="font-size: 0.78rem; color: var(--text-muted);"> → <?php echo htmlspecialchars($act['doctor_name']); ?></span>
+                                                    </div>
+                                                    <span style="font-size: 0.7rem; font-weight: 600; color: var(--text-muted); white-space: nowrap;"><?php echo $timeAgo; ?></span>
+                                                </div>
+                                                <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                                                    <span style="font-size: 0.72rem; font-weight: 700; color: <?php echo $sColor; ?>; background: <?php echo $sColor; ?>15; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.3px;"><?php echo $act['status']; ?></span>
+                                                    <span style="font-size: 0.72rem; color: var(--text-muted);"><?php echo htmlspecialchars($act['department']); ?> · <?php echo date('M d', strtotime($act['appointment_date'])); ?></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <p style="text-align: center; color: var(--text-muted); padding: 20px;">No recent appointment activity.</p>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+
+                        <!-- System Health / Quick Stats -->
+                        <div class="analytics-card">
+                            <div class="analytics-card-header">
+                                <h3><i class="fi fi-rr-pulse"></i> System Health</h3>
+                            </div>
+                            <div class="analytics-card-body">
+                                <!-- Completion Rate Ring -->
+                                <div style="text-align: center; margin-bottom: 20px;">
+                                    <div style="position: relative; width: 100px; height: 100px; margin: 0 auto; border-radius: 50%; background: conic-gradient(#10B981 0deg <?php echo $completionRate * 3.6; ?>deg, rgba(0,0,0,0.06) <?php echo $completionRate * 3.6; ?>deg 360deg);">
+                                        <div style="position: absolute; inset: 10px; border-radius: 50%; background: white; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                                            <span style="font-size: 1.3rem; font-weight: 800; color: var(--text-primary);"><?php echo $completionRate; ?>%</span>
+                                            <span style="font-size: 0.6rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase;">Complete</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style="display: flex; flex-direction: column; gap: 10px;">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(99, 102, 241, 0.05); border-radius: 10px;">
+                                        <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary);"><i class="fi fi-rr-calendar-day" style="color: var(--primary); margin-right: 6px;"></i>Today's Slots</span>
+                                        <strong style="font-size: 0.88rem; color: var(--primary);"><?php echo $todayAppts; ?></strong>
+                                    </div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(245, 158, 11, 0.05); border-radius: 10px;">
+                                        <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary);"><i class="fi fi-rr-time-quarter-to" style="color: #D97706; margin-right: 6px;"></i>Peak Day</span>
+                                        <strong style="font-size: 0.88rem; color: #D97706;"><?php echo $busiestDay; ?></strong>
+                                    </div>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(16, 185, 129, 0.05); border-radius: 10px;">
+                                        <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary);"><i class="fi fi-rr-shield-check" style="color: #059669; margin-right: 6px;"></i>Verified Doctors</span>
+                                        <strong style="font-size: 0.88rem; color: #059669;"><?php echo ($totalDocs - $pendingVerDocs); ?> / <?php echo $totalDocs; ?></strong>
+                                    </div>
+                                    <?php if (!empty($topRatedDocs)): 
+                                        $topR = $topRatedDocs[0];
+                                    ?>
+                                        <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(236, 72, 153, 0.05); border-radius: 10px;">
+                                            <span style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary);"><i class="fi fi-rr-star" style="color: #EC4899; margin-right: 6px;"></i>Top Rated</span>
+                                            <div style="text-align: right;">
+                                                <strong style="font-size: 0.82rem; color: #EC4899;">Dr. <?php echo htmlspecialchars($topR['first_name'] . ' ' . $topR['last_name']); ?></strong>
+                                                <div style="font-size: 0.7rem; color: var(--text-muted);">⭐ <?php echo $topR['avg_rating']; ?> (<?php echo $topR['review_count']; ?> reviews)</div>
+                                            </div>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </section>
 
                 <!-- ===== SECTION 2: DOCTOR MANAGEMENT ===== -->
@@ -445,6 +1033,12 @@ $totalAppointments = $appRes ? ($appRes->fetch_assoc()['total'] ?? 0) : 0;
                             <h2><i class="fi fi-rr-stethoscope"></i> Registered Doctor Directory & Verification</h2>
                         </div>
                         <div class="profile-card-body">
+                            <?php if (!empty($success) && in_array($submittedAction, ['toggle_verification', 'edit_doctor_admin', 'archive_doctor', 'restore_doctor'])): ?>
+                                <div class="hms-success-alert" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); color: #10B981; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-weight: 600; display: flex; align-items: center; gap: 8px; font-size: 0.88rem;">
+                                    <i class="fi fi-rr-check-circle" style="font-size: 1.1rem;"></i>
+                                    <span><?php echo htmlspecialchars($success); ?></span>
+                                </div>
+                            <?php endif; ?>
                             <!-- Filter Sub-tabs -->
                             <div class="sub-tabs">
                                 <button type="button" class="sub-tab-btn active" id="btnSubActive" onclick="switchDocSubTab('active')">
@@ -634,6 +1228,12 @@ $totalAppointments = $appRes ? ($appRes->fetch_assoc()['total'] ?? 0) : 0;
                             <h2><i class="fi fi-rr-plus"></i> Add New Medical Department</h2>
                         </div>
                         <div class="profile-card-body">
+                            <?php if (!empty($success) && in_array($submittedAction, ['add_department', 'update_department', 'delete_department'])): ?>
+                                <div class="hms-success-alert" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); color: #10B981; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-weight: 600; display: flex; align-items: center; gap: 8px; font-size: 0.88rem;">
+                                    <i class="fi fi-rr-check-circle" style="font-size: 1.1rem;"></i>
+                                    <span><?php echo htmlspecialchars($success); ?></span>
+                                </div>
+                            <?php endif; ?>
                             <form method="POST" action="">
                                 <input type="hidden" name="action" value="add_department">
                                 <div class="form-group-row">
@@ -769,12 +1369,18 @@ $totalAppointments = $appRes ? ($appRes->fetch_assoc()['total'] ?? 0) : 0;
 
                 <!-- ===== SECTION 6: ADMIN PROFILE ===== -->
                 <section id="sec-profile" class="admin-section">
-                    <div style="max-width: 600px;">
+                    <div class="admin-form-container" style="max-width: 520px; margin: 30px auto; width: 100%;">
                         <div class="profile-card">
                             <div class="profile-card-header">
                                 <h2><i class="fi fi-rr-user"></i> Admin Account Info</h2>
                             </div>
                             <div class="profile-card-body">
+                                <?php if (!empty($success) && $submittedAction === 'update_profile'): ?>
+                                    <div class="hms-success-alert" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); color: #10B981; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-weight: 600; display: flex; align-items: center; gap: 8px; font-size: 0.88rem;">
+                                        <i class="fi fi-rr-check-circle" style="font-size: 1.1rem;"></i>
+                                        <span><?php echo htmlspecialchars($success); ?></span>
+                                    </div>
+                                <?php endif; ?>
                                 <form method="POST" action="">
                                     <input type="hidden" name="action" value="update_profile">
 
@@ -801,12 +1407,18 @@ $totalAppointments = $appRes ? ($appRes->fetch_assoc()['total'] ?? 0) : 0;
 
                 <!-- ===== SECTION 7: CHANGE PASSWORD ===== -->
                 <section id="sec-security" class="admin-section">
-                    <div style="max-width: 600px;">
+                    <div class="admin-form-container" style="max-width: 520px; margin: 30px auto; width: 100%;">
                         <div class="profile-card">
                             <div class="profile-card-header">
                                 <h2><i class="fi fi-rr-lock"></i> Change Security Password</h2>
                             </div>
                             <div class="profile-card-body">
+                                <?php if (!empty($success) && $submittedAction === 'change_password'): ?>
+                                    <div class="hms-success-alert" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); color: #10B981; padding: 12px 16px; border-radius: 10px; margin-bottom: 20px; font-weight: 600; display: flex; align-items: center; gap: 8px; font-size: 0.88rem;">
+                                        <i class="fi fi-rr-check-circle" style="font-size: 1.1rem;"></i>
+                                        <span><?php echo htmlspecialchars($success); ?></span>
+                                    </div>
+                                <?php endif; ?>
                                 <form method="POST" action="" novalidate id="changePasswordForm">
                                     <input type="hidden" name="action" value="change_password">
 
@@ -1045,6 +1657,11 @@ $totalAppointments = $appRes ? ($appRes->fetch_assoc()['total'] ?? 0) : 0;
                 pageTitle.textContent = sectionTitles[secId];
             }
 
+            const greetingEl = document.getElementById('dashboardGreeting');
+            if (greetingEl) {
+                greetingEl.style.display = (secId === 'overview') ? 'block' : 'none';
+            }
+
             const bcSectionText = document.getElementById('breadcrumbAdminSectionText');
             if (bcSectionText && breadcrumbSectionTitles[secId]) {
                 bcSectionText.textContent = breadcrumbSectionTitles[secId];
@@ -1102,15 +1719,15 @@ $totalAppointments = $appRes ? ($appRes->fetch_assoc()['total'] ?? 0) : 0;
                 if (main) main.classList.add('sidebar-collapsed');
             }
 
-            // Auto-hide alert
-            const alert = document.getElementById('successAlert');
-            if (alert) {
+            // Auto-hide alerts
+            document.querySelectorAll('.hms-success-alert').forEach(alert => {
                 setTimeout(() => {
+                    alert.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
                     alert.style.opacity = '0';
-                    alert.style.transform = 'translateY(-10px)';
+                    alert.style.transform = 'translateY(-6px)';
                     setTimeout(() => alert.style.display = 'none', 300);
                 }, 4000);
-            }
+            });
         });
 
         // Dropdown toggle logic with smart auto-upward positioning
@@ -1352,6 +1969,35 @@ $totalAppointments = $appRes ? ($appRes->fetch_assoc()['total'] ?? 0) : 0;
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
+        }
+
+        function switchDirectoryTab(tab) {
+            const docTab = document.getElementById('dirTabDocs');
+            const patTab = document.getElementById('dirTabPats');
+            const btnDocs = document.getElementById('btnDirDocs');
+            const btnPats = document.getElementById('btnDirPats');
+
+            if (!docTab || !patTab || !btnDocs || !btnPats) return;
+
+            if (tab === 'docs') {
+                docTab.style.display = 'block';
+                patTab.style.display = 'none';
+                btnDocs.style.background = 'var(--primary)';
+                btnDocs.style.color = '#ffffff';
+                btnDocs.style.border = 'none';
+                btnPats.style.background = 'transparent';
+                btnPats.style.color = 'var(--text-primary)';
+                btnPats.style.border = '1px solid var(--border-glass)';
+            } else {
+                docTab.style.display = 'none';
+                patTab.style.display = 'block';
+                btnPats.style.background = 'var(--primary)';
+                btnPats.style.color = '#ffffff';
+                btnPats.style.border = 'none';
+                btnDocs.style.background = 'transparent';
+                btnDocs.style.color = 'var(--text-primary)';
+                btnDocs.style.border = '1px solid var(--border-glass)';
+            }
         }
 
         window.addEventListener('click', (e) => {
