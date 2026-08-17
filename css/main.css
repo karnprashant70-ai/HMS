@@ -3,5 +3,6 @@
 @import 'index/navbar.css';
 @import 'index/hero.css';
 @import 'index/features.css';
+@import 'index/doctors.css';
 @import 'index/footer.css';
 @import 'auth/auth.css';
