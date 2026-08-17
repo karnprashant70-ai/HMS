@@ -132,9 +132,6 @@
                 <button type="button" class="faq-pill" onclick="setFaqCategory('security', this)">
                     <i class="fi fi-rr-shield-check"></i> Security & Privacy
                 </button>
-                <button type="button" class="faq-pill" onclick="setFaqCategory('billing', this)">
-                    <i class="fi fi-rr-receipt"></i> Billing & Support
-                </button>
             </div>
         </div>
 
@@ -255,32 +252,6 @@
                         <li>Strict Role-Based Access Control (RBAC) ensures only your assigned doctor can review your consultation records.</li>
                         <li>We never sell or monetize medical data. Read our full <strong><a href="privacy_policy.php" style="color: var(--primary); text-decoration: underline;">Privacy Policy</a></strong>.</li>
                     </ul>
-                </div>
-            </div>
-
-            <!-- Item 9 -->
-            <div class="faq-item" data-category="billing" data-keywords="consultation fee payment cost charges doctor fee">
-                <button type="button" class="faq-question" onclick="toggleFaq(this)">
-                    <span>How are consultation fees calculated and paid?</span>
-                    <div class="faq-icon-arrow"><i class="fi fi-rr-angle-small-down"></i></div>
-                </button>
-                <div class="faq-answer">
-                    <p>
-                        Consultation fees are transparently displayed on each doctor's card in the Doctors Directory and during appointment booking. Fees can be settled at the hospital billing desk for in-person appointments or processed online for virtual visits.
-                    </p>
-                </div>
-            </div>
-
-            <!-- Item 10 -->
-            <div class="faq-item" data-category="billing" data-keywords="bug error glitch report issue ticket technical help support">
-                <button type="button" class="faq-question" onclick="toggleFaq(this)">
-                    <span>What should I do if I experience a glitch or technical issue?</span>
-                    <div class="faq-icon-arrow"><i class="fi fi-rr-angle-small-down"></i></div>
-                </button>
-                <div class="faq-answer">
-                    <p>
-                        If you encounter an error or display bug, please submit a ticket through our dedicated <strong><a href="report_bug.php" style="color: var(--primary); text-decoration: underline;">Bug Reporting Page</a></strong>. You will receive a unique tracking code (e.g. <code>TKT-XXXXXX</code>) to monitor the resolution progress in real time.
-                    </p>
                 </div>
             </div>
 
