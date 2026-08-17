@@ -44,6 +44,7 @@ $topDoctors = $conn->query($topDoctorsQuery);
             <li><a href="index.php" class="nav-link active">Home</a></li>
             <li><a href="doctors.php" class="nav-link">Doctors</a></li>
             <li><a href="#features" class="nav-link">Features</a></li>
+            <li><a href="faq.php" class="nav-link">FAQ</a></li>
             <li><a href="privacy_policy.php" class="nav-link">Privacy</a></li>
 
             <!-- Login Dropdown -->
@@ -254,6 +255,7 @@ $topDoctors = $conn->query($topDoctorsQuery);
             <a href="index.php">Home</a>
             <a href="doctors.php">Doctors Directory</a>
             <a href="#features">Features</a>
+            <a href="faq.php">FAQ</a>
             <a href="privacy_policy.php">Privacy & Policy</a>
             <a href="cookie_policy.php">Cookie Policy</a>
             <a href="report_bug.php">Report a Bug</a>
