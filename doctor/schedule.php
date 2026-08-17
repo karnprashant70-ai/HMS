@@ -155,7 +155,6 @@ if ($shiftStartSec < $shiftEndSec) {
                     <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">☰</button>
                     <div>
                         <?php include __DIR__ . '/../includes/breadcrumb.php'; ?>
-                        <h1>My Schedule & Working Hours</h1>
                     </div>
                 </div>
                 <div class="top-header-right">

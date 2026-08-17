@@ -94,7 +94,6 @@ if (!empty($_SESSION['appt_success'])) {
                     <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Open menu">☰</button>
                     <div>
                         <?php include __DIR__ . '/../includes/breadcrumb.php'; ?>
-                        <h1>Pending Approvals</h1>
                     </div>
                 </div>
             </header>
